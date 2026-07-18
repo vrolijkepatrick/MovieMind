@@ -1,0 +1,885 @@
+let currentPlayer = 1;
+let selectedCell = null;
+let database = [];
+let gameOver = false;
+let databaseLoaded = false;
+
+let playerBlue = "";
+let playerOrange = "";
+
+let columns = [];
+let rows = [];
+let cells = [];
+let usedMovieIds = [];
+
+const startScreen = document.getElementById("startScreen");
+const gameScreen = document.getElementById("gameScreen");
+
+const startBtn = document.getElementById("startBtn");
+const newRoundBtn = document.getElementById("newRoundBtn");
+
+const playerBlueInput = document.getElementById("playerBlueInput");
+const playerOrangeInput = document.getElementById("playerOrangeInput");
+
+const board = document.getElementById("board");
+
+const popup = document.getElementById("popup");
+const question = document.getElementById("question");
+
+const answerInput = document.getElementById("answerInput");
+const movieSuggestions = document.getElementById("movieSuggestions");
+
+const submitBtn = document.getElementById("submitBtn");
+const passBtn = document.getElementById("passBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+const playerText = document.getElementById("player");
+const winnerMessage = document.getElementById("winnerMessage");
+
+loadDatabase();
+
+
+/* =========================================
+   DATABASE LADEN
+========================================= */
+
+async function loadDatabase() {
+    startBtn.disabled = true;
+    startBtn.textContent = "Database laden...";
+
+    try {
+        const response = await fetch("../data/cinegrid_database.json");
+
+        if (!response.ok) {
+            throw new Error(
+                "Databasebestand niet gevonden."
+            );
+        }
+
+        const data = await response.json();
+
+        if (!data.films || !Array.isArray(data.films)) {
+            throw new Error(
+                "Ongeldige CineGrid database."
+            );
+        }
+
+        database = data.films
+            .filter(isUsableMovie)
+            .filter(removeDuplicateMovies);
+
+        databaseLoaded = true;
+
+        startBtn.disabled = false;
+        startBtn.textContent = "Start spel";
+
+        console.log(
+            "Database geladen:",
+            database.length,
+            "bruikbare films"
+        );
+
+    } catch (error) {
+        console.error("Databasefout:", error);
+
+        startBtn.disabled = true;
+        startBtn.textContent = "Database niet gevonden";
+
+        alert(
+            "De database kon niet worden geladen.\n\n" +
+            "Controleer of dit bestand bestaat:\n" +
+            "data/cinegrid_database.json"
+        );
+    }
+}
+
+function isUsableMovie(movie) {
+    return (
+        movie &&
+        movie.id !== undefined &&
+        typeof movie.title === "string" &&
+        movie.title.trim() !== "" &&
+        Array.isArray(movie.genre) &&
+        Array.isArray(movie.actors) &&
+        movie.genre.length > 0 &&
+        movie.actors.length > 0 &&
+        hasReadableText(movie.title) &&
+        !movie.genre.includes("TV Movie")
+    );
+}
+
+function removeDuplicateMovies(movie, index, array) {
+    return (
+        array.findIndex(function (otherMovie) {
+            return Number(otherMovie.id) === Number(movie.id);
+        }) === index
+    );
+}
+
+function hasReadableText(text) {
+    return /^[\p{L}\p{N}\s:'".,!?\-&()]+$/u.test(text);
+}
+
+
+/* =========================================
+   SPEL STARTEN
+========================================= */
+
+startBtn.addEventListener("click", function () {
+    if (!databaseLoaded) {
+        alert("De database is nog niet geladen.");
+        return;
+    }
+
+    playerBlue = playerBlueInput.value.trim();
+    playerOrange = playerOrangeInput.value.trim();
+
+    if (playerBlue === "" || playerOrange === "") {
+        alert("Vul beide spelersnamen in.");
+        return;
+    }
+
+    startScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+
+    startRound();
+});
+
+newRoundBtn.addEventListener("click", startRound);
+
+function startRound() {
+    currentPlayer = 1;
+    selectedCell = null;
+    gameOver = false;
+
+    usedMovieIds = [];
+    rows = [];
+    columns = [];
+    cells = [];
+
+    winnerMessage.textContent = "";
+    newRoundBtn.classList.add("hidden");
+
+    playerText.textContent = playerBlue + " 🔵";
+
+    createSmartGrid();
+}
+
+
+/* =========================================
+   GRID GENEREREN
+========================================= */
+
+function createSmartGrid() {
+    board.innerHTML = "";
+    cells = [];
+
+    const smartGrid = findSmartGrid();
+
+    if (!smartGrid) {
+        winnerMessage.textContent =
+            "Er kon geen speelbaar bord worden gemaakt.";
+
+        newRoundBtn.classList.remove("hidden");
+
+        console.warn(
+            "Geen geldig bord gevonden.",
+            "Films:",
+            database.length,
+            "Acteurs:",
+            getEligibleActors().length,
+            "Genres:",
+            getAllGenres().length
+        );
+
+        return;
+    }
+
+    columns = smartGrid.actors;
+    rows = smartGrid.genres;
+
+    console.log("Nieuw speelbaar bord:", smartGrid);
+
+    const corner = document.createElement("div");
+    corner.className = "corner";
+
+    board.appendChild(corner);
+
+    columns.forEach(function (actor) {
+        const header = document.createElement("div");
+
+        header.className = "header";
+        header.textContent = actor;
+
+        board.appendChild(header);
+    });
+
+    rows.forEach(function (genre, rowIndex) {
+        const side = document.createElement("div");
+
+        side.className = "side";
+        side.textContent = genre;
+
+        board.appendChild(side);
+
+        columns.forEach(function (actor, columnIndex) {
+            const cell = document.createElement("button");
+
+            cell.className = "cell";
+            cell.dataset.row = rowIndex;
+            cell.dataset.column = columnIndex;
+            cell.title = actor + " + " + genre;
+
+            cell.addEventListener("click", function () {
+                openAnswerPopup(cell);
+            });
+
+            cells.push(cell);
+            board.appendChild(cell);
+        });
+    });
+}
+
+function findSmartGrid() {
+    const genres = getAllGenres();
+    const actors = getEligibleActors();
+
+    const validGrids = [];
+    const genreCombinations = getCombinations(genres, 3);
+
+    genreCombinations.forEach(function (chosenGenres) {
+        const possibleActors = actors.filter(function (actor) {
+            return chosenGenres.every(function (genre) {
+                return getMatchingMovies(actor, genre).length >= 2;
+            });
+        });
+
+        if (possibleActors.length >= 3) {
+            const chosenActors = pickBalancedActors(
+                possibleActors,
+                chosenGenres
+            );
+
+            if (chosenActors.length === 3) {
+                validGrids.push({
+                    genres: chosenGenres,
+                    actors: chosenActors
+                });
+            }
+        }
+    });
+
+    if (validGrids.length === 0) {
+        return null;
+    }
+
+    return shuffleArray(validGrids)[0];
+}
+
+function pickBalancedActors(possibleActors, chosenGenres) {
+    const scoredActors = possibleActors.map(function (actor) {
+        const totalAnswers = chosenGenres.reduce(
+            function (total, genre) {
+                return total + getMatchingMovies(actor, genre).length;
+            },
+            0
+        );
+
+        return {
+            name: actor,
+            score: totalAnswers
+        };
+    });
+
+    const bestCandidates = scoredActors
+        .sort(function (a, b) {
+            return b.score - a.score;
+        })
+        .slice(0, 30)
+        .map(function (item) {
+            return item.name;
+        });
+
+    return shuffleArray(bestCandidates).slice(0, 3);
+}
+
+
+/* =========================================
+   ACTEURS EN GENRES
+========================================= */
+
+function getMatchingMovies(actor, genre) {
+    const normalizedActor = normalizeText(actor);
+
+    return database.filter(function (movie) {
+        const actorMatches = movie.actors.some(function (movieActor) {
+            return normalizeText(movieActor) === normalizedActor;
+        });
+
+        const genreMatches = movieMatchesGenre(movie, genre);
+
+        return actorMatches && genreMatches;
+    });
+}
+
+function getEligibleActors() {
+    const actorCounts = {};
+
+    database.forEach(function (movie) {
+        movie.actors.forEach(function (actor) {
+            if (!actor || !hasReadableText(actor)) {
+                return;
+            }
+
+            actorCounts[actor] =
+                (actorCounts[actor] || 0) + 1;
+        });
+    });
+
+    return Object.keys(actorCounts)
+        .filter(function (actor) {
+            return actorCounts[actor] >= 5;
+        })
+        .sort(function (actorA, actorB) {
+            return actorCounts[actorB] - actorCounts[actorA];
+        });
+}
+
+function getAllGenres() {
+    const allowedGenres = [
+        "Actie",
+        "Komedie",
+        "Misdaad",
+        "Drama",
+        "Horror / Thriller",
+        "Mysterie",
+        "Sciencefiction"
+    ];
+
+    const genres = new Set();
+
+    database.forEach(function (movie) {
+        allowedGenres.forEach(function (genre) {
+            if (movieMatchesGenre(movie, genre)) {
+                genres.add(genre);
+            }
+        });
+    });
+
+    return Array.from(genres);
+}
+
+function movieMatchesGenre(movie, genre) {
+    return getGenreAliases(genre).some(function (genreAlias) {
+        const normalizedAlias = normalizeText(genreAlias);
+
+        return movie.genre.some(function (movieGenre) {
+            return normalizeText(movieGenre) === normalizedAlias;
+        });
+    });
+}
+
+function getGenreAliases(genre) {
+    const aliases = {
+        "Actie": ["Actie", "Action"],
+        "Komedie": ["Komedie", "Comedy"],
+        "Misdaad": ["Misdaad", "Crime"],
+        "Drama": ["Drama"],
+        "Horror / Thriller": ["Horror", "Thriller"],
+        "Mysterie": ["Mysterie", "Mystery"],
+        "Sciencefiction": ["Sciencefiction", "Science Fiction"]
+    };
+
+    return aliases[genre] || [genre];
+}
+
+function getCombinations(items, amount) {
+    const combinations = [];
+
+    function addCombination(startIndex, combination) {
+        if (combination.length === amount) {
+            combinations.push(combination.slice());
+            return;
+        }
+
+        for (
+            let index = startIndex;
+            index < items.length;
+            index++
+        ) {
+            combination.push(items[index]);
+            addCombination(index + 1, combination);
+            combination.pop();
+        }
+    }
+
+    addCombination(0, []);
+
+    return combinations;
+}
+
+function shuffleArray(array) {
+    const copy = [...array];
+
+    for (
+        let index = copy.length - 1;
+        index > 0;
+        index--
+    ) {
+        const randomIndex = Math.floor(
+            Math.random() * (index + 1)
+        );
+
+        [copy[index], copy[randomIndex]] =
+            [copy[randomIndex], copy[index]];
+    }
+
+    return copy;
+}
+
+
+/* =========================================
+   POPUP OPENEN
+========================================= */
+
+function openAnswerPopup(cell) {
+    if (
+        gameOver ||
+        cell.classList.contains("blue") ||
+        cell.classList.contains("orange")
+    ) {
+        return;
+    }
+
+    selectedCell = cell;
+
+    const rowIndex = Number(cell.dataset.row);
+    const columnIndex = Number(cell.dataset.column);
+
+    const actor = columns[columnIndex];
+    const genre = rows[rowIndex];
+
+    question.textContent =
+        actor + " + " + genre;
+
+    answerInput.value = "";
+
+    movieSuggestions.innerHTML = "";
+    movieSuggestions.classList.add("hidden");
+
+    popup.classList.remove("hidden");
+    answerInput.focus();
+}
+
+
+/* =========================================
+   AUTOCOMPLETE FILMTITELS
+========================================= */
+
+answerInput.addEventListener(
+    "input",
+    showMovieSuggestions
+);
+
+function showMovieSuggestions() {
+    if (!selectedCell) {
+        return;
+    }
+
+    const searchText = normalizeText(
+        answerInput.value
+    );
+
+    movieSuggestions.innerHTML = "";
+
+    if (searchText.length < 2) {
+        movieSuggestions.classList.add("hidden");
+        return;
+    }
+
+    const rowIndex =
+        Number(selectedCell.dataset.row);
+
+    const columnIndex =
+        Number(selectedCell.dataset.column);
+
+    const actor = columns[columnIndex];
+    const genre = rows[rowIndex];
+
+    const matchingMovies = getMatchingMovies(actor, genre)
+        .filter(function (movie) {
+            return normalizeText(movie.title)
+                .includes(searchText);
+        })
+        .filter(function (movie) {
+            return !usedMovieIds.includes(
+                Number(movie.id)
+            );
+        })
+        .sort(function (movieA, movieB) {
+            return movieA.title.localeCompare(
+                movieB.title
+            );
+        })
+        .slice(0, 10);
+
+    if (matchingMovies.length === 0) {
+        movieSuggestions.classList.add("hidden");
+        return;
+    }
+
+    matchingMovies.forEach(function (movie) {
+        const suggestion =
+            document.createElement("div");
+
+        suggestion.className =
+            "movie-suggestion";
+
+        suggestion.textContent =
+            movie.title +
+            " (" +
+            (movie.year || "?") +
+            ")";
+
+        suggestion.addEventListener(
+            "click",
+            function () {
+                answerInput.value = movie.title;
+
+                movieSuggestions.innerHTML = "";
+                movieSuggestions.classList.add(
+                    "hidden"
+                );
+
+                answerInput.focus();
+            }
+        );
+
+        movieSuggestions.appendChild(suggestion);
+    });
+
+    movieSuggestions.classList.remove("hidden");
+}
+
+
+/* =========================================
+   ANTWOORD BEVESTIGEN
+========================================= */
+
+submitBtn.addEventListener(
+    "click",
+    submitAnswer
+);
+
+answerInput.addEventListener(
+    "keydown",
+    function (event) {
+        if (event.key === "Enter") {
+            submitAnswer();
+        }
+
+        if (event.key === "Escape") {
+            closePopup();
+        }
+    }
+);
+
+function submitAnswer() {
+    if (!selectedCell || gameOver) {
+        return;
+    }
+
+    const answer = answerInput.value.trim();
+
+    if (answer === "") {
+        alert("Typ eerst een filmtitel.");
+        return;
+    }
+
+    const rowIndex =
+        Number(selectedCell.dataset.row);
+
+    const columnIndex =
+        Number(selectedCell.dataset.column);
+
+    const result = checkMovie(
+        answer,
+        rowIndex,
+        columnIndex
+    );
+
+    if (result.status === "not-found") {
+        alert(
+            "❌ Deze film staat niet in de database."
+        );
+
+        closePopup();
+        switchPlayer();
+
+        return;
+    }
+
+    if (result.status === "wrong-combination") {
+        alert(
+            "❌ Deze film past niet bij " +
+            columns[columnIndex] +
+            " en " +
+            rows[rowIndex] +
+            "."
+        );
+
+        closePopup();
+        switchPlayer();
+
+        return;
+    }
+
+    if (result.status === "already-used") {
+        alert(
+            "❌ Deze film is deze ronde al gebruikt."
+        );
+
+        closePopup();
+        switchPlayer();
+
+        return;
+    }
+
+    placeMovie(result.movie);
+}
+
+function checkMovie(title, rowIndex, columnIndex) {
+    const normalizedTitle = normalizeText(title);
+
+    const movie = database.find(
+        function (databaseMovie) {
+            return (
+                normalizeText(databaseMovie.title) ===
+                normalizedTitle
+            );
+        }
+    );
+
+    if (!movie) {
+        return {
+            status: "not-found"
+        };
+    }
+
+    if (
+        usedMovieIds.includes(
+            Number(movie.id)
+        )
+    ) {
+        return {
+            status: "already-used"
+        };
+    }
+
+    const requiredActor =
+        normalizeText(columns[columnIndex]);
+
+    const actorMatches =
+        movie.actors.some(function (actor) {
+            return (
+                normalizeText(actor) ===
+                requiredActor
+            );
+        });
+
+    const genreMatches =
+        movieMatchesGenre(movie, rows[rowIndex]);
+
+    if (!actorMatches || !genreMatches) {
+        return {
+            status: "wrong-combination"
+        };
+    }
+
+    return {
+        status: "correct",
+        movie: movie
+    };
+}
+
+function placeMovie(movie) {
+    usedMovieIds.push(Number(movie.id));
+
+    selectedCell.textContent = movie.title;
+
+    selectedCell.title =
+        movie.title +
+        " (" +
+        (movie.year || "?") +
+        ")";
+
+    if (currentPlayer === 1) {
+        selectedCell.classList.add("blue");
+    } else {
+        selectedCell.classList.add("orange");
+    }
+
+    closePopup();
+
+    const winner = checkWinner();
+
+    if (winner) {
+        finishGame(winner);
+        return;
+    }
+
+    if (cells.every(isOccupiedCell)) {
+        finishDraw();
+        return;
+    }
+
+    switchPlayer();
+}
+
+
+/* =========================================
+   PASSEN EN ANNULEREN
+========================================= */
+
+passBtn.addEventListener(
+    "click",
+    function () {
+        if (!gameOver) {
+            closePopup();
+            switchPlayer();
+        }
+    }
+);
+
+cancelBtn.addEventListener(
+    "click",
+    closePopup
+);
+
+popup.addEventListener(
+    "click",
+    function (event) {
+        if (event.target === popup) {
+            closePopup();
+        }
+    }
+);
+
+function closePopup() {
+    popup.classList.add("hidden");
+
+    answerInput.value = "";
+
+    movieSuggestions.innerHTML = "";
+    movieSuggestions.classList.add("hidden");
+
+    selectedCell = null;
+}
+
+
+/* =========================================
+   SPELERS EN EINDE SPEL
+========================================= */
+
+function switchPlayer() {
+    currentPlayer =
+        currentPlayer === 1 ? 2 : 1;
+
+    if (currentPlayer === 1) {
+        playerText.textContent =
+            playerBlue + " 🔵";
+    } else {
+        playerText.textContent =
+            playerOrange + " 🟠";
+    }
+}
+
+function checkWinner() {
+    const winningCombinations = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    for (
+        const combination
+        of winningCombinations
+    ) {
+        const first =
+            cells[combination[0]];
+
+        const second =
+            cells[combination[1]];
+
+        const third =
+            cells[combination[2]];
+
+        if (
+            first.classList.contains("blue") &&
+            second.classList.contains("blue") &&
+            third.classList.contains("blue")
+        ) {
+            return playerBlue;
+        }
+
+        if (
+            first.classList.contains("orange") &&
+            second.classList.contains("orange") &&
+            third.classList.contains("orange")
+        ) {
+            return playerOrange;
+        }
+    }
+
+    return null;
+}
+
+function finishGame(winner) {
+    gameOver = true;
+
+    winnerMessage.textContent =
+        "🏆 " +
+        winner +
+        " heeft gewonnen!";
+
+    newRoundBtn.classList.remove("hidden");
+}
+
+function finishDraw() {
+    gameOver = true;
+
+    winnerMessage.textContent =
+        "🤝 Gelijkspel: het bord is vol.";
+
+    newRoundBtn.classList.remove("hidden");
+}
+
+function isOccupiedCell(cell) {
+    return (
+        cell.classList.contains("blue") ||
+        cell.classList.contains("orange")
+    );
+}
+
+
+/* =========================================
+   HULPFUNCTIES
+========================================= */
+
+function normalizeText(text) {
+    return String(text || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        );
+}

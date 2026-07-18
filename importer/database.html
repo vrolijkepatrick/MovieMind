@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CineGrid Importer</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="pageShell">
+
+    <header class="hero">
+        <div class="heroIcon">🎬</div>
+
+        <div>
+            <h1>CineGrid Importer</h1>
+            <p>
+                Zoek films en acteurs, bekijk resultaten en voeg ze toe
+                aan je CineGrid-database.
+            </p>
+        </div>
+    </header>
+
+
+    <main>
+
+        <section class="panel searchPanel">
+
+            <div class="searchColumn movieSearchBlock">
+
+                <div class="sectionTitle">
+                    <span class="sectionIcon">🎞️</span>
+                    <h2>Zoek film</h2>
+                </div>
+
+                <div class="inputWrap">
+                    <span class="inputIcon">⌕</span>
+
+                    <input
+                        id="movieTitle"
+                        type="text"
+                        placeholder="Bijvoorbeeld: Apollo 13"
+                        autocomplete="off">
+                </div>
+
+                <div
+                    id="movieSuggestions"
+                    class="movieSuggestions hidden">
+                </div>
+
+                <button id="searchBtn" class="primaryButton purpleButton">
+                    🎬 Film zoeken
+                </button>
+
+            </div>
+
+
+            <div class="searchDivider"></div>
+
+
+            <div class="searchColumn">
+
+                <div class="sectionTitle">
+                    <span class="sectionIcon">👤</span>
+                    <h2>Zoek acteur of actrice</h2>
+                </div>
+
+                <div class="inputWrap">
+                    <span class="inputIcon">⌕</span>
+
+                    <input
+                        id="actorName"
+                        type="text"
+                        placeholder="Bijvoorbeeld: Timothée Chalamet"
+                        autocomplete="off">
+                </div>
+
+                <div
+                    id="actorSuggestions"
+                    class="movieSuggestions hidden">
+                </div>
+
+                <button id="actorSearchBtn" class="primaryButton blueButton">
+                    👤 Acteur zoeken
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel databasePanel">
+
+            <div class="sectionTitle">
+                <span class="sectionIcon">🗄️</span>
+                <h2>Bestaande database laden</h2>
+            </div>
+
+            <div class="databaseControls">
+
+                <label class="fileButton" for="loadDatabaseInput">
+                    📁 Bestand kiezen
+                </label>
+
+                <input
+                    id="loadDatabaseInput"
+                    type="file"
+                    accept=".json">
+
+                <button id="exportBtn" class="greenButton hidden">
+                    ⬇ Exporteer database
+                </button>
+
+            </div>
+
+
+            <div class="photoManager">
+
+                <div class="photoManagerHeader">
+                    <div>
+                        <h3>📸 Acteursfotomap</h3>
+                        <p>
+                            Kies één keer de map
+                            <strong>game/images/actors</strong>.
+                            Daarna kan de importer foto’s rechtstreeks
+                            in deze map opslaan.
+                        </p>
+                    </div>
+
+                    <span id="photoFolderBadge" class="photoFolderBadge">
+                        Geen map gekozen
+                    </span>
+                </div>
+
+                <div class="photoManagerButtons">
+                    <button id="choosePhotoFolderBtn" type="button">
+                        📁 Kies acteursfotomap
+                    </button>
+
+                    <button
+                        id="testActorPhotoBtn"
+                        type="button"
+                        disabled>
+                        🧪 Test foto van gevonden acteur
+                    </button>
+                </div>
+
+                <div id="photoManagerStatus" class="photoManagerStatus">
+                    Zoek eerst een acteur, kies daarna de acteursfotomap
+                    en voer de test uit.
+                </div>
+
+            </div>
+
+
+            <div class="manualToggleRow">
+                <button id="manualToggleBtn" type="button">
+                    ✍️ Film handmatig toevoegen
+                </button>
+            </div>
+
+
+            <div id="manualForm" class="manualForm hidden">
+
+                <div class="sectionTitle compactTitle">
+                    <span class="sectionIcon">✍️</span>
+                    <h2>Handmatig film toevoegen</h2>
+                </div>
+
+                <div class="manualGrid">
+
+                    <div>
+                        <label for="manualTitle">Titel *</label>
+                        <input id="manualTitle" type="text">
+                    </div>
+
+                    <div>
+                        <label for="manualYear">Jaar</label>
+                        <input
+                            id="manualYear"
+                            type="number"
+                            min="1880"
+                            max="2100">
+                    </div>
+
+                    <div class="manualFullWidth">
+                        <label for="manualGenres">Genres *</label>
+                        <input
+                            id="manualGenres"
+                            type="text"
+                            placeholder="Bijvoorbeeld: Drama, Thriller">
+                        <div class="manualHelp">
+                            Scheid meerdere genres met komma's.
+                        </div>
+                    </div>
+
+                    <div class="manualFullWidth">
+                        <label for="manualDirectors">Regisseur(s)</label>
+                        <input
+                            id="manualDirectors"
+                            type="text"
+                            placeholder="Bijvoorbeeld: Ron Howard">
+                        <div class="manualHelp">
+                            Scheid meerdere regisseurs met komma's.
+                        </div>
+                    </div>
+
+                    <div class="manualFullWidth">
+                        <label for="manualActors">Acteurs *</label>
+                        <textarea
+                            id="manualActors"
+                            placeholder="Tom Hanks, Ed Harris, Gary Sinise"></textarea>
+                    </div>
+
+                    <div class="manualFullWidth">
+                        <label for="manualCharacters">Personages</label>
+                        <textarea
+                            id="manualCharacters"
+                            placeholder="Jim Lovell, Gene Kranz, Ken Mattingly"></textarea>
+                    </div>
+
+                </div>
+
+                <div class="manualButtonRow">
+                    <button id="manualAddBtn" type="button">
+                        ➕ Toevoegen aan database
+                    </button>
+
+                    <button id="manualCancelBtn" type="button">
+                        Annuleren
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="panel resultsPanel">
+
+            <div class="resultsHeader">
+
+                <div class="sectionTitle">
+                    <span class="sectionIcon">☷</span>
+                    <h2>Resultaten</h2>
+                </div>
+
+                <span id="selectionCount" class="selectionBadge">
+                    0 films geselecteerd
+                </span>
+
+            </div>
+
+
+            <div id="selectionToolbar" class="selectionToolbar hidden">
+
+                <button id="selectAllBtn" type="button" class="selectButton">
+                    ✅ Alles selecteren
+                </button>
+
+                <button id="clearSelectionBtn" type="button" class="clearButton">
+                    ❌ Selectie wissen
+                </button>
+
+                <label class="databaseFilter">
+                    <input id="hideImportedCheckbox" type="checkbox">
+                    Alleen films tonen die nog niet in de database staan
+                </label>
+
+            </div>
+
+
+            <div class="resultsContent">
+
+                <div id="actorResults"></div>
+
+                <div id="result" class="result emptyState">
+                    <div class="emptyIcon">🎞️</div>
+                    <h3>Nog geen film opgehaald.</h3>
+                    <p>
+                        Gebruik de zoekvelden hierboven om films of acteurs te zoeken.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section id="savedMovies" class="savedMovies"></section>
+
+    </main>
+
+</div>
+
+
+<div id="batchBar" class="batchBar hidden">
+
+    <div class="batchBarContent">
+
+        <strong id="batchSelectionCount">
+            0 films geselecteerd
+        </strong>
+
+        <button id="addSelectedBtn" type="button">
+            ➕ Geselecteerde films toevoegen
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

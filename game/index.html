@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMind</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="cinema-shell">
+
+        <section class="screen-content">
+
+            <div class="brand-block">
+                <h1>MovieMind</h1>
+                <div class="brand-line"></div>
+                <p class="brand-subtitle">HET ULTIEME FILM- EN SERIEQUIZ SPEL</p>
+            </div>
+
+            <div id="startScreen">
+
+                <h2>Nieuwe wedstrijd</h2>
+
+                <div class="player-input-grid">
+                    <label class="player-field">
+                        <span>🔵 Speler 1</span>
+                        <input id="playerBlueInput" type="text" placeholder="Naam speler 1">
+                    </label>
+
+                    <label class="player-field">
+                        <span>🟠 Speler 2</span>
+                        <input id="playerOrangeInput" type="text" placeholder="Naam speler 2">
+                    </label>
+                </div>
+
+                <div class="difficulty-section">
+
+                    <h3 class="difficulty-title">Kies moeilijkheid</h3>
+
+                    <div class="difficulty-grid">
+
+                        <button class="difficulty-card" type="button" data-difficulty="moviehouse"
+                            aria-pressed="false">
+                            <span class="difficulty-icon">🍿</span>
+                            <span class="difficulty-name">Movie House</span>
+                            <span class="difficulty-stars" aria-label="2 van 5 sterren">
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </span>
+                            <span class="difficulty-description">Ontspannen spelen</span>
+                        </button>
+
+                        <button class="difficulty-card selected" type="button" data-difficulty="blockbuster"
+                            aria-pressed="true">
+                            <span class="difficulty-icon">🎬</span>
+                            <span class="difficulty-name">Blockbuster</span>
+                            <span class="difficulty-stars" aria-label="4 van 5 sterren">
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star">★</span>
+                            </span>
+                            <span class="difficulty-description">De standaard ervaring</span>
+                        </button>
+
+                        <button class="difficulty-card" type="button" data-difficulty="oscarnight"
+                            aria-pressed="false">
+                            <span class="difficulty-icon">🏆</span>
+                            <span class="difficulty-name">Oscar Night</span>
+                            <span class="difficulty-stars" aria-label="5 van 5 sterren">
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                                <span class="star filled">★</span>
+                            </span>
+                            <span class="difficulty-description">Voor echte film- en seriekenners</span>
+                        </button>
+
+                    </div>
+
+                    <div class="selected-difficulty-summary">
+                        Gekozen:
+                        <strong id="selectedDifficultyLabel">Blockbuster</strong>
+                    </div>
+                </div>
+
+                <button id="startBtn">Start spel</button>
+
+                <div class="developerToggleRow">
+                    <button id="developerToggleBtn" type="button">🛠 Developer Mode</button>
+                </div>
+
+                <div id="developerPanel" class="developerPanel hidden">
+
+                    <h3>🛠 MovieMind Developer Mode</h3>
+
+                    <p class="developerIntro">
+                        Test automatisch of de bordgenerator stabiel werkt.
+                    </p>
+
+                    <div class="developerButtonGrid">
+                        <button id="test100Btn" type="button">🧪 Test 100 grids</button>
+                        <button id="databaseStatsBtn" type="button">📊 Database statistieken</button>
+                        <button id="weakCombinationsBtn" type="button">⚠️ Zwakke combinaties</button>
+                    </div>
+
+                    <div id="developerProgress" class="developerProgress hidden">
+                        Test voorbereiden...
+                    </div>
+
+                    <div id="developerReport" class="developerReport hidden"></div>
+                </div>
+
+            </div>
+
+            <div class="screen-frame hidden" id="screenFrame">
+                <div id="gameScreen">
+
+                    <div id="turnIndicator" class="status blue-turn" aria-live="polite">
+                        <div class="status-center">
+                            <span class="status-icon" aria-hidden="true">🎬</span>
+                            <div class="status-copy">
+                                <span class="status-label">Now playing</span>
+                                <span id="player">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="board" id="board"></div>
+
+                    <div id="winnerMessage"></div>
+
+                    <div id="winnerOverlay" class="winner-overlay hidden" aria-live="polite">
+                        <div class="winner-overlay-card">
+                            <div class="winner-award">
+                                <img src="images/awards/popcorn-bling.png"
+                                    alt="MovieMind winnaar popcornbeker"
+                                    class="winner-popcorn-image">
+                            </div>
+
+                            <div id="winnerOverlayText" class="winner-overlay-text"></div>
+                            <div class="winner-overlay-subtitle">MovieMind-kampioen</div>
+
+                            <button id="winnerNewGameBtn" class="winner-new-game-btn" type="button">
+                                🎬 Nieuwe game
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="newRoundBtn" class="hidden">
+                        Nieuwe ronde
+                    </button>
+
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <div id="loadingScreen" class="loading-screen hidden" aria-live="polite" aria-busy="true">
+        <div class="loading-card">
+            <div class="loading-reel" aria-hidden="true">🎬</div>
+            <div class="loading-brand">MovieMind</div>
+            <div class="loading-divider"></div>
+            <p id="loadingMessage" class="loading-message">De zaal loopt vol...</p>
+            <div class="loading-progress" aria-hidden="true">
+                <span class="loading-progress-bar"></span>
+            </div>
+            <p class="loading-hint">Een speelbaar bord wordt samengesteld</p>
+        </div>
+    </div>
+
+    <div id="popup" class="popup hidden">
+
+        <div class="popup-box">
+
+            <h2 id="question">Kies een antwoord</h2>
+
+            <input id="answerInput" type="text" placeholder="Typ een film- of serietitel" autocomplete="off">
+
+            <div id="movieSuggestions" class="movie-suggestions hidden"></div>
+
+            <div class="buttons">
+                <button id="submitBtn">Bevestigen</button>
+                <button id="passBtn">Passen</button>
+                <button id="cancelBtn">Annuleren</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
