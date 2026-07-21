@@ -1331,3 +1331,59 @@ body.game-active .board {
         animation: none;
     }
 }
+
+/* =========================================================
+   FIX – CATEGORIE-ICOON BOVEN, TEKST ERONDER
+========================================================= */
+
+.board .side {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: clamp(1px, 0.18vw, 3px) !important;
+    padding: 2% 3% !important;
+    text-align: center !important;
+}
+
+.board .side-icon {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.board .side-icon-image {
+    width: clamp(38px, 3.15vw, 58px) !important;
+    height: clamp(38px, 3.15vw, 58px) !important;
+    margin: 0 auto !important;
+}
+
+.board .side-label {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    color: var(--gold-light);
+    font-size: clamp(6px, 0.52vw, 10px) !important;
+    font-weight: 900;
+    line-height: 1.05 !important;
+    letter-spacing: 0.01em;
+    text-align: center !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+/* Definitieve categorie-indeling: icoon boven, tekst eronder */
+.board .side {
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.board .side-label {
+    width: 100% !important;
+    text-align: center !important;
+}
