@@ -14,91 +14,293 @@
 
     <header class="app-header">
         <div class="app-icon">🎬</div>
+
         <div>
             <h1>MovieMind Importer</h1>
-            <p>Films, acteurs en acteursfoto’s toevoegen aan de MovieMind-database.</p>
+            <p>
+                Films, acteurs en acteursfoto’s toevoegen aan de MovieMind-database.
+            </p>
         </div>
     </header>
+
 
     <main class="workspace">
 
         <aside class="sidebar">
 
+            <!-- =====================================================
+                 STAP 1 — DATABASE LADEN EN EXPORTEREN
+            ====================================================== -->
+
             <section class="panel database-panel">
 
                 <div class="panel-title">
                     <span>🗄️</span>
+
                     <div>
-                        <h2>Actieve database</h2>
-                        <p>Laad je nieuwste JSON-bestand en exporteer de bijgewerkte database wanneer je klaar bent.</p>
+                        <h2>Stap 1 — Database</h2>
+                        <p>
+                            Laad altijd eerst je nieuwste MovieMind-database.
+                        </p>
                     </div>
                 </div>
 
                 <div class="database-actions">
-                    <label class="button secondary" for="loadDatabaseInput">
+
+                    <label
+                        class="button secondary"
+                        for="loadDatabaseInput">
                         📁 Database laden
                     </label>
 
-                    <input id="loadDatabaseInput" type="file" accept=".json">
+                    <input
+                        id="loadDatabaseInput"
+                        type="file"
+                        accept=".json">
 
-                    <button id="exportBtn" class="button success" type="button" disabled>
+                    <button
+                        id="exportBtn"
+                        class="button success"
+                        type="button"
+                        disabled>
                         ⬇ Database exporteren
                     </button>
+
                 </div>
 
                 <div class="database-status">
+
                     <div>
-                        <span class="status-label">Aantal films</span>
-                        <strong id="databaseCount">0</strong>
+                        <span class="status-label">
+                            Aantal films
+                        </span>
+
+                        <strong id="databaseCount">
+                            0
+                        </strong>
                     </div>
 
                     <div>
-                        <span class="status-label">Laatst toegevoegd</span>
-                        <strong id="lastAddedMovie">Nog niets toegevoegd</strong>
+                        <span class="status-label">
+                            Laatst toegevoegd
+                        </span>
+
+                        <strong id="lastAddedMovie">
+                            Nog niets toegevoegd
+                        </strong>
                     </div>
+
                 </div>
 
-                <div class="recent-block">
-                    <h3>Laatste 25 films</h3>
-                    <ol id="recentMoviesList">
-                        <li class="muted-item">Nog geen database geladen.</li>
-                    </ol>
+                <div id="databaseWorkflowStatus" class="info-box">
+                    Begin met het laden van je nieuwste databasebestand.
                 </div>
 
             </section>
 
 
-            <section class="panel photo-panel">
+            <!-- =====================================================
+                 STAP 2 — ACTEURSFOTO'S
+            ====================================================== -->
+
+            <section class="panel photo-panel photo-panel-top">
 
                 <div class="panel-title">
                     <span>📸</span>
+
                     <div>
-                        <h2>Acteursfoto’s</h2>
-                        <p>Kies de map <strong>game/images/actors</strong>.</p>
+                        <h2>Stap 2 — Acteursfoto’s</h2>
+                        <p>
+                            Kies de map <strong>game/images/actors</strong>.
+                        </p>
                     </div>
                 </div>
 
+
+                <article id="sidebarActorPhotoCard" class="sidebar-actor-photo-card">
+
+                    <div class="sidebar-actor-photo-wrap">
+
+                        <img
+                            id="sidebarActorPhoto"
+                            alt=""
+                            class="hidden">
+
+                        <div
+                            id="sidebarActorPhotoPlaceholder"
+                            class="sidebar-actor-photo-placeholder">
+                            👤
+                        </div>
+
+                    </div>
+
+                    <div class="sidebar-actor-photo-copy">
+
+                        <span>
+                            Geselecteerde acteur
+                        </span>
+
+                        <strong id="sidebarActorPhotoName">
+                            Nog niemand geselecteerd
+                        </strong>
+
+                        <small id="sidebarActorPhotoState">
+                            Zoek rechts naar een acteur om de foto te bekijken.
+                        </small>
+
+                    </div>
+
+
+                    <button
+                        id="saveActorPhotoUnderPreviewBtn"
+                        class="button success wide-button"
+                        type="button"
+                        disabled>
+                        📸 Foto opslaan
+                    </button>
+
+                    <div
+                        id="actorPhotoAlreadyExistsMessage"
+                        class="photo-exists-message hidden">
+                        ✅ Foto staat al in de acteursmap
+                    </div>
+
+                </article>
+
+
                 <div class="photo-actions">
-                    <button id="choosePhotoFolderBtn" class="button secondary" type="button">
+
+                    <button
+                        id="choosePhotoFolderBtn"
+                        class="button secondary"
+                        type="button">
                         📁 Acteursfotomap kiezen
                     </button>
 
-                    <button id="testActorPhotoBtn" class="button success" type="button" disabled>
-                        📸 Foto opslaan
+                    <button
+                        id="fillMissingActorPhotosBtn"
+                        class="button primary wide-button"
+                        type="button"
+                        disabled>
+                        🔎 Alle ontbrekende acteursfoto’s aanvullen
                     </button>
+
                 </div>
 
+
                 <label class="checkbox-row">
-                    <input id="autoDownloadActorPhotosCheckbox" type="checkbox">
-                    <span>Ontbrekende acteursfoto’s automatisch opslaan bij het toevoegen van films</span>
+
+                    <input
+                        id="autoDownloadActorPhotosCheckbox"
+                        type="checkbox">
+
+                    <span>
+                        Ontbrekende acteursfoto’s automatisch opslaan
+                        bij het toevoegen van films
+                    </span>
+
                 </label>
 
+
                 <p class="photo-warning">
-                    Bestaande foto’s worden nooit overschreven. Laat dit vinkje uit wanneer je foto’s alleen handmatig wilt toevoegen.
+                    Bestaande foto’s worden nooit overschreven.
+                    De aanvulknop loopt alle acteurs uit de geladen database na.
                 </p>
+
 
                 <div id="photoStatus" class="info-box">
                     Nog geen acteursfotomap actief.
+                </div>
+
+
+                <div
+                    id="photoBulkProgress"
+                    class="photo-bulk-progress hidden">
+
+                    <div class="photo-progress-heading">
+
+                        <strong id="photoProgressTitle">
+                            Database analyseren…
+                        </strong>
+
+                        <span id="photoProgressCounter">
+                            0 / 0
+                        </span>
+
+                    </div>
+
+                    <div
+                        class="progress-track"
+                        aria-hidden="true">
+
+                        <div
+                            id="photoProgressFill"
+                            class="progress-fill">
+                        </div>
+
+                    </div>
+
+                    <p
+                        id="photoCurrentActor"
+                        class="photo-current-actor">
+                        Acteurs verzamelen…
+                    </p>
+
+
+                    <div class="photo-progress-stats">
+
+                        <div>
+                            <span>Nieuw</span>
+                            <strong id="photoDownloadedCount">0</strong>
+                        </div>
+
+                        <div>
+                            <span>Bestond al</span>
+                            <strong id="photoExistingCount">0</strong>
+                        </div>
+
+                        <div>
+                            <span>Geen foto</span>
+                            <strong id="photoMissingCount">0</strong>
+                        </div>
+
+                        <div>
+                            <span>Mislukt</span>
+                            <strong id="photoFailedCount">0</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 LAATSTE 25 FILMS — NU ONDERAAN
+            ====================================================== -->
+
+            <section class="panel recent-panel">
+
+                <div class="panel-title">
+                    <span>🕘</span>
+
+                    <div>
+                        <h2>Laatste 25 films</h2>
+                        <p>
+                            De meest recent toegevoegde films uit de geladen database.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="recent-block">
+
+                    <ol id="recentMoviesList">
+                        <li class="muted-item">
+                            Nog geen database geladen.
+                        </li>
+                    </ol>
+
                 </div>
 
             </section>
@@ -108,91 +310,179 @@
 
         <div class="content-column">
 
+            <!-- =====================================================
+                 ZOEKEN
+            ====================================================== -->
+
             <section class="panel search-panel">
 
-                <div class="search-tabs" role="tablist">
-                    <button id="movieTabBtn" class="tab-button active" type="button">
+                <div
+                    class="search-tabs"
+                    role="tablist">
+
+                    <button
+                        id="movieTabBtn"
+                        class="tab-button active"
+                        type="button">
                         🎞️ Film zoeken
                     </button>
 
-                    <button id="actorTabBtn" class="tab-button" type="button">
+                    <button
+                        id="actorTabBtn"
+                        class="tab-button"
+                        type="button">
                         👤 Acteur zoeken
                     </button>
+
                 </div>
 
-                <div id="movieSearchView" class="search-view">
-                    <label for="movieTitle">Filmnaam</label>
+
+                <div
+                    id="movieSearchView"
+                    class="search-view">
+
+                    <label for="movieTitle">
+                        Filmnaam
+                    </label>
 
                     <div class="search-row">
+
                         <input
                             id="movieTitle"
                             type="text"
                             autocomplete="off"
                             placeholder="Bijvoorbeeld: Hotel Rwanda">
 
-                        <button id="searchBtn" class="button primary" type="button">
+                        <button
+                            id="searchBtn"
+                            class="button primary"
+                            type="button">
                             Film zoeken
                         </button>
+
                     </div>
 
-                    <div id="movieSuggestions" class="suggestions hidden"></div>
+                    <div
+                        id="movieSuggestions"
+                        class="suggestions hidden">
+                    </div>
+
                 </div>
 
-                <div id="actorSearchView" class="search-view hidden">
-                    <label for="actorName">Acteur of actrice</label>
+
+                <div
+                    id="actorSearchView"
+                    class="search-view hidden">
+
+                    <label for="actorName">
+                        Acteur of actrice
+                    </label>
 
                     <div class="search-row">
+
                         <input
                             id="actorName"
                             type="text"
                             autocomplete="off"
                             placeholder="Bijvoorbeeld: Don Cheadle">
 
-                        <button id="actorSearchBtn" class="button primary" type="button">
+                        <button
+                            id="actorSearchBtn"
+                            class="button primary"
+                            type="button">
                             Acteur zoeken
                         </button>
+
                     </div>
 
-                    <div id="actorSuggestions" class="suggestions hidden"></div>
+                    <div
+                        id="actorSuggestions"
+                        class="suggestions hidden">
+                    </div>
+
                 </div>
 
             </section>
 
 
+            <!-- =====================================================
+                 RESULTATEN
+            ====================================================== -->
+
             <section class="panel results-panel">
 
                 <div class="results-header">
+
                     <div>
-                        <h2 id="resultsTitle">Resultaten</h2>
-                        <p id="resultsSubtitle">Zoek hierboven naar een film of acteur.</p>
+                        <h2 id="resultsTitle">
+                            Resultaten
+                        </h2>
+
+                        <p id="resultsSubtitle">
+                            Zoek hierboven naar een film of acteur.
+                        </p>
                     </div>
 
-                    <span id="selectionCount" class="selection-count">
+                    <span
+                        id="selectionCount"
+                        class="selection-count">
                         0 films geselecteerd
                     </span>
+
                 </div>
 
-                <div id="selectionToolbar" class="selection-toolbar hidden">
-                    <button id="selectAllBtn" class="button secondary" type="button">
+
+                <div
+                    id="selectionToolbar"
+                    class="selection-toolbar hidden">
+
+                    <button
+                        id="selectAllBtn"
+                        class="button secondary"
+                        type="button">
                         ✅ Alles selecteren
                     </button>
 
-                    <button id="clearSelectionBtn" class="button danger" type="button">
+                    <button
+                        id="clearSelectionBtn"
+                        class="button danger"
+                        type="button">
                         ❌ Selectie wissen
                     </button>
 
                     <label class="checkbox-row compact">
-                        <input id="hideImportedCheckbox" type="checkbox">
-                        <span>Reeds geïmporteerde films verbergen</span>
+
+                        <input
+                            id="hideImportedCheckbox"
+                            type="checkbox">
+
+                        <span>
+                            Reeds geïmporteerde films verbergen
+                        </span>
+
                     </label>
+
                 </div>
 
-                <div id="resultsList" class="results-list">
+
+                <div
+                    id="resultsList"
+                    class="results-list">
+
                     <div class="empty-state">
+
                         <span>🎞️</span>
-                        <strong>Nog geen zoekresultaten</strong>
-                        <p>Gebruik één van de zoekvelden hierboven.</p>
+
+                        <strong>
+                            Nog geen zoekresultaten
+                        </strong>
+
+                        <p>
+                            Gebruik één van de zoekvelden hierboven.
+                        </p>
+
                     </div>
+
                 </div>
 
             </section>
@@ -203,16 +493,36 @@
 
 </div>
 
-<div id="batchBar" class="batch-bar hidden">
+
+<!-- =========================================================
+     VASTE BALK VOOR FILMS TOEVOEGEN
+========================================================== -->
+
+<div
+    id="batchBar"
+    class="batch-bar hidden">
+
     <div>
-        <strong id="batchSelectionCount">0 films geselecteerd</strong>
-        <span id="batchProgressText">Klaar om toe te voegen.</span>
+
+        <strong id="batchSelectionCount">
+            0 films geselecteerd
+        </strong>
+
+        <span id="batchProgressText">
+            Klaar om toe te voegen.
+        </span>
+
     </div>
 
-    <button id="addSelectedBtn" class="button primary" type="button">
+    <button
+        id="addSelectedBtn"
+        class="button primary"
+        type="button">
         ➕ Geselecteerde films toevoegen
     </button>
+
 </div>
+
 
 <script src="config.js"></script>
 <script src="script.js"></script>

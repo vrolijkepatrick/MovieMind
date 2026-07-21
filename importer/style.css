@@ -606,3 +606,426 @@ Zonder geladen database is hij uitgeschakeld, maar nooit verdwenen.
         text-align: center;
     }
 }
+
+/* =========================================================
+   IMPORTER 2.0 · ACTEURPREVIEW EN FOTO-AANVULLER
+========================================================= */
+
+.wide-button {
+    flex-basis: 100%;
+}
+
+.results-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+.results-hero .results-header {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.actor-preview-card {
+    overflow: hidden;
+    border: 1px solid #3b5271;
+    border-radius: 14px;
+    background:
+        linear-gradient(
+            155deg,
+            rgba(31, 49, 76, 0.98),
+            rgba(8, 18, 32, 0.98)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+.actor-preview-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 50% 25%,
+            rgba(120, 91, 224, 0.22),
+            transparent 48%
+        ),
+        #091426;
+}
+
+.actor-preview-image-wrap img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center 18%;
+}
+
+.actor-preview-placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #8fa0b8;
+    font-size: 66px;
+}
+
+.actor-preview-copy {
+    display: grid;
+    gap: 5px;
+    padding: 13px 14px 15px;
+}
+
+.actor-preview-copy span {
+    color: #aab6c8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.actor-preview-copy strong {
+    color: white;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.actor-preview-copy small {
+    color: #bfc9d8;
+    line-height: 1.35;
+}
+
+.photo-bulk-progress {
+    margin-top: 15px;
+    padding: 14px;
+    border: 1px solid #3b5271;
+    border-radius: 11px;
+    background: rgba(7, 16, 29, 0.62);
+}
+
+.photo-progress-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.photo-progress-heading strong {
+    color: #f7f8fb;
+}
+
+.photo-progress-heading span {
+    flex: 0 0 auto;
+    color: #d8ceff;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.progress-track {
+    height: 12px;
+    margin-top: 11px;
+    overflow: hidden;
+    border: 1px solid #344a66;
+    border-radius: 999px;
+    background: #081321;
+}
+
+.progress-fill {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(
+            90deg,
+            var(--purple-dark),
+            #8b71ea
+        );
+    transition: width 0.2s ease;
+}
+
+.photo-current-actor {
+    min-height: 20px;
+    margin: 10px 0 0;
+    overflow: hidden;
+    color: #dce3ee;
+    font-size: 13px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.photo-progress-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.photo-progress-stats > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #304662;
+    border-radius: 8px;
+    background: rgba(18, 34, 55, 0.8);
+}
+
+.photo-progress-stats span {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.photo-progress-stats strong {
+    color: white;
+    font-size: 13px;
+}
+
+@media (max-width: 1180px) {
+    .results-hero {
+        grid-template-columns: minmax(0, 1fr) 185px;
+    }
+}
+
+@media (max-width: 760px) {
+    .results-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .actor-preview-card {
+        width: min(230px, 100%);
+        justify-self: end;
+    }
+}
+
+@media (max-width: 680px) {
+    .actor-preview-card {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .actor-preview-image-wrap {
+        aspect-ratio: 16 / 10;
+    }
+
+    .photo-progress-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .photo-current-actor {
+        white-space: normal;
+    }
+}
+
+
+/* =========================================================
+   MOVIEMIND IMPORTER 2.1
+   NIEUWE SIDEBAR-INDELING
+========================================================= */
+
+.photo-panel-top {
+    position: relative;
+}
+
+.sidebar-actor-photo-card {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 14px;
+    border: 1px solid #3b5271;
+    border-radius: 14px;
+    background:
+        linear-gradient(
+            155deg,
+            rgba(31, 49, 76, 0.98),
+            rgba(8, 18, 32, 0.98)
+        );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.sidebar-actor-photo-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border: 1px solid #324b69;
+    border-radius: 11px;
+    background:
+        radial-gradient(
+            circle at 50% 25%,
+            rgba(120, 91, 224, 0.24),
+            transparent 48%
+        ),
+        #091426;
+}
+
+.sidebar-actor-photo-wrap img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center 18%;
+}
+
+.sidebar-actor-photo-placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #8fa0b8;
+    font-size: 76px;
+}
+
+.sidebar-actor-photo-copy {
+    display: grid;
+    gap: 5px;
+    text-align: center;
+}
+
+.sidebar-actor-photo-copy span {
+    color: #aab6c8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sidebar-actor-photo-copy strong {
+    color: #ffffff;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.sidebar-actor-photo-copy small {
+    color: #bcc8d8;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.photo-exists-message {
+    padding: 10px 12px;
+    border: 1px solid rgba(54, 199, 122, 0.45);
+    border-radius: 9px;
+    background: rgba(54, 199, 122, 0.12);
+    color: #9cf0bd;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.recent-panel {
+    min-height: 0;
+}
+
+.recent-panel .recent-block {
+    margin-top: 4px;
+}
+
+.recent-panel #recentMoviesList {
+    max-height: 430px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+#databaseWorkflowStatus {
+    margin-top: 14px;
+}
+
+#saveActorPhotoUnderPreviewBtn {
+    width: 100%;
+}
+
+#fillMissingActorPhotosBtn {
+    width: 100%;
+}
+
+.photo-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.database-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.database-actions .button,
+.photo-actions .button {
+    width: 100%;
+}
+
+.results-panel .results-header {
+    margin-bottom: 15px;
+}
+
+/*
+De oude acteur-preview rechtsboven uit versie 2.0 wordt in
+versie 2.1 niet meer gebruikt. Deze regel voorkomt dat een
+eventueel nog aanwezig element ruimte inneemt.
+*/
+#actorPreviewCard {
+    display: none !important;
+}
+
+/* =========================================================
+   RESPONSIVE AANPASSINGEN
+========================================================= */
+
+@media (min-width: 1181px) {
+    .sidebar {
+        align-self: start;
+    }
+
+    .photo-panel-top {
+        scroll-margin-top: 18px;
+    }
+}
+
+@media (max-width: 1180px) {
+    .sidebar-actor-photo-card {
+        grid-template-columns: 180px minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .sidebar-actor-photo-copy {
+        text-align: left;
+    }
+
+    .sidebar-actor-photo-card .wide-button,
+    .sidebar-actor-photo-card .photo-exists-message {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    .sidebar-actor-photo-card {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar-actor-photo-wrap {
+        width: min(260px, 100%);
+        justify-self: center;
+    }
+
+    .sidebar-actor-photo-copy {
+        text-align: center;
+    }
+}
+
+@media (max-width: 520px) {
+    .sidebar-actor-photo-wrap {
+        width: 100%;
+    }
+
+    .sidebar-actor-photo-copy strong {
+        font-size: 18px;
+    }
+}

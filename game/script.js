@@ -618,6 +618,7 @@ function normalizeGenreList(genres) {
         "Sci-Fi & Fantasy": "Sciencefiction",
         "Science Fiction": "Sciencefiction",
         "Comedy": "Komedie",
+        "Romance": "Romantiek",
         "Crime": "Misdaad",
         "War & Politics": "Oorlog",
         "War": "Oorlog",
@@ -881,59 +882,57 @@ function startRound() {
    GRID GENEREREN
 ========================================= */
 
-function getCategoryIcon(category) {
-    const normalizedCategory =
-        normalizeText(category);
+const CATEGORY_IMAGE_FOLDER = "images/categories/";
 
-    const categoryIcons = {
-        "actie": "💥",
-        "animation": "🧸",
-        "animatie": "🧸",
-        "avontuur": "🧭",
-        "adventure": "🧭",
-        "comedy": "😂",
-        "komedie": "😂",
-        "crime": "🕵️",
-        "misdaad": "🕵️",
-        "drama": "🎭",
-        "family": "👨‍👩‍👧",
-        "familie": "👨‍👩‍👧",
-        "fantasy": "🐉",
-        "historie": "🏛️",
-        "history": "🏛️",
-        "horror": "👻",
-        "music": "🎵",
-        "muziek": "🎵",
-        "mystery": "🔎",
-        "mysterie": "🔎",
-        "oorlog": "⚔️",
-        "war": "⚔️",
-        "romance": "❤️",
-        "sciencefiction": "🪐",
-        "science fiction": "🪐",
-        "sci-fi": "🪐",
-        "thriller": "🗝️",
-        "western": "🤠",
-        "speelde samen met...": "🤝"
+function getCategoryImage(category) {
+    const normalizedCategory = normalizeText(category);
+
+    const categoryImages = {
+        "actie": "actie.png",
+        "actiefilm": "actie.png",
+        "sciencefiction": "sciencefiction.png",
+        "science fiction": "sciencefiction.png",
+        "sci-fi": "sciencefiction.png",
+        "oorlog": "oorlog.png",
+        "war": "oorlog.png",
+        "drama": "drama.png",
+        "komedie": "komedie.png",
+        "comedy": "komedie.png",
+        "romantiek": "romantiek.png",
+        "romance": "romantiek.png",
+        "speelde samen met...": "speelde-samen-met.png"
     };
 
-    return categoryIcons[normalizedCategory] || "🎬";
+    return categoryImages[normalizedCategory] || null;
 }
 
 function createCategorySide(category) {
     const side = document.createElement("div");
     side.className = "side";
 
-    const icon = document.createElement("span");
-    icon.className = "side-icon";
-    icon.textContent = getCategoryIcon(category);
-    icon.setAttribute("aria-hidden", "true");
+    const imageFilename = getCategoryImage(category);
+
+    if (imageFilename) {
+        const icon = document.createElement("img");
+        icon.className = "side-icon side-icon-image";
+        icon.src = CATEGORY_IMAGE_FOLDER + imageFilename;
+        icon.alt = "";
+        icon.setAttribute("aria-hidden", "true");
+
+        icon.addEventListener("error", function () {
+            icon.remove();
+            side.classList.add("side-without-image");
+        });
+
+        side.appendChild(icon);
+    } else {
+        side.classList.add("side-without-image");
+    }
 
     const label = document.createElement("span");
     label.className = "side-label";
     label.textContent = category;
 
-    side.appendChild(icon);
     side.appendChild(label);
 
     return side;
@@ -1395,13 +1394,13 @@ function getEligibleActors() {
 
 function getAllGenres() {
     const allowedGenres = [
-    "Actie",
-    "Drama",
-    "Komedie",
-    "Oorlog",
-    "Sciencefiction",
-    "Thriller"
-];
+        "Actie",
+        "Sciencefiction",
+        "Oorlog",
+        "Drama",
+        "Komedie",
+        "Romantiek"
+    ];
 
     const genres = new Set();
 

@@ -35,10 +35,42 @@ const lastAddedMovieElement = document.getElementById("lastAddedMovie");
 const recentMoviesList = document.getElementById("recentMoviesList");
 
 const choosePhotoFolderBtn = document.getElementById("choosePhotoFolderBtn");
-const testActorPhotoBtn = document.getElementById("testActorPhotoBtn");
+const testActorPhotoBtn = document.getElementById("saveActorPhotoUnderPreviewBtn");
 const autoDownloadActorPhotosCheckbox =
     document.getElementById("autoDownloadActorPhotosCheckbox");
 const photoStatus = document.getElementById("photoStatus");
+
+const fillMissingActorPhotosBtn =
+    document.getElementById("fillMissingActorPhotosBtn");
+const photoBulkProgress =
+    document.getElementById("photoBulkProgress");
+const photoProgressTitle =
+    document.getElementById("photoProgressTitle");
+const photoProgressCounter =
+    document.getElementById("photoProgressCounter");
+const photoProgressFill =
+    document.getElementById("photoProgressFill");
+const photoCurrentActor =
+    document.getElementById("photoCurrentActor");
+const photoDownloadedCount =
+    document.getElementById("photoDownloadedCount");
+const photoExistingCount =
+    document.getElementById("photoExistingCount");
+const photoMissingCount =
+    document.getElementById("photoMissingCount");
+const photoFailedCount =
+    document.getElementById("photoFailedCount");
+
+const actorPreviewCard =
+    document.getElementById("sidebarActorPhotoCard");
+const actorPreviewImage =
+    document.getElementById("sidebarActorPhoto");
+const actorPreviewPlaceholder =
+    document.getElementById("sidebarActorPhotoPlaceholder");
+const actorPreviewName =
+    document.getElementById("sidebarActorPhotoName");
+const actorPreviewMeta =
+    document.getElementById("sidebarActorPhotoState");
 
 let importedMovies = [];
 let lastAddedMovie = null;
@@ -49,6 +81,9 @@ let selectedActor = null;
 let selectedActorMovies = [];
 
 let actorPhotoDirectoryHandle = null;
+let actorPreviewObjectUrl = null;
+let bulkPhotoScanRunning = false;
+let lastActorPhotoSaveError = "";
 
 const availableMovies = new Map();
 
@@ -207,6 +242,7 @@ function deduplicateMovies(movies) {
 
 function refreshDatabasePanel() {
     databaseCount.textContent = String(importedMovies.length);
+    updatePhotoTestButton();
 
     exportBtn.disabled = importedMovies.length === 0;
 
@@ -427,6 +463,8 @@ async function searchActor() {
         currentResults = movies;
 
         actorNameInput.value = actor.name;
+
+        await updateActorPreview(actor, movies.length);
 
         movies.forEach(function (movie) {
             availableMovies.set(Number(movie.id), movie);
@@ -868,6 +906,12 @@ function setImporterBusy(isBusy) {
     testActorPhotoBtn.disabled =
         isBusy || !(selectedActor && actorPhotoDirectoryHandle);
 
+    fillMissingActorPhotosBtn.disabled =
+        isBusy ||
+        bulkPhotoScanRunning ||
+        !actorPhotoDirectoryHandle ||
+        importedMovies.length === 0;
+
     exportBtn.disabled =
         isBusy || importedMovies.length === 0;
 
@@ -948,6 +992,11 @@ testActorPhotoBtn.addEventListener(
     saveSelectedActorPhoto
 );
 
+fillMissingActorPhotosBtn.addEventListener(
+    "click",
+    fillMissingActorPhotos
+);
+
 async function choosePhotoFolder() {
     if (!("showDirectoryPicker" in window)) {
         setPhotoStatus(
@@ -989,6 +1038,13 @@ async function choosePhotoFolder() {
 
         updatePhotoTestButton();
 
+        if (selectedActor) {
+            await updateActorPreview(
+                selectedActor,
+                selectedActorMovies.length
+            );
+        }
+
     } catch (error) {
         if (error && error.name === "AbortError") {
             return;
@@ -1003,7 +1059,12 @@ async function choosePhotoFolder() {
     }
 }
 
-async function saveSelectedActorPhoto() {
+async function saveSelectedActorPhoto(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
     if (!selectedActor) {
         alert("Zoek eerst een acteur of actrice.");
         return;
@@ -1014,11 +1075,32 @@ async function saveSelectedActorPhoto() {
         return;
     }
 
+    /*
+    Bewaar exact de huidige preview. Zo kan het opslaan van de foto
+    de zichtbare afbeelding nooit leegmaken of vervangen.
+    */
+    const previewSnapshot = {
+        src: actorPreviewImage.getAttribute("src") || "",
+        alt: actorPreviewImage.getAttribute("alt") || "",
+        imageWasHidden: actorPreviewImage.classList.contains("hidden"),
+        placeholderWasHidden:
+            actorPreviewPlaceholder.classList.contains("hidden"),
+        cardWasHidden: actorPreviewCard.classList.contains("hidden"),
+        name: actorPreviewName.textContent,
+        meta: actorPreviewMeta.textContent
+    };
+
     testActorPhotoBtn.disabled = true;
 
     try {
         const result =
             await saveActorPhotoCandidate(selectedActor);
+
+        /*
+        Zet de preview direct terug vóórdat de melding verschijnt.
+        We gebruiken bewust dezelfde bron die al zichtbaar was.
+        */
+        restoreActorPreviewSnapshot(previewSnapshot);
 
         if (result === "downloaded") {
             alert(
@@ -1030,21 +1112,73 @@ async function saveSelectedActorPhoto() {
         } else if (result === "missing") {
             alert("TMDB heeft geen foto voor deze acteur.");
         } else {
-            alert("De foto kon niet worden opgeslagen.");
+            const detail =
+                lastActorPhotoSaveError
+                    ? "\n\nReden: " + lastActorPhotoSaveError
+                    : "";
+
+            alert(
+                "De foto kon niet worden opgeslagen." +
+                detail
+            );
+
+            setPhotoStatus(
+                "Opslaan mislukt: " +
+                (
+                    lastActorPhotoSaveError ||
+                    "onbekende fout"
+                ),
+                "error"
+            );
         }
 
     } finally {
+        restoreActorPreviewSnapshot(previewSnapshot);
         updatePhotoTestButton();
-
-        /*
-        Foto opslaan mag niets wijzigen aan de huidige resultaten,
-        geselecteerde films of databaseweergave.
-        */
     }
 }
 
-async function saveActorPhotoCandidate(candidate) {
+function restoreActorPreviewSnapshot(snapshot) {
+    if (!snapshot) {
+        return;
+    }
+
+    if (snapshot.src) {
+        actorPreviewImage.setAttribute("src", snapshot.src);
+    } else {
+        actorPreviewImage.removeAttribute("src");
+    }
+
+    actorPreviewImage.setAttribute("alt", snapshot.alt);
+
+    actorPreviewImage.classList.toggle(
+        "hidden",
+        snapshot.imageWasHidden
+    );
+
+    actorPreviewPlaceholder.classList.toggle(
+        "hidden",
+        snapshot.placeholderWasHidden
+    );
+
+    actorPreviewCard.classList.toggle(
+        "hidden",
+        snapshot.cardWasHidden
+    );
+
+    actorPreviewName.textContent = snapshot.name;
+    actorPreviewMeta.textContent = snapshot.meta;
+}
+
+async function saveActorPhotoCandidate(
+    candidate,
+    existingPhotoIndex
+) {
+    lastActorPhotoSaveError = "";
+
     if (!candidate || !candidate.name) {
+        lastActorPhotoSaveError =
+            "De geselecteerde acteur bevat geen geldige naam.";
         return "failed";
     }
 
@@ -1052,29 +1186,71 @@ async function saveActorPhotoCandidate(candidate) {
         return "missing";
     }
 
+    if (!actorPhotoDirectoryHandle) {
+        lastActorPhotoSaveError =
+            "Er is geen acteursfotomap geselecteerd.";
+        return "failed";
+    }
+
     const filename =
         createActorPhotoFilename(candidate.name);
+    const actorKey =
+        createActorPhotoIdentity(candidate.name);
 
     try {
+        const permissionGranted =
+            await requestDirectoryPermission(
+                actorPhotoDirectoryHandle
+            );
+
+        if (!permissionGranted) {
+            throw new Error(
+                "Chrome heeft geen schrijftoestemming voor de gekozen map."
+            );
+        }
+
         if (
-            await fileExists(
-                actorPhotoDirectoryHandle,
-                filename
-            )
+            existingPhotoIndex &&
+            existingPhotoIndex.has(actorKey)
         ) {
             return "existing";
         }
 
-        const response = await fetch(
+        if (
+            !existingPhotoIndex &&
+            await actorPhotoExists(candidate.name)
+        ) {
+            return "existing";
+        }
+
+        const imageUrl =
             "https://image.tmdb.org/t/p/w500" +
-            candidate.profile_path
+            candidate.profile_path;
+
+        const response = await fetch(
+            imageUrl,
+            {
+                method: "GET",
+                mode: "cors",
+                cache: "no-store"
+            }
         );
 
         if (!response.ok) {
-            throw new Error("Afbeelding ophalen mislukt.");
+            throw new Error(
+                "De afbeelding kon niet bij TMDB worden opgehaald " +
+                "(HTTP " + response.status + ")."
+            );
         }
 
         const blob = await response.blob();
+
+        if (!blob || blob.size === 0) {
+            throw new Error(
+                "TMDB stuurde een leeg afbeeldingsbestand terug."
+            );
+        }
+
         const fileHandle =
             await actorPhotoDirectoryHandle.getFileHandle(
                 filename,
@@ -1083,17 +1259,33 @@ async function saveActorPhotoCandidate(candidate) {
                 }
             );
 
-        const writable = await fileHandle.createWritable();
+        const writable =
+            await fileHandle.createWritable();
 
-        try {
-            await writable.write(blob);
-        } finally {
-            await writable.close();
+        await writable.write(blob);
+        await writable.close();
+
+        const savedFile =
+            await fileHandle.getFile();
+
+        if (!savedFile || savedFile.size === 0) {
+            throw new Error(
+                "Het bestand is aangemaakt, maar bevat geen afbeelding."
+            );
+        }
+
+        if (existingPhotoIndex) {
+            existingPhotoIndex.set(actorKey, filename);
         }
 
         return "downloaded";
 
     } catch (error) {
+        lastActorPhotoSaveError =
+            error && error.message
+                ? error.message
+                : String(error || "Onbekende fout.");
+
         console.error(
             "Foto opslaan mislukt:",
             candidate.name,
@@ -1102,6 +1294,548 @@ async function saveActorPhotoCandidate(candidate) {
 
         return "failed";
     }
+}
+
+async function fillMissingActorPhotos() {
+    if (bulkPhotoScanRunning) {
+        return;
+    }
+
+    if (importedMovies.length === 0) {
+        alert("Laad eerst de MovieMind-database.");
+        return;
+    }
+
+    if (!actorPhotoDirectoryHandle) {
+        alert("Kies eerst de map game/images/actors.");
+        return;
+    }
+
+    const permission =
+        await requestDirectoryPermission(
+            actorPhotoDirectoryHandle
+        );
+
+    if (!permission) {
+        alert(
+            "De importer heeft geen schrijftoestemming voor de acteursfotomap."
+        );
+        return;
+    }
+
+    const actorNames = collectUniqueActorNames();
+
+    if (actorNames.length === 0) {
+        alert("In de geladen database zijn geen acteurs gevonden.");
+        return;
+    }
+
+    const startedAt = Date.now();
+
+    bulkPhotoScanRunning = true;
+    setImporterBusy(true);
+    resetPhotoProgress(actorNames.length);
+    photoBulkProgress.classList.remove("hidden");
+
+    setPhotoStatus(
+        actorNames.length +
+        " unieke acteurs gevonden. De fotomap wordt gecontroleerd…"
+    );
+
+    let downloaded = 0;
+    let existing = 0;
+    let missing = 0;
+    let failed = 0;
+
+    try {
+        const existingPhotoIndex =
+            await buildActorPhotoIndex();
+
+        for (
+            let index = 0;
+            index < actorNames.length;
+            index++
+        ) {
+            const actorName = actorNames[index];
+            const actorNumber = index + 1;
+            const actorKey =
+                createActorPhotoIdentity(actorName);
+
+            updatePhotoProgress(
+                actorNumber,
+                actorNames.length,
+                actorName,
+                downloaded,
+                existing,
+                missing,
+                failed
+            );
+
+            if (existingPhotoIndex.has(actorKey)) {
+                existing++;
+                continue;
+            }
+
+            try {
+                const candidate =
+                    await findExactActorPhotoCandidate(actorName);
+
+                if (!candidate || !candidate.profile_path) {
+                    missing++;
+                } else {
+                    const result =
+                        await saveActorPhotoCandidate(
+                            candidate,
+                            existingPhotoIndex
+                        );
+
+                    if (result === "downloaded") {
+                        downloaded++;
+                    } else if (result === "existing") {
+                        existing++;
+                    } else if (result === "missing") {
+                        missing++;
+                    } else {
+                        failed++;
+                    }
+                }
+            } catch (error) {
+                console.error(
+                    "Acteursfoto aanvullen mislukt:",
+                    actorName,
+                    error
+                );
+
+                failed++;
+            }
+
+            updatePhotoProgress(
+                actorNumber,
+                actorNames.length,
+                actorName,
+                downloaded,
+                existing,
+                missing,
+                failed
+            );
+
+            /*
+            Korte pauze tussen TMDB-zoekopdrachten.
+            Hierdoor blijft de interface rustig en wordt de API
+            niet onnodig snel achter elkaar aangeroepen.
+            */
+            await wait(90);
+        }
+
+        const seconds =
+            Math.max(
+                1,
+                Math.round((Date.now() - startedAt) / 1000)
+            );
+
+        photoProgressTitle.textContent =
+            "Controle afgerond";
+        photoCurrentActor.textContent =
+            "Alle acteurs uit de database zijn nagelopen.";
+
+        setPhotoStatus(
+            "Klaar: " +
+            downloaded +
+            " nieuwe foto’s opgeslagen, " +
+            existing +
+            " bestonden al, " +
+            missing +
+            " zonder TMDB-foto en " +
+            failed +
+            " mislukt.",
+            failed > 0 ? "error" : "success"
+        );
+
+        alert(
+            "Acteursfoto’s gecontroleerd!\n\n" +
+            "Films in database: " +
+            importedMovies.length +
+            "\nUnieke acteurs: " +
+            actorNames.length +
+            "\nNieuwe foto’s: " +
+            downloaded +
+            "\nBestonden al: " +
+            existing +
+            "\nGeen TMDB-foto: " +
+            missing +
+            "\nMislukt: " +
+            failed +
+            "\nTijd: " +
+            formatDuration(seconds)
+        );
+
+        if (selectedActor) {
+            await updateActorPreview(
+                selectedActor,
+                selectedActorMovies.length
+            );
+        }
+
+    } catch (error) {
+        console.error(
+            "Complete fotocontrole mislukt:",
+            error
+        );
+
+        setPhotoStatus(
+            "De complete fotocontrole is onverwacht gestopt. Reeds opgeslagen foto’s blijven gewoon staan.",
+            "error"
+        );
+
+        alert(
+            "De fotocontrole is onverwacht gestopt. " +
+            "Foto’s die al waren opgeslagen blijven behouden."
+        );
+
+    } finally {
+        bulkPhotoScanRunning = false;
+        setImporterBusy(false);
+        updatePhotoTestButton();
+        updateSelectionState();
+    }
+}
+
+function collectUniqueActorNames() {
+    const unique = new Map();
+
+    importedMovies.forEach(function (movie) {
+        const actors =
+            Array.isArray(movie && movie.actors)
+                ? movie.actors
+                : [];
+
+        actors.forEach(function (actor) {
+            const name =
+                typeof actor === "string"
+                    ? actor
+                    : (
+                        actor &&
+                        typeof actor.name === "string"
+                            ? actor.name
+                            : ""
+                    );
+
+            const cleanName = String(name || "").trim();
+
+            if (!cleanName) {
+                return;
+            }
+
+            const key = normalizeText(cleanName);
+
+            if (!unique.has(key)) {
+                unique.set(key, cleanName);
+            }
+        });
+    });
+
+    return Array.from(unique.values()).sort(
+        function (a, b) {
+            return a.localeCompare(
+                b,
+                "nl",
+                {
+                    sensitivity: "base"
+                }
+            );
+        }
+    );
+}
+
+async function findExactActorPhotoCandidate(name) {
+    const response = await fetch(
+        "https://api.themoviedb.org/3/search/person" +
+        "?api_key=" + TMDB_API_KEY +
+        "&language=en-US" +
+        "&include_adult=false" +
+        "&query=" + encodeURIComponent(name)
+    );
+
+    if (!response.ok) {
+        throw new Error("Acteur zoeken mislukt.");
+    }
+
+    const data = await response.json();
+    const normalizedName = normalizeText(name);
+
+    const exactActors = (data.results || [])
+        .filter(function (person) {
+            return (
+                person &&
+                person.id &&
+                person.name &&
+                normalizeText(person.name) === normalizedName &&
+                (
+                    person.known_for_department === "Acting" ||
+                    !person.known_for_department
+                )
+            );
+        })
+        .sort(function (a, b) {
+            const photoDifference =
+                Number(Boolean(b.profile_path)) -
+                Number(Boolean(a.profile_path));
+
+            if (photoDifference !== 0) {
+                return photoDifference;
+            }
+
+            return (b.popularity || 0) -
+                (a.popularity || 0);
+        });
+
+    if (exactActors.length === 0) {
+        return null;
+    }
+
+    return {
+        id: exactActors[0].id,
+        name: exactActors[0].name,
+        profile_path:
+            exactActors[0].profile_path || null
+    };
+}
+
+async function buildActorPhotoIndex() {
+    const index = new Map();
+
+    if (!actorPhotoDirectoryHandle) {
+        return index;
+    }
+
+    for await (
+        const [filename, handle]
+        of actorPhotoDirectoryHandle.entries()
+    ) {
+        if (!handle || handle.kind !== "file") {
+            continue;
+        }
+
+        if (!isSupportedActorPhotoFilename(filename)) {
+            continue;
+        }
+
+        const key =
+            createActorPhotoIdentity(filename);
+
+        if (key && !index.has(key)) {
+            index.set(key, filename);
+        }
+    }
+
+    return index;
+}
+
+async function actorPhotoExists(name) {
+    const actorKey =
+        createActorPhotoIdentity(name);
+
+    if (!actorKey || !actorPhotoDirectoryHandle) {
+        return false;
+    }
+
+    for await (
+        const [filename, handle]
+        of actorPhotoDirectoryHandle.entries()
+    ) {
+        if (
+            handle &&
+            handle.kind === "file" &&
+            isSupportedActorPhotoFilename(filename) &&
+            createActorPhotoIdentity(filename) === actorKey
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+async function findExistingActorPhotoFile(name) {
+    const actorKey =
+        createActorPhotoIdentity(name);
+
+    if (!actorKey || !actorPhotoDirectoryHandle) {
+        return null;
+    }
+
+    for await (
+        const [filename, handle]
+        of actorPhotoDirectoryHandle.entries()
+    ) {
+        if (
+            handle &&
+            handle.kind === "file" &&
+            isSupportedActorPhotoFilename(filename) &&
+            createActorPhotoIdentity(filename) === actorKey
+        ) {
+            return handle.getFile();
+        }
+    }
+
+    return null;
+}
+
+function createActorPhotoIdentity(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\.(jpe?g|png|webp)$/i, "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/&/g, " and ")
+        .replace(/['’]/g, "")
+        .replace(/[^a-z0-9]+/g, "");
+}
+
+function isSupportedActorPhotoFilename(filename) {
+    return /\.(jpe?g|png|webp)$/i.test(
+        String(filename || "")
+    );
+}
+
+function resetPhotoProgress(total) {
+    photoProgressTitle.textContent =
+        "Acteursfoto’s aanvullen";
+    photoProgressCounter.textContent =
+        "0 / " + total;
+    photoProgressFill.style.width = "0%";
+    photoCurrentActor.textContent =
+        "Bestaande bestanden in de fotomap controleren…";
+    photoDownloadedCount.textContent = "0";
+    photoExistingCount.textContent = "0";
+    photoMissingCount.textContent = "0";
+    photoFailedCount.textContent = "0";
+}
+
+function updatePhotoProgress(
+    current,
+    total,
+    actorName,
+    downloaded,
+    existing,
+    missing,
+    failed
+) {
+    const percentage =
+        total > 0
+            ? Math.min(
+                100,
+                Math.round((current / total) * 100)
+            )
+            : 0;
+
+    photoProgressCounter.textContent =
+        current + " / " + total;
+    photoProgressFill.style.width =
+        percentage + "%";
+    photoCurrentActor.textContent =
+        "Bezig met: " + actorName;
+    photoDownloadedCount.textContent =
+        String(downloaded);
+    photoExistingCount.textContent =
+        String(existing);
+    photoMissingCount.textContent =
+        String(missing);
+    photoFailedCount.textContent =
+        String(failed);
+}
+
+function formatDuration(totalSeconds) {
+    if (totalSeconds < 60) {
+        return totalSeconds + " seconden";
+    }
+
+    const minutes =
+        Math.floor(totalSeconds / 60);
+    const seconds =
+        totalSeconds % 60;
+
+    return (
+        minutes +
+        " min " +
+        seconds +
+        " sec"
+    );
+}
+
+function wait(milliseconds) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
+async function updateActorPreview(actor, movieCount) {
+    if (actorPreviewObjectUrl) {
+        URL.revokeObjectURL(actorPreviewObjectUrl);
+        actorPreviewObjectUrl = null;
+    }
+
+    if (!actor) {
+        actorPreviewImage.removeAttribute("src");
+        actorPreviewImage.classList.add("hidden");
+        actorPreviewPlaceholder.classList.remove("hidden");
+        actorPreviewName.textContent =
+            "Nog niemand gekozen";
+        actorPreviewMeta.textContent =
+            "Zoek een acteur om de foto te bekijken.";
+        return;
+    }
+
+    actorPreviewName.textContent = actor.name;
+    actorPreviewMeta.textContent =
+        typeof movieCount === "number"
+            ? (
+                movieCount +
+                (movieCount === 1
+                    ? " film gevonden"
+                    : " films gevonden")
+            )
+            : "Acteur geselecteerd";
+
+    actorPreviewImage.alt =
+        "Foto van " + actor.name;
+
+    let imageSource = "";
+
+    try {
+        const localPhoto =
+            await findExistingActorPhotoFile(actor.name);
+
+        if (localPhoto) {
+            actorPreviewObjectUrl =
+                URL.createObjectURL(localPhoto);
+            imageSource = actorPreviewObjectUrl;
+        }
+    } catch (error) {
+        console.warn(
+            "Lokale acteurfoto bekijken mislukt:",
+            error
+        );
+    }
+
+    if (!imageSource && actor.profile_path) {
+        imageSource =
+            "https://image.tmdb.org/t/p/w500" +
+            actor.profile_path;
+    }
+
+    if (imageSource) {
+        actorPreviewImage.src = imageSource;
+        actorPreviewImage.classList.remove("hidden");
+        actorPreviewPlaceholder.classList.add("hidden");
+    } else {
+        actorPreviewImage.removeAttribute("src");
+        actorPreviewImage.classList.add("hidden");
+        actorPreviewPlaceholder.classList.remove("hidden");
+    }
+
+    actorPreviewCard.classList.remove("hidden");
 }
 
 function createActorPhotoFilename(name) {
@@ -1133,7 +1867,13 @@ async function fileExists(directoryHandle, filename) {
 
 function updatePhotoTestButton() {
     testActorPhotoBtn.disabled =
+        bulkPhotoScanRunning ||
         !(selectedActor && actorPhotoDirectoryHandle);
+
+    fillMissingActorPhotosBtn.disabled =
+        bulkPhotoScanRunning ||
+        !actorPhotoDirectoryHandle ||
+        importedMovies.length === 0;
 }
 
 function setPhotoStatus(message, state) {
@@ -1366,6 +2106,13 @@ async function restorePhotoFolder() {
             );
 
             updatePhotoTestButton();
+
+            if (selectedActor) {
+                await updateActorPreview(
+                    selectedActor,
+                    selectedActorMovies.length
+                );
+            }
         } else {
             setPhotoStatus(
                 "Fotomap onthouden: " +
@@ -1411,6 +2158,7 @@ actorNameInput.addEventListener("input", function () {
     selectedActor = null;
     selectedActorMovies = [];
     updatePhotoTestButton();
+    updateActorPreview(null);
 
     const query = actorNameInput.value.trim();
 

@@ -766,22 +766,39 @@ h1 {
 .side {
     position: relative;
     justify-content: flex-start;
-    gap: clamp(5px, 0.5vw, 10px);
-    padding: 0 6%;
-    font-size: clamp(8px, 0.76vw, 15px);
+    gap: clamp(4px, 0.42vw, 8px);
+    padding: 0 3.5%;
+    overflow: hidden;
+    font-size: clamp(7px, 0.68vw, 13px);
     text-transform: uppercase;
 }
 
 .side-icon {
-    display: grid;
-    place-items: center;
-    width: clamp(20px, 1.85vw, 35px);
     flex: 0 0 auto;
-    font-size: clamp(15px, 1.42vw, 27px);
-    line-height: 1;
+}
+
+.side-icon-image {
+    display: block;
+    width: clamp(42px, 4.35vw, 82px);
+    height: clamp(42px, 4.35vw, 82px);
+    object-fit: contain;
+    object-position: center;
+    border-radius: 5px;
     filter:
-        drop-shadow(0 1px 1px rgba(0, 0, 0, 0.85))
-        drop-shadow(0 0 3px rgba(243, 207, 113, 0.18));
+        drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9))
+        drop-shadow(0 0 5px rgba(243, 207, 113, 0.23));
+    transform: scale(1);
+    transition:
+        transform 0.22s ease,
+        filter 0.22s ease;
+}
+
+.side:hover .side-icon-image {
+    transform: scale(1.045);
+    filter:
+        brightness(1.08)
+        drop-shadow(0 2px 2px rgba(0, 0, 0, 0.95))
+        drop-shadow(0 0 8px rgba(243, 207, 113, 0.42));
 }
 
 .side-label {
@@ -789,11 +806,20 @@ h1 {
     color: var(--gold-light);
     font-size: inherit;
     font-weight: 900;
-    line-height: 1.15;
-    letter-spacing: 0.015em;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
     text-align: left;
     overflow-wrap: anywhere;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.side-without-image {
+    justify-content: center;
+    padding: 0 7%;
+}
+
+.side-without-image .side-label {
+    text-align: center;
 }
 
 .cell {

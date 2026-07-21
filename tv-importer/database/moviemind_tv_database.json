@@ -10723,6 +10723,594 @@
       "poster_path": "/vOYfRZ0NpUK5hG2CB2dJFnYJlGe.jpg",
       "backdrop_path": "/ynSOcgDLZfdLCZfRSYZGiTgYJVo.jpg",
       "fullDetails": true
+    },
+    {
+      "id": 11095,
+      "media_type": "tv",
+      "title": "Tour of Duty",
+      "original_title": "Tour of Duty",
+      "year": 1987,
+      "first_air_date": "1987-09-24",
+      "last_air_date": "1990-04-28",
+      "status": "Ended",
+      "number_of_seasons": 3,
+      "number_of_episodes": 58,
+      "genre": [
+        "War & Politics",
+        "Drama",
+        "Action & Adventure"
+      ],
+      "creators": [
+        "L. Travis Clark",
+        "Steve Duncan"
+      ],
+      "director": [
+        "L. Travis Clark",
+        "Steve Duncan"
+      ],
+      "cast": [
+        {
+          "id": 102714,
+          "name": "Terence Knox",
+          "character": "Sgt. Clayton 'Zeke' Anderson",
+          "characters": [
+            "Sgt. Clayton 'Zeke' Anderson"
+          ],
+          "order": 0,
+          "popularity": 0.6517,
+          "profile_path": "/xo3naT9b3W0xF1sKj94FJtpv4e8.jpg",
+          "photo": "terence_knox.jpg"
+        },
+        {
+          "id": 162901,
+          "name": "Stephen Caffrey",
+          "character": "Lt. Myron Goldman",
+          "characters": [
+            "Lt. Myron Goldman"
+          ],
+          "order": 1,
+          "popularity": 0.4173,
+          "profile_path": "/qvrH5yaO6EN04PeqcxTOUdUv04h.jpg",
+          "photo": "stephen_caffrey.jpg"
+        },
+        {
+          "id": 74354,
+          "name": "Miguel A. Núñez Jr.",
+          "character": "Pvt. Marcus Taylor",
+          "characters": [
+            "Pvt. Marcus Taylor"
+          ],
+          "order": 2,
+          "popularity": 0.9536,
+          "profile_path": "/96N3fiIDGfu4yDArkVGfT7rLRvH.jpg",
+          "photo": "miguel_a_nunez_jr.jpg"
+        },
+        {
+          "id": 21216,
+          "name": "Kim Delaney",
+          "character": "Alex Devlin",
+          "characters": [
+            "Alex Devlin"
+          ],
+          "order": 3,
+          "popularity": 1.1119,
+          "profile_path": "/3ZFuBZFljUkmeXftNAIG3a7WS7Q.jpg",
+          "photo": "kim_delaney.jpg"
+        },
+        {
+          "id": 146682,
+          "name": "Stan Foster",
+          "character": "Spc./Sgt.  Marvin Johnson",
+          "characters": [
+            "Spc./Sgt.  Marvin Johnson"
+          ],
+          "order": 5,
+          "popularity": 0.4813,
+          "profile_path": null,
+          "photo": "stan_foster.jpg"
+        },
+        {
+          "id": 60191,
+          "name": "Joshua Maurer",
+          "character": "Pvt. Roger Horn",
+          "characters": [
+            "Pvt. Roger Horn"
+          ],
+          "order": 6,
+          "popularity": 0.3153,
+          "profile_path": "/3iKqAA4HrQ1tsoWRcE7JHGf0HZ4.jpg",
+          "photo": "joshua_maurer.jpg"
+        },
+        {
+          "id": 150172,
+          "name": "Ramón Franco",
+          "character": "Pvt. Alberto Ruiz",
+          "characters": [
+            "Pvt. Alberto Ruiz"
+          ],
+          "order": 154,
+          "popularity": 0.6028,
+          "profile_path": null,
+          "photo": "ramon_franco.jpg"
+        },
+        {
+          "id": 159091,
+          "name": "Tony Becker",
+          "character": "Cpl. Daniel 'Danny' Percell",
+          "characters": [
+            "Cpl. Daniel 'Danny' Percell"
+          ],
+          "order": 154,
+          "popularity": 0.5772,
+          "profile_path": "/eM4ReW3D01LOCXlaNaBFtKD3hzw.jpg",
+          "photo": "tony_becker.jpg"
+        }
+      ],
+      "actors": [
+        "Terence Knox",
+        "Stephen Caffrey",
+        "Miguel A. Núñez Jr.",
+        "Kim Delaney",
+        "Stan Foster",
+        "Joshua Maurer",
+        "Ramón Franco",
+        "Tony Becker"
+      ],
+      "characters": [
+        "Sgt. Clayton 'Zeke' Anderson",
+        "Lt. Myron Goldman",
+        "Pvt. Marcus Taylor",
+        "Alex Devlin",
+        "Spc./Sgt.  Marvin Johnson",
+        "Pvt. Roger Horn",
+        "Pvt. Alberto Ruiz",
+        "Cpl. Daniel 'Danny' Percell"
+      ],
+      "networks": [
+        "CBS"
+      ],
+      "poster_path": "/uVH3fzDl5vqYolREnppV4Os45gd.jpg",
+      "backdrop_path": "/lSYcgYOedOTLOg92WwncU726PoE.jpg",
+      "fullDetails": true
+    },
+    {
+      "id": 1908,
+      "media_type": "tv",
+      "title": "Miami Vice",
+      "original_title": "Miami Vice",
+      "year": 1984,
+      "first_air_date": "1984-09-16",
+      "last_air_date": "1989-06-28",
+      "status": "Ended",
+      "number_of_seasons": 5,
+      "number_of_episodes": 110,
+      "genre": [
+        "Misdaad",
+        "Drama"
+      ],
+      "creators": [
+        "Anthony Yerkovich"
+      ],
+      "director": [
+        "Anthony Yerkovich"
+      ],
+      "cast": [
+        {
+          "id": 25129,
+          "name": "Don Johnson",
+          "character": "James 'Sonny' Crockett",
+          "characters": [
+            "James 'Sonny' Crockett"
+          ],
+          "order": 0,
+          "popularity": 2.9469,
+          "profile_path": "/6s6oav541p7xspCG6PvXut7knkP.jpg",
+          "photo": "don_johnson.jpg"
+        },
+        {
+          "id": 70759,
+          "name": "Philip Michael Thomas",
+          "character": "Ricardo 'Rico' Tubbs",
+          "characters": [
+            "Ricardo 'Rico' Tubbs"
+          ],
+          "order": 1,
+          "popularity": 0.6005,
+          "profile_path": "/rrDuyqoclQRazUTFpTMz2tY9k0o.jpg",
+          "photo": "philip_michael_thomas.jpg"
+        },
+        {
+          "id": 171135,
+          "name": "Saundra Santiago",
+          "character": "Gina Calabrese",
+          "characters": [
+            "Gina Calabrese"
+          ],
+          "order": 2,
+          "popularity": 0.4914,
+          "profile_path": "/9k3bRHUdr6V1iuTYjrUVT5J6HR1.jpg",
+          "photo": "saundra_santiago.jpg"
+        },
+        {
+          "id": 154141,
+          "name": "Olivia Brown",
+          "character": "Trudy Joplin",
+          "characters": [
+            "Trudy Joplin"
+          ],
+          "order": 3,
+          "popularity": 0.6791,
+          "profile_path": "/8IXowfSOwizOqIBYqTHQyUGDOfp.jpg",
+          "photo": "olivia_brown.jpg"
+        },
+        {
+          "id": 16557,
+          "name": "Michael Talbott",
+          "character": "Stan Switek",
+          "characters": [
+            "Stan Switek"
+          ],
+          "order": 4,
+          "popularity": 0.7404,
+          "profile_path": "/kyHGWUqaMsYoFXjywZcaqxsKjLh.jpg",
+          "photo": "michael_talbott.jpg"
+        },
+        {
+          "id": 587,
+          "name": "Edward James Olmos",
+          "character": "Martin Castillo",
+          "characters": [
+            "Martin Castillo"
+          ],
+          "order": 5,
+          "popularity": 1.5317,
+          "profile_path": "/mXnilUrQBIMLHSQkPjQk99mX70x.jpg",
+          "photo": "edward_james_olmos.jpg"
+        },
+        {
+          "id": 4942,
+          "name": "John Diehl",
+          "character": "Larry Zito",
+          "characters": [
+            "Larry Zito"
+          ],
+          "order": 6,
+          "popularity": 1.3293,
+          "profile_path": "/fSaOexgc31Xmp4koMu0HvlkJMr4.jpg",
+          "photo": "john_diehl.jpg"
+        },
+        {
+          "id": 1924,
+          "name": "Jeroen Krabbé",
+          "character": "Klaus Herzog",
+          "characters": [
+            "Klaus Herzog"
+          ],
+          "order": 503,
+          "popularity": 1.1576,
+          "profile_path": "/r26lZKUeLIaUt8DMotm4mdc4EaY.jpg",
+          "photo": "jeroen_krabbe.jpg"
+        }
+      ],
+      "actors": [
+        "Don Johnson",
+        "Philip Michael Thomas",
+        "Saundra Santiago",
+        "Olivia Brown",
+        "Michael Talbott",
+        "Edward James Olmos",
+        "John Diehl",
+        "Jeroen Krabbé"
+      ],
+      "characters": [
+        "James 'Sonny' Crockett",
+        "Ricardo 'Rico' Tubbs",
+        "Gina Calabrese",
+        "Trudy Joplin",
+        "Stan Switek",
+        "Martin Castillo",
+        "Larry Zito",
+        "Klaus Herzog"
+      ],
+      "networks": [
+        "NBC"
+      ],
+      "poster_path": "/e7JylZhe7xC8Vr4t0DfGTZrE3Dd.jpg",
+      "backdrop_path": "/iK7tPi9j4d34g5p6bNKmGVba95K.jpg",
+      "fullDetails": true
+    },
+    {
+      "id": 2734,
+      "media_type": "tv",
+      "title": "Law & Order: Special Victims Unit",
+      "original_title": "Law & Order: Special Victims Unit",
+      "year": 1999,
+      "first_air_date": "1999-09-20",
+      "last_air_date": "2026-05-14",
+      "status": "Returning Series",
+      "number_of_seasons": 28,
+      "number_of_episodes": 595,
+      "genre": [
+        "Misdaad",
+        "Drama",
+        "Mysterie"
+      ],
+      "creators": [
+        "Dick Wolf"
+      ],
+      "director": [
+        "Dick Wolf"
+      ],
+      "cast": [
+        {
+          "id": 6240,
+          "name": "Mariska Hargitay",
+          "character": "Olivia Benson",
+          "characters": [
+            "Olivia Benson"
+          ],
+          "order": 0,
+          "popularity": 2.5753,
+          "profile_path": "/mF5BMaACeb1rlqp9Fz0f5z7N69H.jpg",
+          "photo": "mariska_hargitay.jpg"
+        },
+        {
+          "id": 21411,
+          "name": "Ice-T",
+          "character": "Odafin 'Fin' Tutuola",
+          "characters": [
+            "Odafin 'Fin' Tutuola"
+          ],
+          "order": 1,
+          "popularity": 1.4315,
+          "profile_path": "/96TdPckI16ggfHcPrSFf6bHYLLe.jpg",
+          "photo": "ice_t.jpg"
+        },
+        {
+          "id": 22227,
+          "name": "Christopher Meloni",
+          "character": "Elliot Stabler",
+          "characters": [
+            "Elliot Stabler"
+          ],
+          "order": 2,
+          "popularity": 1.7428,
+          "profile_path": "/nHlFFbRTh85vkohBBtRQjYnWEtb.jpg",
+          "photo": "christopher_meloni.jpg"
+        },
+        {
+          "id": 72132,
+          "name": "Danny Pino",
+          "character": "Nick Amaro",
+          "characters": [
+            "Nick Amaro"
+          ],
+          "order": 3,
+          "popularity": 1.3534,
+          "profile_path": "/2Sp7Mq9aqwq5BIPpobWMG2F0O5x.jpg",
+          "photo": "danny_pino.jpg"
+        },
+        {
+          "id": 32396,
+          "name": "Richard Belzer",
+          "character": "John Munch",
+          "characters": [
+            "John Munch"
+          ],
+          "order": 5,
+          "popularity": 1.068,
+          "profile_path": "/pc5UOMd78kO7Us0nUvKOMgbigd2.jpg",
+          "photo": "richard_belzer.jpg"
+        },
+        {
+          "id": 2005718,
+          "name": "Aimé Donna Kelly",
+          "character": "Renee Curry",
+          "characters": [
+            "Renee Curry"
+          ],
+          "order": 7,
+          "popularity": 0.295,
+          "profile_path": "/jVf2XzJeFbzEopz5LGS3yIRPUoP.jpg",
+          "photo": "aime_donna_kelly.jpg"
+        },
+        {
+          "id": 9175,
+          "name": "Dann Florek",
+          "character": "Donald Cragen",
+          "characters": [
+            "Donald Cragen"
+          ],
+          "order": 9,
+          "popularity": 1.3439,
+          "profile_path": "/cKAhUCW4LC0p5adSeIjRRoT05t1.jpg",
+          "photo": "dann_florek.jpg"
+        },
+        {
+          "id": 107515,
+          "name": "Raúl Esparza",
+          "character": "Rafael Barba",
+          "characters": [
+            "Rafael Barba"
+          ],
+          "order": 10,
+          "popularity": 0.9391,
+          "profile_path": "/m0qln1HWU0u29x4kAww719bndAw.jpg",
+          "photo": "raul_esparza.jpg"
+        }
+      ],
+      "actors": [
+        "Mariska Hargitay",
+        "Ice-T",
+        "Christopher Meloni",
+        "Danny Pino",
+        "Richard Belzer",
+        "Aimé Donna Kelly",
+        "Dann Florek",
+        "Raúl Esparza"
+      ],
+      "characters": [
+        "Olivia Benson",
+        "Odafin 'Fin' Tutuola",
+        "Elliot Stabler",
+        "Nick Amaro",
+        "John Munch",
+        "Renee Curry",
+        "Donald Cragen",
+        "Rafael Barba"
+      ],
+      "networks": [
+        "NBC"
+      ],
+      "poster_path": "/iofokHZoUB4Qhik4PflvJl8TT6a.jpg",
+      "backdrop_path": "/obtdxPgmfykYwVnvuYXC5f2xKlQ.jpg",
+      "fullDetails": true
+    },
+    {
+      "id": 549,
+      "media_type": "tv",
+      "title": "Law & Order",
+      "original_title": "Law & Order",
+      "year": 1990,
+      "first_air_date": "1990-09-13",
+      "last_air_date": "2026-05-14",
+      "status": "Returning Series",
+      "number_of_seasons": 26,
+      "number_of_episodes": 545,
+      "genre": [
+        "Misdaad",
+        "Drama"
+      ],
+      "creators": [
+        "Dick Wolf"
+      ],
+      "director": [
+        "Dick Wolf"
+      ],
+      "cast": [
+        {
+          "id": 1117,
+          "name": "Dennis Farina",
+          "character": "Joe Fontana",
+          "characters": [
+            "Joe Fontana"
+          ],
+          "order": 0,
+          "popularity": 0.877,
+          "profile_path": "/4hEWe0ZcDpGlB3nRizLkVMcG13B.jpg",
+          "photo": "dennis_farina.jpg"
+        },
+        {
+          "id": 81316,
+          "name": "Reid Scott",
+          "character": "Vincent Riley",
+          "characters": [
+            "Vincent Riley"
+          ],
+          "order": 1,
+          "popularity": 1.1724,
+          "profile_path": "/kBAeDUDA7XJRXFLGNALlpE5d3lA.jpg",
+          "photo": "reid_scott.jpg"
+        },
+        {
+          "id": 18471,
+          "name": "Anthony Anderson",
+          "character": "Kevin Bernard",
+          "characters": [
+            "Kevin Bernard"
+          ],
+          "order": 3,
+          "popularity": 2.3022,
+          "profile_path": "/reO1OjwFdtXmiO4LMDaBj6eatzK.jpg",
+          "photo": "anthony_anderson.jpg"
+        },
+        {
+          "id": 10477,
+          "name": "George Dzundza",
+          "character": "Max Greevey",
+          "characters": [
+            "Max Greevey"
+          ],
+          "order": 5,
+          "popularity": 0.8778,
+          "profile_path": "/wmnQQn0dFygl90M2N8tlWlpGHzV.jpg",
+          "photo": "george_dzundza.jpg"
+        },
+        {
+          "id": 3417,
+          "name": "Tony Goldwyn",
+          "character": "Nicholas Baxter",
+          "characters": [
+            "Nicholas Baxter"
+          ],
+          "order": 6,
+          "popularity": 1.5872,
+          "profile_path": "/A3hXimbzDtFxQ1PXNo8gG7RZeN4.jpg",
+          "photo": "tony_goldwyn.jpg"
+        },
+        {
+          "id": 12791,
+          "name": "Hugh Dancy",
+          "character": "Nolan Price",
+          "characters": [
+            "Nolan Price"
+          ],
+          "order": 7,
+          "popularity": 2.2761,
+          "profile_path": "/6UIiS3nxdNTbIo0G2kFNXpcDKhE.jpg",
+          "photo": "hugh_dancy.jpg"
+        },
+        {
+          "id": 7004,
+          "name": "Paul Sorvino",
+          "character": "Phil Cerreta",
+          "characters": [
+            "Phil Cerreta"
+          ],
+          "order": 8,
+          "popularity": 1.3482,
+          "profile_path": "/1gF0UskusEdDcNaBDJ2CMsz5Agi.jpg",
+          "photo": "paul_sorvino.jpg"
+        },
+        {
+          "id": 1639904,
+          "name": "Odelya Halevi",
+          "character": "Samantha Maroun",
+          "characters": [
+            "Samantha Maroun"
+          ],
+          "order": 9,
+          "popularity": 0.7923,
+          "profile_path": "/26jv3dcS5Us8Ut13Tu9PmvT7uPh.jpg",
+          "photo": "odelya_halevi.jpg"
+        }
+      ],
+      "actors": [
+        "Dennis Farina",
+        "Reid Scott",
+        "Anthony Anderson",
+        "George Dzundza",
+        "Tony Goldwyn",
+        "Hugh Dancy",
+        "Paul Sorvino",
+        "Odelya Halevi"
+      ],
+      "characters": [
+        "Joe Fontana",
+        "Vincent Riley",
+        "Kevin Bernard",
+        "Max Greevey",
+        "Nicholas Baxter",
+        "Nolan Price",
+        "Phil Cerreta",
+        "Samantha Maroun"
+      ],
+      "networks": [
+        "NBC"
+      ],
+      "poster_path": "/haJ9eHytVO3H3JooMJG1DiWwDNm.jpg",
+      "backdrop_path": "/tc7canPSAn2X14hYi6Rl3gZm1o4.jpg",
+      "fullDetails": true
     }
   ]
 }
