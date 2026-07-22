@@ -1066,75 +1066,119 @@ async function saveSelectedActorPhoto(event) {
     }
 
     if (!selectedActor) {
-        alert("Zoek eerst een acteur of actrice.");
+        setPhotoStatus(
+            "Zoek eerst een acteur of actrice.",
+            "error"
+        );
         return;
     }
 
     if (!actorPhotoDirectoryHandle) {
-        alert("Kies eerst de acteursfotomap.");
+        setPhotoStatus(
+            "Kies eerst de acteursfotomap.",
+            "error"
+        );
         return;
     }
 
     /*
-    Bewaar exact de huidige preview. Zo kan het opslaan van de foto
-    de zichtbare afbeelding nooit leegmaken of vervangen.
+    Belangrijk:
+    We gebruiken hier bewust géén alert().
+    In Chrome kan een alert na het schrijven naar een lokale map
+    de focus en de afbeeldingsweergave verstoren.
+    De bestaande preview wordt daarom helemaal niet aangeraakt.
     */
-    const previewSnapshot = {
-        src: actorPreviewImage.getAttribute("src") || "",
-        alt: actorPreviewImage.getAttribute("alt") || "",
-        imageWasHidden: actorPreviewImage.classList.contains("hidden"),
-        placeholderWasHidden:
-            actorPreviewPlaceholder.classList.contains("hidden"),
-        cardWasHidden: actorPreviewCard.classList.contains("hidden"),
-        name: actorPreviewName.textContent,
-        meta: actorPreviewMeta.textContent
-    };
+    const originalButtonText = testActorPhotoBtn.textContent;
 
     testActorPhotoBtn.disabled = true;
+    testActorPhotoBtn.textContent = "⏳ Foto opslaan...";
+
+    actorPreviewMeta.textContent =
+        "Foto wordt opgeslagen en gecontroleerd…";
 
     try {
         const result =
             await saveActorPhotoCandidate(selectedActor);
 
-        /*
-        Zet de preview direct terug vóórdat de melding verschijnt.
-        We gebruiken bewust dezelfde bron die al zichtbaar was.
-        */
-        restoreActorPreviewSnapshot(previewSnapshot);
-
         if (result === "downloaded") {
-            alert(
-                createActorPhotoFilename(selectedActor.name) +
-                " is opgeslagen."
-            );
-        } else if (result === "existing") {
-            alert("De foto stond al in de acteursmap.");
-        } else if (result === "missing") {
-            alert("TMDB heeft geen foto voor deze acteur.");
-        } else {
-            const detail =
-                lastActorPhotoSaveError
-                    ? "\n\nReden: " + lastActorPhotoSaveError
-                    : "";
-
-            alert(
-                "De foto kon niet worden opgeslagen." +
-                detail
-            );
+            actorPreviewMeta.textContent =
+                "✅ Foto succesvol opgeslagen als " +
+                createActorPhotoFilename(selectedActor.name);
 
             setPhotoStatus(
-                "Opslaan mislukt: " +
-                (
-                    lastActorPhotoSaveError ||
-                    "onbekende fout"
-                ),
+                "Foto van " +
+                selectedActor.name +
+                " is opgeslagen en gecontroleerd.",
+                "success"
+            );
+
+        } else if (result === "existing") {
+            actorPreviewMeta.textContent =
+                "✅ Deze foto stond al in de acteursmap.";
+
+            setPhotoStatus(
+                "De foto van " +
+                selectedActor.name +
+                " stond al in de acteursmap.",
+                "success"
+            );
+
+        } else if (result === "missing") {
+            actorPreviewMeta.textContent =
+                "TMDB heeft geen foto voor deze acteur.";
+
+            setPhotoStatus(
+                "TMDB heeft geen foto voor " +
+                selectedActor.name +
+                ".",
+                "error"
+            );
+
+        } else {
+            const reason =
+                lastActorPhotoSaveError ||
+                "onbekende fout";
+
+            actorPreviewMeta.textContent =
+                "❌ Opslaan mislukt: " + reason;
+
+            setPhotoStatus(
+                "Opslaan mislukt: " + reason,
                 "error"
             );
         }
 
+    } catch (error) {
+        const reason =
+            error && error.message
+                ? error.message
+                : "Onbekende fout.";
+
+        console.error(
+            "Geselecteerde acteurfoto opslaan mislukt:",
+            error
+        );
+
+        actorPreviewMeta.textContent =
+            "❌ Opslaan mislukt: " + reason;
+
+        setPhotoStatus(
+            "Opslaan mislukt: " + reason,
+            "error"
+        );
+
     } finally {
-        restoreActorPreviewSnapshot(previewSnapshot);
-        updatePhotoTestButton();
+        testActorPhotoBtn.textContent =
+            originalButtonText;
+
+        /*
+        Alleen de knop opnieuw beschikbaar maken.
+        Geen updatePhotoTestButton(), geen preview-herlaadactie
+        en geen snapshot-herstel: de zichtbare foto blijft onaangeroerd.
+        */
+        testActorPhotoBtn.disabled =
+            bulkPhotoScanRunning ||
+            !(selectedActor && actorPhotoDirectoryHandle);
     }
 }
 
