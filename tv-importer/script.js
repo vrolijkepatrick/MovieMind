@@ -55,6 +55,7 @@ const PHOTO_STORE_NAME = "settings";
 const PHOTO_HANDLE_KEY = "actorPhotoDirectoryHandle";
 const ACTIVE_TAB_KEY = "movieMindTvImporterActiveTab";
 let activeSearchTab = "series";
+let addSeriesInProgress = false;
 
 const SERIES_CAST_LIMIT = 8;
 
@@ -1174,6 +1175,10 @@ function isSeriesImported(seriesId) {
 addSelectedBtn.addEventListener("click", addSelectedSeries);
 
 async function addSelectedSeries() {
+    if (addSeriesInProgress) {
+        return;
+    }
+
     if (!databaseActive) {
         alert("Laad eerst een database of klik op ‘Nieuwe database’.");
         return;
@@ -1189,7 +1194,9 @@ async function addSelectedSeries() {
         return;
     }
 
+    addSeriesInProgress = true;
     setBusy(true);
+    addSelectedBtn.textContent = "⏳ Bezig met toevoegen...";
 
     let added = 0;
     let skipped = 0;
@@ -1213,13 +1220,17 @@ async function addSelectedSeries() {
             );
 
             const knownSeries = availableSeries.get(seriesId);
+            const displayTitle =
+                knownSeries && knownSeries.title
+                    ? knownSeries.title
+                    : "serie";
 
             batchProgressText.textContent =
                 (index + 1) +
                 " van " +
                 selectedCheckboxes.length +
-                " · " +
-                (knownSeries ? knownSeries.title : "serie ophalen");
+                " · gegevens ophalen voor " +
+                displayTitle;
 
             if (isSeriesImported(seriesId)) {
                 skipped++;
@@ -1229,30 +1240,42 @@ async function addSelectedSeries() {
             try {
                 const details = await getSeriesDetails(seriesId);
 
-                if (actorPhotoDirectoryHandle) {
-                    batchProgressText.textContent =
-                        (index + 1) +
-                        " van " +
-                        selectedCheckboxes.length +
-                        " · castfoto’s opslaan voor " +
-                        details.title;
+                /*
+                 * Belangrijk:
+                 * De serie wordt direct opgeslagen en zichtbaar gemaakt.
+                 * Het downloaden/controleren van castfoto's gebeurt daarna.
+                 */
+                importedSeries.push(details);
+                lastAddedSeries = details;
+                added++;
 
+                saveActiveDatabase();
+                refreshDatabasePanel();
+                refreshVisibleSeriesCards();
+
+                if (actorPhotoDirectoryHandle) {
                     const photoResult =
-                        await saveSeriesCastPhotos(details.cast);
+                        await saveSeriesCastPhotos(
+                            details.cast,
+                            function (current, total, castMember) {
+                                batchProgressText.textContent =
+                                    (index + 1) +
+                                    " van " +
+                                    selectedCheckboxes.length +
+                                    " · foto " +
+                                    current +
+                                    "/" +
+                                    total +
+                                    " · " +
+                                    castMember.name;
+                            }
+                        );
 
                     photoTotals.downloaded += photoResult.downloaded;
                     photoTotals.existing += photoResult.existing;
                     photoTotals.missing += photoResult.missing;
                     photoTotals.failed += photoResult.failed;
                 }
-
-                importedSeries.push(details);
-                lastAddedSeries = details;
-                added++;
-
-                refreshDatabasePanel();
-                refreshVisibleSeriesCards();
-                saveActiveDatabase();
             } catch (error) {
                 console.error(
                     "Serie toevoegen mislukt:",
@@ -1261,6 +1284,13 @@ async function addSelectedSeries() {
                 );
 
                 failed++;
+
+                setDatabaseStatus(
+                    displayTitle +
+                    " kon niet worden toegevoegd: " +
+                    error.message,
+                    "error"
+                );
             }
         }
 
@@ -1268,34 +1298,39 @@ async function addSelectedSeries() {
         refreshDatabasePanel();
         refreshVisibleSeriesCards();
 
+        batchProgressText.textContent = "Klaar.";
+
         let message =
-            "Klaar!\\n\\n" +
-            "Toegevoegd: " + added + "\\n" +
-            "Al aanwezig: " + skipped + "\\n" +
+            "Klaar!\n\n" +
+            "Toegevoegd: " + added + "\n" +
+            "Al aanwezig: " + skipped + "\n" +
             "Mislukt: " + failed;
 
         if (actorPhotoDirectoryHandle) {
             message +=
-                "\\n\\nCastfoto’s:" +
-                "\\nNieuw opgeslagen: " + photoTotals.downloaded +
-                "\\nStonden al in map: " + photoTotals.existing +
-                "\\nGeen TMDB-foto: " + photoTotals.missing +
-                "\\nOpslaan mislukt: " + photoTotals.failed;
+                "\n\nCastfoto’s:" +
+                "\nNieuw opgeslagen: " + photoTotals.downloaded +
+                "\nStonden al in map: " + photoTotals.existing +
+                "\nGeen TMDB-foto: " + photoTotals.missing +
+                "\nOpslaan mislukt: " + photoTotals.failed;
         } else if (added > 0) {
             message +=
-                "\\n\\nGeen acteursfotomap actief." +
-                "\\nDe castgegevens zijn wel volledig opgeslagen.";
+                "\n\nGeen acteursfotomap actief." +
+                "\nDe castgegevens zijn wel volledig opgeslagen.";
         }
 
         alert(message);
     } finally {
+        addSeriesInProgress = false;
         setBusy(false);
+        addSelectedBtn.textContent =
+            "➕ Geselecteerde series toevoegen";
         updateSelectionState();
         showSearchTab(activeSearchTab);
     }
 }
 
-async function saveSeriesCastPhotos(cast) {
+async function saveSeriesCastPhotos(cast, onProgress) {
     const totals = {
         downloaded: 0,
         existing: 0,
@@ -1310,7 +1345,13 @@ async function saveSeriesCastPhotos(cast) {
         return totals;
     }
 
-    for (const castMember of cast) {
+    for (let index = 0; index < cast.length; index++) {
+        const castMember = cast[index];
+
+        if (typeof onProgress === "function") {
+            onProgress(index + 1, cast.length, castMember);
+        }
+
         const result = await saveActorPhotoCandidate(castMember);
 
         if (Object.prototype.hasOwnProperty.call(totals, result)) {
@@ -1323,14 +1364,80 @@ async function saveSeriesCastPhotos(cast) {
     return totals;
 }
 
+
+async function fetchWithRetry(url, options) {
+    const attempts =
+        options && Number(options.attempts)
+            ? Number(options.attempts)
+            : 3;
+
+    const timeoutMs =
+        options && Number(options.timeoutMs)
+            ? Number(options.timeoutMs)
+            : 20000;
+
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(function () {
+            controller.abort();
+        }, timeoutMs);
+
+        try {
+            const response = await fetch(url, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            lastError = error;
+
+            if (attempt < attempts) {
+                batchProgressText.textContent =
+                    "TMDB reageert traag · poging " +
+                    (attempt + 1) +
+                    " van " +
+                    attempts;
+
+                await new Promise(function (resolve) {
+                    setTimeout(resolve, 1000);
+                });
+            }
+        }
+    }
+
+    if (lastError && lastError.name === "AbortError") {
+        throw new Error(
+            "TMDB reageerde niet binnen " +
+            Math.round(timeoutMs / 1000) +
+            " seconden."
+        );
+    }
+
+    throw lastError || new Error("TMDB-aanroep mislukt.");
+}
+
+
 async function getSeriesDetails(seriesId) {
-    const response = await fetch(
+    const url =
         "https://api.themoviedb.org/3/tv/" +
         seriesId +
         "?api_key=" + TMDB_API_KEY +
         "&language=nl-NL" +
-        "&append_to_response=aggregate_credits"
-    );
+        "&append_to_response=aggregate_credits";
+
+    const response = await fetchWithRetry(url, {
+        attempts: 3,
+        timeoutMs: 20000
+    });
 
     if (!response.ok) {
         throw new Error("HTTP " + response.status);
