@@ -15,6 +15,17 @@ let usedMediaKeys = [];
 let usedCoStarNames = [];
 let selectedSuggestionKey = null;
 
+/*
+Snelle zoekindexen voor de bordgenerator.
+Deze worden één keer opgebouwd nadat de databases zijn geladen.
+*/
+let actorGenreMediaIndex = new Map();
+let actorCoStarsIndex = new Map();
+let actorDisplayNamesIndex = new Map();
+let eligibleActorsCache = [];
+let allGenresCache = [];
+let allCategoriesCache = [];
+
 const PLAYED_TOGETHER_CATEGORY = "Speelde samen met...";
 
 const DIFFICULTY_PROFILES = {
@@ -561,6 +572,8 @@ async function loadDatabase() {
             .filter(isUsableMedia)
             .filter(removeDuplicateMedia);
 
+        buildLookupCaches();
+
         databaseLoaded = true;
         startBtn.disabled = false;
         startBtn.textContent = "Start spel";
@@ -660,6 +673,136 @@ function removeDuplicateMedia(item, index, array) {
 
 function hasReadableText(text) {
     return /^[\p{L}\p{N}\s:'".,!?\-&()]+$/u.test(text);
+}
+
+
+/* =========================================
+   SNELLE ZOEKINDEXEN OPBOUWEN
+========================================= */
+
+function buildLookupCaches() {
+    actorGenreMediaIndex = new Map();
+    actorCoStarsIndex = new Map();
+    actorDisplayNamesIndex = new Map();
+
+    const actorTitleCounts = new Map();
+    const activeGenres = new Set();
+
+    const allowedGenres = new Set([
+        "Actie",
+        "Sciencefiction",
+        "Oorlog",
+        "Drama",
+        "Komedie",
+        "Romantiek"
+    ]);
+
+    database.forEach(function (item) {
+        const uniqueActors = new Map();
+
+        item.actors.forEach(function (actor) {
+            const normalizedActor = normalizeText(actor);
+
+            if (
+                normalizedActor === "" ||
+                !hasReadableActorName(actor) ||
+                uniqueActors.has(normalizedActor)
+            ) {
+                return;
+            }
+
+            uniqueActors.set(normalizedActor, actor);
+
+            if (!actorDisplayNamesIndex.has(normalizedActor)) {
+                actorDisplayNamesIndex.set(normalizedActor, actor);
+            }
+
+            actorTitleCounts.set(
+                normalizedActor,
+                (actorTitleCounts.get(normalizedActor) || 0) + 1
+            );
+        });
+
+        const usableGenres = item.genre.filter(function (genre) {
+            return allowedGenres.has(genre);
+        });
+
+        usableGenres.forEach(function (genre) {
+            activeGenres.add(genre);
+
+            uniqueActors.forEach(function (actorName, normalizedActor) {
+                const key =
+                    normalizedActor +
+                    "|" +
+                    normalizeText(genre);
+
+                if (!actorGenreMediaIndex.has(key)) {
+                    actorGenreMediaIndex.set(key, []);
+                }
+
+                actorGenreMediaIndex.get(key).push(item);
+            });
+        });
+
+        uniqueActors.forEach(function (actorName, normalizedActor) {
+            if (!actorCoStarsIndex.has(normalizedActor)) {
+                actorCoStarsIndex.set(normalizedActor, new Map());
+            }
+
+            const coStars = actorCoStarsIndex.get(normalizedActor);
+
+            uniqueActors.forEach(function (
+                coStarName,
+                normalizedCoStar
+            ) {
+                if (normalizedCoStar === normalizedActor) {
+                    return;
+                }
+
+                if (!coStars.has(normalizedCoStar)) {
+                    coStars.set(normalizedCoStar, {
+                        name: coStarName,
+                        answer_key: "actor:" + normalizedCoStar
+                    });
+                }
+            });
+        });
+    });
+
+    eligibleActorsCache = Array.from(actorTitleCounts.entries())
+        .filter(function (entry) {
+            return entry[1] >= 5;
+        })
+        .sort(function (first, second) {
+            return second[1] - first[1];
+        })
+        .map(function (entry) {
+            return (
+                actorDisplayNamesIndex.get(entry[0]) ||
+                entry[0]
+            );
+        });
+
+    allGenresCache = Array.from(activeGenres);
+
+    allCategoriesCache = [...allGenresCache];
+
+    const hasPlayedTogetherCategory =
+        eligibleActorsCache.some(function (actor) {
+            return getMatchingCoStars(actor).length >= 2;
+        });
+
+    if (hasPlayedTogetherCategory) {
+        allCategoriesCache.push(PLAYED_TOGETHER_CATEGORY);
+    }
+
+    console.log(
+        "Snelle zoekindexen opgebouwd:",
+        actorGenreMediaIndex.size,
+        "acteur/genre-combinaties en",
+        actorCoStarsIndex.size,
+        "acteurs"
+    );
 }
 
 
@@ -1266,20 +1409,12 @@ function logGeneratedGridDifficulty(
 ========================================= */
 
 function getMatchingMovies(actor, genre) {
-    const normalizedActor = normalizeText(actor);
-    const normalizedGenre = normalizeText(genre);
+    const key =
+        normalizeText(actor) +
+        "|" +
+        normalizeText(genre);
 
-    return database.filter(function (movie) {
-        const actorMatches = movie.actors.some(function (movieActor) {
-            return normalizeText(movieActor) === normalizedActor;
-        });
-
-        const genreMatches = movie.genre.some(function (movieGenre) {
-            return normalizeText(movieGenre) === normalizedGenre;
-        });
-
-        return actorMatches && genreMatches;
-    });
+    return actorGenreMediaIndex.get(key) || [];
 }
 
 
@@ -1293,36 +1428,11 @@ function getMatchingAnswers(actor, category) {
 
 function getMatchingCoStars(actor) {
     const normalizedActor = normalizeText(actor);
-    const coStars = new Map();
+    const coStars = actorCoStarsIndex.get(normalizedActor);
 
-    database.forEach(function (item) {
-        const actorAppears = item.actors.some(function (castMember) {
-            return normalizeText(castMember) === normalizedActor;
-        });
-
-        if (!actorAppears) {
-            return;
-        }
-
-        item.actors.forEach(function (castMember) {
-            const normalizedCastMember = normalizeText(castMember);
-
-            if (
-                normalizedCastMember === "" ||
-                normalizedCastMember === normalizedActor ||
-                !hasReadableActorName(castMember)
-            ) {
-                return;
-            }
-
-            if (!coStars.has(normalizedCastMember)) {
-                coStars.set(normalizedCastMember, {
-                    name: castMember,
-                    answer_key: "actor:" + normalizedCastMember
-                });
-            }
-        });
-    });
+    if (!coStars) {
+        return [];
+    }
 
     return Array.from(coStars.values()).sort(function (first, second) {
         return first.name.localeCompare(second.name, "nl", {
@@ -1332,23 +1442,7 @@ function getMatchingCoStars(actor) {
 }
 
 function getAllActorNames() {
-    const actors = new Map();
-
-    database.forEach(function (item) {
-        item.actors.forEach(function (actor) {
-            const normalizedActor = normalizeText(actor);
-
-            if (
-                normalizedActor &&
-                hasReadableActorName(actor) &&
-                !actors.has(normalizedActor)
-            ) {
-                actors.set(normalizedActor, actor);
-            }
-        });
-    });
-
-    return Array.from(actors.values());
+    return Array.from(actorDisplayNamesIndex.values());
 }
 
 function hasReadableActorName(text) {
@@ -1370,63 +1464,15 @@ function hasReadableActorName(text) {
 }
 
 function getEligibleActors() {
-    const actorCounts = {};
-
-    database.forEach(function (movie) {
-        movie.actors.forEach(function (actor) {
-            if (!actor || !hasReadableActorName(actor)) {
-                return;
-            }
-
-            actorCounts[actor] =
-                (actorCounts[actor] || 0) + 1;
-        });
-    });
-
-    return Object.keys(actorCounts)
-        .filter(function (actor) {
-            return actorCounts[actor] >= 5;
-        })
-        .sort(function (actorA, actorB) {
-            return actorCounts[actorB] - actorCounts[actorA];
-        });
+    return eligibleActorsCache;
 }
 
 function getAllGenres() {
-    const allowedGenres = [
-        "Actie",
-        "Sciencefiction",
-        "Oorlog",
-        "Drama",
-        "Komedie",
-        "Romantiek"
-    ];
-
-    const genres = new Set();
-
-    database.forEach(function (movie) {
-        movie.genre.forEach(function (genre) {
-            if (allowedGenres.includes(genre)) {
-                genres.add(genre);
-            }
-        });
-    });
-
-    return Array.from(genres);
+    return [...allGenresCache];
 }
 
 function getAllCategories() {
-    const categories = getAllGenres();
-
-    if (
-        getEligibleActors().some(function (actor) {
-            return getMatchingCoStars(actor).length >= 2;
-        })
-    ) {
-        categories.push(PLAYED_TOGETHER_CATEGORY);
-    }
-
-    return categories;
+    return [...allCategoriesCache];
 }
 
 function shuffleArray(array) {
@@ -2705,7 +2751,9 @@ function renderDeveloperReport(report) {
         duration.classList.add("developerSuccess");
 
         duration.textContent =
-            "✅ Alle 100 grids zijn speelbaar. " +
+            "✅ Alle " +
+            report.testAmount +
+            " grids zijn speelbaar. " +
             "Testduur: " +
             report.duration +
             " ms.";
