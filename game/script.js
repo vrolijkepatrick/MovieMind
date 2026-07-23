@@ -2089,7 +2089,7 @@ async function runGridTest() {
         return;
     }
 
-    const testAmount = 100;
+    const testAmount = 50;
 
     test100Btn.disabled = true;
     test100Btn.textContent = "Test wordt uitgevoerd...";
@@ -2228,7 +2228,7 @@ async function runGridTest() {
     developerProgress.classList.add("hidden");
 
     test100Btn.disabled = false;
-    test100Btn.textContent = "🧪 Test 100 grids";
+    test100Btn.textContent = "🧪 Test 50 grids";
 }
 
 function validateTestGrid(testGrid) {
