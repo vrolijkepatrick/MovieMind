@@ -21,6 +21,7 @@ Deze worden één keer opgebouwd nadat de databases zijn geladen.
 */
 let actorGenreMediaIndex = new Map();
 let actorCoStarsIndex = new Map();
+let actorAnswerCountIndex = new Map();
 let actorDisplayNamesIndex = new Map();
 let eligibleActorsCache = [];
 let allGenresCache = [];
@@ -503,10 +504,17 @@ function getAnswerLimits(category, profile = getDifficultyProfile()) {
     return profile.normal;
 }
 
-function isAnswerCountSuitable(actor, category, profile) {
-    const answerCount =
-        getMatchingAnswers(actor, category).length;
+function getAnswerCount(actor, category) {
+    const key =
+        normalizeText(actor) +
+        "|" +
+        normalizeText(category);
 
+    return actorAnswerCountIndex.get(key) || 0;
+}
+
+function isAnswerCountSuitable(actor, category, profile) {
+    const answerCount = getAnswerCount(actor, category);
     const limits = getAnswerLimits(category, profile);
 
     return (
@@ -516,9 +524,7 @@ function isAnswerCountSuitable(actor, category, profile) {
 }
 
 function getAnswerDifficultyDistance(actor, category, profile) {
-    const answerCount =
-        getMatchingAnswers(actor, category).length;
-
+    const answerCount = getAnswerCount(actor, category);
     const limits = getAnswerLimits(category, profile);
 
     return Math.abs(answerCount - limits.target);
@@ -683,6 +689,7 @@ function hasReadableText(text) {
 function buildLookupCaches() {
     actorGenreMediaIndex = new Map();
     actorCoStarsIndex = new Map();
+    actorAnswerCountIndex = new Map();
     actorDisplayNamesIndex = new Map();
 
     const actorTitleCounts = new Map();
@@ -767,6 +774,34 @@ function buildLookupCaches() {
                 }
             });
         });
+    });
+
+    /*
+    Zet alle medespeler-maps één keer om naar alfabetisch
+    gesorteerde arrays. Voorheen werd dezelfde soms zeer lange
+    lijst bij vrijwel iedere generatorcontrole opnieuw gesorteerd.
+    */
+    actorCoStarsIndex.forEach(function (coStars, normalizedActor) {
+        const sortedCoStars = Array.from(coStars.values()).sort(
+            function (first, second) {
+                return first.name.localeCompare(second.name, "nl", {
+                    sensitivity: "base"
+                });
+            }
+        );
+
+        actorCoStarsIndex.set(normalizedActor, sortedCoStars);
+
+        actorAnswerCountIndex.set(
+            normalizedActor +
+            "|" +
+            normalizeText(PLAYED_TOGETHER_CATEGORY),
+            sortedCoStars.length
+        );
+    });
+
+    actorGenreMediaIndex.forEach(function (items, key) {
+        actorAnswerCountIndex.set(key, items.length);
     });
 
     eligibleActorsCache = Array.from(actorTitleCounts.entries())
@@ -1320,7 +1355,7 @@ function pickBalancedActors(
             function (total, genre) {
                 return (
                     total +
-                    getMatchingAnswers(actor, genre).length
+                    getAnswerCount(actor, genre)
                 );
             },
             0
@@ -1382,7 +1417,7 @@ function logGeneratedGridDifficulty(
                 actor: actor,
                 category: genre,
                 answers:
-                    getMatchingAnswers(actor, genre).length
+                    getAnswerCount(actor, genre)
             });
         });
     });
@@ -1427,18 +1462,10 @@ function getMatchingAnswers(actor, category) {
 }
 
 function getMatchingCoStars(actor) {
-    const normalizedActor = normalizeText(actor);
-    const coStars = actorCoStarsIndex.get(normalizedActor);
-
-    if (!coStars) {
-        return [];
-    }
-
-    return Array.from(coStars.values()).sort(function (first, second) {
-        return first.name.localeCompare(second.name, "nl", {
-            sensitivity: "base"
-        });
-    });
+    return (
+        actorCoStarsIndex.get(normalizeText(actor)) ||
+        []
+    );
 }
 
 function getAllActorNames() {
@@ -2135,7 +2162,7 @@ async function runGridTest() {
         return;
     }
 
-    const testAmount = 50;
+    const testAmount = 100;
 
     test100Btn.disabled = true;
     test100Btn.textContent = "Test wordt uitgevoerd...";
@@ -2274,7 +2301,7 @@ async function runGridTest() {
     developerProgress.classList.add("hidden");
 
     test100Btn.disabled = false;
-    test100Btn.textContent = "🧪 Test 50 grids";
+    test100Btn.textContent = "🧪 Test 100 grids";
 }
 
 function validateTestGrid(testGrid) {
@@ -2302,7 +2329,7 @@ function validateTestGrid(testGrid) {
     testGrid.genres.forEach(function (genre) {
         testGrid.actors.forEach(function (actor) {
             const answerCount =
-                getMatchingAnswers(actor, genre).length;
+                getAnswerCount(actor, genre);
 
             totalAnswers += answerCount;
 
