@@ -92,6 +92,11 @@
                             accept=".json,application/json"
                         >
 
+                        <button class="action-button action-button-accent" id="merge-databases-button" type="button">
+                            <span aria-hidden="true">🔗</span>
+                            Film- en TV-database samenvoegen
+                        </button>
+
                         <button class="action-button" type="button">
                             <span aria-hidden="true">⬆</span>
                             Database exporteren
@@ -440,7 +445,7 @@
                 <section class="maintenance-group">
                     <h3>Importeren</h3>
                     <button type="button">🎬 Film importeren</button>
-                    <button type="button">📺 TV-serie importeren</button>
+                    <button id="import-tv-series-button" type="button">📺 TV-serie importeren</button>
                     <button type="button">📚 Bulk importeren</button>
                 </section>
 
@@ -527,6 +532,36 @@
             </section>
         </footer>
 
+    </div>
+
+
+    <!-- TV-SERIE IMPORTER -->
+    <div class="studio-modal" id="tv-import-modal" hidden>
+        <div class="studio-modal-backdrop" data-close-tv-importer></div>
+
+        <section class="studio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="tv-import-title">
+            <header class="studio-modal-header">
+                <div>
+                    <span class="panel-step">Importeren</span>
+                    <h2 id="tv-import-title">TV-serie zoeken bij TMDB</h2>
+                </div>
+
+                <button class="studio-modal-close" id="tv-import-close" type="button" aria-label="Sluiten">×</button>
+            </header>
+
+            <div class="studio-modal-content">
+                <form class="tv-import-search" id="tv-import-search-form">
+                    <label for="tv-import-search-input">Naam van de TV-serie</label>
+                    <div>
+                        <input id="tv-import-search-input" type="search" placeholder="Bijvoorbeeld: The A-Team, Knight Rider of Airwolf" autocomplete="off">
+                        <button id="tv-import-search-button" type="submit">🔍 Zoeken</button>
+                    </div>
+                </form>
+
+                <p class="tv-import-status" id="tv-import-status">Zoek een serie en kies daarna Toevoegen.</p>
+                <div class="tv-import-results" id="tv-import-results"></div>
+            </div>
+        </section>
     </div>
 
     <script src="config.js"></script>
