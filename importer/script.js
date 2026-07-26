@@ -60,6 +60,14 @@ const photoMissingCount =
     document.getElementById("photoMissingCount");
 const photoFailedCount =
     document.getElementById("photoFailedCount");
+const photoReviewCount =
+    document.getElementById("photoReviewCount");
+const photoReviewPanel =
+    document.getElementById("photoReviewPanel");
+const photoReviewList =
+    document.getElementById("photoReviewList");
+const downloadPhotoReviewBtn =
+    document.getElementById("downloadPhotoReviewBtn");
 
 const actorPreviewCard =
     document.getElementById("sidebarActorPhotoCard");
@@ -93,6 +101,7 @@ let lastActorPhotoSaveError = "";
 let selectedActorPhotoCandidate = null;
 let selectedActorHasLocalPhoto = false;
 let actorPhotoChoiceRequestId = 0;
+let bulkPhotoReviewItems = [];
 
 const availableMovies = new Map();
 
@@ -1007,6 +1016,11 @@ fillMissingActorPhotosBtn.addEventListener(
     fillMissingActorPhotos
 );
 
+downloadPhotoReviewBtn.addEventListener(
+    "click",
+    downloadPhotoReviewList
+);
+
 async function choosePhotoFolder() {
     if (!("showDirectoryPicker" in window)) {
         setPhotoStatus(
@@ -1409,6 +1423,9 @@ async function fillMissingActorPhotos() {
     let existing = 0;
     let missing = 0;
     let failed = 0;
+    let review = 0;
+    bulkPhotoReviewItems = [];
+    renderPhotoReviewList();
 
     try {
         const existingPhotoIndex =
@@ -1431,7 +1448,8 @@ async function fillMissingActorPhotos() {
                 downloaded,
                 existing,
                 missing,
-                failed
+                failed,
+                review
             );
 
             if (existingPhotoIndex.has(actorKey)) {
@@ -1440,20 +1458,29 @@ async function fillMissingActorPhotos() {
             }
 
             try {
-                const candidate =
-                    await findExactActorPhotoCandidate(actorName);
+                const photoChoice =
+                    await findBestActorPhotoCandidate(actorName);
 
-                if (!candidate || !candidate.profile_path) {
+                if (!photoChoice || !photoChoice.candidate) {
                     missing++;
                 } else {
                     const result =
                         await saveActorPhotoCandidate(
-                            candidate,
+                            photoChoice.candidate,
                             existingPhotoIndex
                         );
 
                     if (result === "downloaded") {
                         downloaded++;
+
+                        if (photoChoice.reviewRecommended) {
+                            review++;
+                            bulkPhotoReviewItems.push({
+                                name: actorName,
+                                reason: photoChoice.reviewReason
+                            });
+                            renderPhotoReviewList();
+                        }
                     } else if (result === "existing") {
                         existing++;
                     } else if (result === "missing") {
@@ -1479,7 +1506,8 @@ async function fillMissingActorPhotos() {
                 downloaded,
                 existing,
                 missing,
-                failed
+                failed,
+                review
             );
 
             /*
@@ -1510,7 +1538,9 @@ async function fillMissingActorPhotos() {
             missing +
             " zonder TMDB-foto en " +
             failed +
-            " mislukt.",
+            " mislukt en " +
+            review +
+            " voor handmatige controle.",
             failed > 0 ? "error" : "success"
         );
 
@@ -1528,6 +1558,8 @@ async function fillMissingActorPhotos() {
             missing +
             "\nMislukt: " +
             failed +
+            "\nHandmatige controle: " +
+            review +
             "\nTijd: " +
             formatDuration(seconds)
         );
@@ -1611,6 +1643,11 @@ function collectUniqueActorNames() {
 }
 
 async function findExactActorPhotoCandidate(name) {
+    const photoChoice = await findBestActorPhotoCandidate(name);
+    return photoChoice ? photoChoice.candidate : null;
+}
+
+async function findBestActorPhotoCandidate(name) {
     const response = await fetch(
         "https://api.themoviedb.org/3/search/person" +
         "?api_key=" + TMDB_API_KEY +
@@ -1640,27 +1677,85 @@ async function findExactActorPhotoCandidate(name) {
             );
         })
         .sort(function (a, b) {
-            const photoDifference =
-                Number(Boolean(b.profile_path)) -
-                Number(Boolean(a.profile_path));
-
-            if (photoDifference !== 0) {
-                return photoDifference;
-            }
-
-            return (b.popularity || 0) -
-                (a.popularity || 0);
+            return (b.popularity || 0) - (a.popularity || 0);
         });
 
     if (exactActors.length === 0) {
         return null;
     }
 
+    const actor = exactActors[0];
+    const imagesResponse = await fetch(
+        "https://api.themoviedb.org/3/person/" +
+        actor.id +
+        "/images" +
+        "?api_key=" + TMDB_API_KEY
+    );
+
+    const unique = new Map();
+
+    if (actor.profile_path) {
+        unique.set(actor.profile_path, {
+            file_path: actor.profile_path,
+            width: 0,
+            height: 0,
+            vote_average: 0,
+            vote_count: 0,
+            isDefault: true
+        });
+    }
+
+    if (imagesResponse.ok) {
+        const imagesData = await imagesResponse.json();
+
+        (imagesData.profiles || []).forEach(function (profile) {
+            if (profile && profile.file_path) {
+                unique.set(profile.file_path, profile);
+            }
+        });
+    }
+
+    const profiles = Array.from(unique.values())
+        .sort(scoreActorProfile);
+
+    if (profiles.length === 0) {
+        return null;
+    }
+
+    const best = profiles[0];
+    const second = profiles[1] || null;
+    const bestScore = calculateActorProfileScore(best);
+    const secondScore = second
+        ? calculateActorProfileScore(second)
+        : null;
+    const scoreGap = secondScore === null
+        ? null
+        : bestScore - secondScore;
+
+    let reviewRecommended = false;
+    let reviewReason = "";
+
+    if (bestScore < 6) {
+        reviewRecommended = true;
+        reviewReason = "lage automatische kwaliteitsscore";
+    } else if (scoreGap !== null && scoreGap < 0.8) {
+        reviewRecommended = true;
+        reviewReason = "meerdere bijna gelijkwaardige portretten";
+    } else if (profiles.length === 1) {
+        reviewRecommended = true;
+        reviewReason = "slechts één TMDB-portret beschikbaar";
+    }
+
     return {
-        id: exactActors[0].id,
-        name: exactActors[0].name,
-        profile_path:
-            exactActors[0].profile_path || null
+        candidate: {
+            id: actor.id,
+            name: actor.name,
+            profile_path: best.file_path
+        },
+        reviewRecommended: reviewRecommended,
+        reviewReason: reviewReason,
+        score: bestScore,
+        alternatives: profiles.length
     };
 }
 
@@ -1774,6 +1869,9 @@ function resetPhotoProgress(total) {
     photoExistingCount.textContent = "0";
     photoMissingCount.textContent = "0";
     photoFailedCount.textContent = "0";
+    photoReviewCount.textContent = "0";
+    bulkPhotoReviewItems = [];
+    renderPhotoReviewList();
 }
 
 function updatePhotoProgress(
@@ -1783,7 +1881,8 @@ function updatePhotoProgress(
     downloaded,
     existing,
     missing,
-    failed
+    failed,
+    review
 ) {
     const percentage =
         total > 0
@@ -1807,6 +1906,8 @@ function updatePhotoProgress(
         String(missing);
     photoFailedCount.textContent =
         String(failed);
+    photoReviewCount.textContent =
+        String(review || 0);
 }
 
 function formatDuration(totalSeconds) {
@@ -2096,27 +2197,87 @@ async function loadActorPhotoChoices(actor) {
     }
 }
 
-function scoreActorProfile(a, b) {
-    function score(profile) {
-        const width = Number(profile.width) || 0;
-        const height = Number(profile.height) || 0;
-        const ratio = height > 0 ? width / height : 0.8;
-        const portraitFit = Math.max(0, 1 - Math.abs(ratio - 0.8));
-        const resolution = Math.min(4, (width * height) / 1000000);
-        const votes = Math.min(3, Number(profile.vote_count) / 10);
-        const rating = Math.min(2, Number(profile.vote_average) / 5);
-        const defaultBonus = profile.isDefault ? 0.35 : 0;
+function calculateActorProfileScore(profile) {
+    const width = Number(profile.width) || 0;
+    const height = Number(profile.height) || 0;
+    const ratio = height > 0 ? width / height : 0.8;
+    const portraitFit = Math.max(0, 1 - Math.abs(ratio - 0.8));
+    const resolution = Math.min(4, (width * height) / 1000000);
+    const votes = Math.min(3, Number(profile.vote_count) / 10);
+    const rating = Math.min(2, Number(profile.vote_average) / 5);
+    const defaultBonus = profile.isDefault ? 0.35 : 0;
 
-        return (
-            portraitFit * 5 +
-            resolution +
-            votes +
-            rating +
-            defaultBonus
-        );
+    return (
+        portraitFit * 5 +
+        resolution +
+        votes +
+        rating +
+        defaultBonus
+    );
+}
+
+function scoreActorProfile(a, b) {
+    return (
+        calculateActorProfileScore(b) -
+        calculateActorProfileScore(a)
+    );
+}
+
+function renderPhotoReviewList() {
+    if (!photoReviewPanel || !photoReviewList) {
+        return;
     }
 
-    return score(b) - score(a);
+    photoReviewList.innerHTML = "";
+    photoReviewPanel.classList.toggle(
+        "hidden",
+        bulkPhotoReviewItems.length === 0
+    );
+
+    bulkPhotoReviewItems.forEach(function (item) {
+        const listItem = document.createElement("li");
+        const name = document.createElement("strong");
+        const reason = document.createElement("span");
+
+        name.textContent = item.name;
+        reason.textContent = item.reason || "controle aanbevolen";
+
+        listItem.appendChild(name);
+        listItem.appendChild(reason);
+        photoReviewList.appendChild(listItem);
+    });
+}
+
+function downloadPhotoReviewList() {
+    if (bulkPhotoReviewItems.length === 0) {
+        alert("Er staan nog geen acteurs op de controlelijst.");
+        return;
+    }
+
+    const lines = [
+        "MovieMind — handmatige controle acteursfoto’s",
+        "",
+        ...bulkPhotoReviewItems.map(function (item) {
+            return item.name + " — " + item.reason;
+        })
+    ];
+
+    const blob = new Blob(
+        [lines.join("\n")],
+        { type: "text/plain;charset=utf-8" }
+    );
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "moviemind_acteursfotos_controleren.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(function () {
+        URL.revokeObjectURL(url);
+    }, 1000);
 }
 
 function createActorPhotoFilename(name) {

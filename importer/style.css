@@ -1131,3 +1131,73 @@ eventueel nog aanwezig element ruimte inneemt.
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
+
+
+/* =========================================================
+   ACTEURFOTO'S 2.1 · SLIMME BULKCONTROLE
+========================================================= */
+
+.photo-review-panel {
+    margin-top: 14px;
+    padding: 13px;
+    border: 1px solid #725f2c;
+    border-radius: 10px;
+    background: rgba(124, 91, 20, 0.16);
+}
+
+.photo-review-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.photo-review-heading > div {
+    display: grid;
+    gap: 4px;
+}
+
+.photo-review-heading small {
+    color: #d4c79d;
+    line-height: 1.4;
+}
+
+.photo-review-heading .button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 12px;
+}
+
+.photo-review-list {
+    display: grid;
+    gap: 7px;
+    max-height: 240px;
+    margin: 12px 0 0;
+    padding-left: 24px;
+    overflow-y: auto;
+}
+
+.photo-review-list li {
+    padding-left: 3px;
+}
+
+.photo-review-list strong,
+.photo-review-list span {
+    display: block;
+}
+
+.photo-review-list span {
+    margin-top: 2px;
+    color: #d4c79d;
+    font-size: 12px;
+}
+
+@media (max-width: 680px) {
+    .photo-review-heading {
+        flex-direction: column;
+    }
+
+    .photo-review-heading .button {
+        width: 100%;
+    }
+}
