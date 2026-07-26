@@ -102,6 +102,7 @@ let selectedActorPhotoCandidate = null;
 let selectedActorHasLocalPhoto = false;
 let actorPhotoChoiceRequestId = 0;
 let bulkPhotoReviewItems = [];
+let bulkPhotoProblemItems = [];
 
 const availableMovies = new Map();
 
@@ -1425,6 +1426,7 @@ async function fillMissingActorPhotos() {
     let failed = 0;
     let review = 0;
     bulkPhotoReviewItems = [];
+    bulkPhotoProblemItems = [];
     renderPhotoReviewList();
 
     try {
@@ -1463,6 +1465,12 @@ async function fillMissingActorPhotos() {
 
                 if (!photoChoice || !photoChoice.candidate) {
                     missing++;
+                    bulkPhotoProblemItems.push({
+                        name: actorName,
+                        type: "Geen foto",
+                        reason: "Geen betrouwbare TMDB-match of geen beschikbaar portret"
+                    });
+                    renderPhotoReviewList();
                 } else {
                     const result =
                         await saveActorPhotoCandidate(
@@ -1485,8 +1493,20 @@ async function fillMissingActorPhotos() {
                         existing++;
                     } else if (result === "missing") {
                         missing++;
+                        bulkPhotoProblemItems.push({
+                            name: actorName,
+                            type: "Geen foto",
+                            reason: "TMDB-resultaat bevatte geen bruikbaar portret"
+                        });
+                        renderPhotoReviewList();
                     } else {
                         failed++;
+                        bulkPhotoProblemItems.push({
+                            name: actorName,
+                            type: "Mislukt",
+                            reason: lastActorPhotoSaveError || "Opslaan van de foto is mislukt"
+                        });
+                        renderPhotoReviewList();
                     }
                 }
             } catch (error) {
@@ -1497,6 +1517,12 @@ async function fillMissingActorPhotos() {
                 );
 
                 failed++;
+                bulkPhotoProblemItems.push({
+                    name: actorName,
+                    type: "Mislukt",
+                    reason: error && error.message ? error.message : "Onbekende fout"
+                });
+                renderPhotoReviewList();
             }
 
             updatePhotoProgress(
@@ -1647,50 +1673,128 @@ async function findExactActorPhotoCandidate(name) {
     return photoChoice ? photoChoice.candidate : null;
 }
 
-async function findBestActorPhotoCandidate(name) {
-    const response = await fetch(
-        "https://api.themoviedb.org/3/search/person" +
-        "?api_key=" + TMDB_API_KEY +
-        "&language=en-US" +
-        "&include_adult=false" +
-        "&query=" + encodeURIComponent(name)
-    );
+async function fetchJsonWithRetry(url, label, attempts) {
+    const maxAttempts = Number(attempts) || 3;
+    let lastError = null;
 
-    if (!response.ok) {
-        throw new Error("Acteur zoeken mislukt.");
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                const retryable = response.status === 429 || response.status >= 500;
+                if (!retryable) {
+                    throw new Error(label + " (HTTP " + response.status + ").");
+                }
+                throw new Error(label + " tijdelijk niet beschikbaar (HTTP " + response.status + ").");
+            }
+
+            return await response.json();
+        } catch (error) {
+            lastError = error;
+            if (attempt < maxAttempts) {
+                await wait(350 * attempt);
+            }
+        }
     }
 
-    const data = await response.json();
-    const normalizedName = normalizeText(name);
+    throw lastError || new Error(label + " mislukt.");
+}
 
-    const exactActors = (data.results || [])
+function buildActorSearchQueries(name) {
+    const clean = String(name || "").replace(/\s+/g, " ").trim();
+    const simplified = clean
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[’']/g, "")
+        .replace(/[-–—]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return Array.from(new Set([clean, simplified].filter(Boolean)));
+}
+
+function chooseBestActorSearchResult(results, requestedName) {
+    const requestedNormal = normalizeText(requestedName);
+    const requestedIdentity = createActorPhotoIdentity(requestedName);
+
+    const ranked = (results || [])
         .filter(function (person) {
-            return (
-                person &&
-                person.id &&
-                person.name &&
-                normalizeText(person.name) === normalizedName &&
-                (
-                    person.known_for_department === "Acting" ||
-                    !person.known_for_department
-                )
-            );
+            return person && person.id && person.name;
+        })
+        .map(function (person) {
+            const exactNormal = normalizeText(person.name) === requestedNormal;
+            const exactIdentity = createActorPhotoIdentity(person.name) === requestedIdentity;
+            const isActor = person.known_for_department === "Acting" || !person.known_for_department;
+            let matchScore = 0;
+
+            if (exactNormal) matchScore += 1000;
+            if (exactIdentity) matchScore += 700;
+            if (isActor) matchScore += 100;
+            if (person.profile_path) matchScore += 20;
+            matchScore += Math.min(50, Number(person.popularity) || 0);
+
+            return { person: person, score: matchScore, exact: exactNormal || exactIdentity };
+        })
+        .filter(function (entry) {
+            return entry.exact;
         })
         .sort(function (a, b) {
-            return (b.popularity || 0) - (a.popularity || 0);
+            return b.score - a.score;
         });
 
-    if (exactActors.length === 0) {
+    return ranked.length ? ranked[0].person : null;
+}
+
+async function findBestActorPhotoCandidate(name) {
+    const queries = buildActorSearchQueries(name);
+    let actor = null;
+
+    for (const query of queries) {
+        const searchUrl =
+            "https://api.themoviedb.org/3/search/person" +
+            "?api_key=" + TMDB_API_KEY +
+            "&language=en-US" +
+            "&include_adult=false" +
+            "&query=" + encodeURIComponent(query);
+
+        const data = await fetchJsonWithRetry(
+            searchUrl,
+            "Acteur zoeken mislukt",
+            3
+        );
+
+        actor = chooseBestActorSearchResult(data.results || [], name);
+        if (actor) {
+            break;
+        }
+    }
+
+    if (!actor) {
         return null;
     }
 
-    const actor = exactActors[0];
-    const imagesResponse = await fetch(
+    const imagesUrl =
         "https://api.themoviedb.org/3/person/" +
         actor.id +
         "/images" +
-        "?api_key=" + TMDB_API_KEY
-    );
+        "?api_key=" + TMDB_API_KEY;
+
+    let imagesData = { profiles: [] };
+
+    try {
+        imagesData = await fetchJsonWithRetry(
+            imagesUrl,
+            "Acteurfoto’s ophalen mislukt",
+            3
+        );
+    } catch (error) {
+        console.warn("Alternatieve portretten ophalen mislukt:", actor.name, error);
+    }
 
     const unique = new Map();
 
@@ -1705,18 +1809,13 @@ async function findBestActorPhotoCandidate(name) {
         });
     }
 
-    if (imagesResponse.ok) {
-        const imagesData = await imagesResponse.json();
+    (imagesData.profiles || []).forEach(function (profile) {
+        if (profile && profile.file_path) {
+            unique.set(profile.file_path, profile);
+        }
+    });
 
-        (imagesData.profiles || []).forEach(function (profile) {
-            if (profile && profile.file_path) {
-                unique.set(profile.file_path, profile);
-            }
-        });
-    }
-
-    const profiles = Array.from(unique.values())
-        .sort(scoreActorProfile);
+    const profiles = Array.from(unique.values()).sort(scoreActorProfile);
 
     if (profiles.length === 0) {
         return null;
@@ -1725,12 +1824,8 @@ async function findBestActorPhotoCandidate(name) {
     const best = profiles[0];
     const second = profiles[1] || null;
     const bestScore = calculateActorProfileScore(best);
-    const secondScore = second
-        ? calculateActorProfileScore(second)
-        : null;
-    const scoreGap = secondScore === null
-        ? null
-        : bestScore - secondScore;
+    const secondScore = second ? calculateActorProfileScore(second) : null;
+    const scoreGap = secondScore === null ? null : bestScore - secondScore;
 
     let reviewRecommended = false;
     let reviewReason = "";
@@ -1749,9 +1844,10 @@ async function findBestActorPhotoCandidate(name) {
     return {
         candidate: {
             id: actor.id,
-            name: actor.name,
+            name: name,
             profile_path: best.file_path
         },
+        matchedTmdbName: actor.name,
         reviewRecommended: reviewRecommended,
         reviewReason: reviewReason,
         score: bestScore,
@@ -1871,6 +1967,7 @@ function resetPhotoProgress(total) {
     photoFailedCount.textContent = "0";
     photoReviewCount.textContent = "0";
     bulkPhotoReviewItems = [];
+    bulkPhotoProblemItems = [];
     renderPhotoReviewList();
 }
 
@@ -2228,18 +2325,21 @@ function renderPhotoReviewList() {
         return;
     }
 
-    photoReviewList.innerHTML = "";
-    photoReviewPanel.classList.toggle(
-        "hidden",
-        bulkPhotoReviewItems.length === 0
-    );
+    const allItems = bulkPhotoReviewItems
+        .map(function (item) {
+            return { name: item.name, type: "Controle", reason: item.reason };
+        })
+        .concat(bulkPhotoProblemItems);
 
-    bulkPhotoReviewItems.forEach(function (item) {
+    photoReviewList.innerHTML = "";
+    photoReviewPanel.classList.toggle("hidden", allItems.length === 0);
+
+    allItems.forEach(function (item) {
         const listItem = document.createElement("li");
         const name = document.createElement("strong");
         const reason = document.createElement("span");
 
-        name.textContent = item.name;
+        name.textContent = item.name + " — " + (item.type || "Controle");
         reason.textContent = item.reason || "controle aanbevolen";
 
         listItem.appendChild(name);
@@ -2249,16 +2349,22 @@ function renderPhotoReviewList() {
 }
 
 function downloadPhotoReviewList() {
-    if (bulkPhotoReviewItems.length === 0) {
-        alert("Er staan nog geen acteurs op de controlelijst.");
+    const allItems = bulkPhotoReviewItems
+        .map(function (item) {
+            return { name: item.name, type: "Controle", reason: item.reason };
+        })
+        .concat(bulkPhotoProblemItems);
+
+    if (allItems.length === 0) {
+        alert("Er staan nog geen acteurs op de resultatenlijst.");
         return;
     }
 
     const lines = [
-        "MovieMind — handmatige controle acteursfoto’s",
+        "MovieMind — resultaten acteursfotoscan",
         "",
-        ...bulkPhotoReviewItems.map(function (item) {
-            return item.name + " — " + item.reason;
+        ...allItems.map(function (item) {
+            return item.name + " — " + item.type + " — " + item.reason;
         })
     ];
 
@@ -2270,7 +2376,7 @@ function downloadPhotoReviewList() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "moviemind_acteursfotos_controleren.txt";
+    link.download = "moviemind_acteursfotos_scan_resultaten.txt";
     document.body.appendChild(link);
     link.click();
     link.remove();
