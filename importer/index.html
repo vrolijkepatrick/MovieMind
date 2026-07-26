@@ -150,19 +150,34 @@
 
                     </div>
 
+                    <div class="actor-photo-picker">
+                        <div class="actor-photo-picker-heading">
+                            <strong>Kies een portret</strong>
+                            <small id="actorPhotoChoicesStatus">
+                                Zoek een acteur om beschikbare TMDB-foto’s te bekijken.
+                            </small>
+                        </div>
+
+                        <div
+                            id="actorPhotoChoices"
+                            class="actor-photo-choices"
+                            aria-label="Beschikbare acteurfoto’s">
+                        </div>
+                    </div>
+
 
                     <button
                         id="saveActorPhotoUnderPreviewBtn"
                         class="button success wide-button"
                         type="button"
                         disabled>
-                        📸 Foto opslaan
+                        📸 Gekozen foto opslaan
                     </button>
 
                     <div
                         id="actorPhotoAlreadyExistsMessage"
                         class="photo-exists-message hidden">
-                        ✅ Foto staat al in de acteursmap
+                        ✅ Er staat al een foto in de acteursmap. Opslaan vervangt die bewust.
                     </div>
 
                 </article>
@@ -203,8 +218,8 @@
 
 
                 <p class="photo-warning">
-                    Bestaande foto’s worden nooit overschreven.
-                    De aanvulknop loopt alle acteurs uit de geladen database na.
+                    De automatische aanvulknop overschrijft bestaande foto’s nooit.
+                    Alleen bij een handmatig gekozen portret kun je bewust vervangen.
                 </p>
 
 

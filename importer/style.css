@@ -1029,3 +1029,105 @@ eventueel nog aanwezig element ruimte inneemt.
         font-size: 18px;
     }
 }
+
+/* =========================================================
+   IMPORTER 2.2 · ACTEURFOTO-KIEZER
+========================================================= */
+
+.actor-photo-picker {
+    display: grid;
+    gap: 10px;
+    padding-top: 2px;
+}
+
+.actor-photo-picker-heading {
+    display: grid;
+    gap: 4px;
+}
+
+.actor-photo-picker-heading strong {
+    color: #ffffff;
+    font-size: 15px;
+}
+
+.actor-photo-picker-heading small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.actor-photo-choices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.actor-photo-choice {
+    position: relative;
+    min-width: 0;
+    aspect-ratio: 4 / 5;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid #344b67;
+    border-radius: 9px;
+    background: #091426;
+    box-shadow: none;
+    transition:
+        border-color 0.15s ease,
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.actor-photo-choice:hover {
+    transform: translateY(-2px);
+    border-color: #8b71ea;
+}
+
+.actor-photo-choice.selected {
+    border-color: #9d86f3;
+    box-shadow:
+        0 0 0 3px rgba(139, 113, 234, 0.2),
+        0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.actor-photo-choice.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    background: #7255dc;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.actor-photo-choice img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center 18%;
+}
+
+@media (max-width: 1180px) {
+    .actor-photo-picker,
+    .actor-photo-choices {
+        grid-column: 1 / -1;
+    }
+
+    .actor-photo-choices {
+        grid-template-columns: repeat(8, minmax(62px, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .actor-photo-choices {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
