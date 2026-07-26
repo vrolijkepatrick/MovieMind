@@ -676,7 +676,7 @@ h1 {
         saturate(0.96)
         contrast(1.04)
         brightness(0.84);
-    transform: scale(0.89);
+    transform: scale(0.50);
     transition:
         transform 0.32s ease,
         filter 0.32s ease;
@@ -691,7 +691,7 @@ h1 {
 }
 
 .actor-header:hover .actor-portrait {
-    transform: scale(0.86);
+    transform: scale(0.60);
     filter:
         saturate(1)
         contrast(1.06)
