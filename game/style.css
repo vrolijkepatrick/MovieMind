@@ -676,14 +676,14 @@ h1 {
         saturate(0.96)
         contrast(1.04)
         brightness(0.84);
-    transform: translateY(-12%) scale(0.50);
+    transform: translateY(-12%) scale(0.89);
     transition:
         transform 0.32s ease,
         filter 0.32s ease;
 }
 
 .actor-header:hover .actor-portrait {
-    transform: translateY(-12%) scale(0.60);
+    transform: translateY(-12%) scale(0.86);
     filter:
         saturate(1)
         contrast(1.06)
