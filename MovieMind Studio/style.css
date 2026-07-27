@@ -1695,3 +1695,98 @@ select {
     opacity: 0.72;
     cursor: wait;
 }
+/* =========================================================
+   DETAILWEERGAVE MET POSTERS EN PERSONENFOTO'S - V0.17
+========================================================= */
+
+.detail-poster-image {
+    width: min(100%, 240px);
+    aspect-ratio: 2 / 3;
+    display: block;
+    object-fit: cover;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #100c0c;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.46);
+}
+
+.detail-overview-card p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.people-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.person-photo-frame {
+    position: relative;
+}
+
+.person-photo-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.person-photo-fallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-size: 25px;
+}
+
+.person-card small {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 9px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.detail-empty-message {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.person-photo-small {
+    height: 68px;
+    aspect-ratio: 4 / 5;
+}
+
+/* Afbeeldingen in detailweergave - v0.17.1 */
+#studio-title-poster {
+    width: min(100%, 220px);
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+}
+
+img.person-photo-placeholder {
+    object-fit: cover;
+    display: block;
+}
+
+
+/* v0.17.4 - voorkom dat poster en placeholder tegelijk zichtbaar zijn */
+.poster-card > [hidden],
+.poster-card [hidden] {
+    display: none !important;
+}
+
+#studio-title-poster {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}

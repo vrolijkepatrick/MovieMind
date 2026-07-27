@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind Studio</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=0174?v=0.17.2">
 </head>
 
 <body>
@@ -304,9 +304,10 @@
                     </section>
 
 
-                    <section class="poster-card">
-                        <div class="poster-placeholder">
-                            <span>Filmposter</span>
+                    <section class="poster-card" id="studio-poster-card">
+                        <img id="studio-title-poster" alt="" hidden>
+                        <div class="poster-placeholder" id="studio-poster-placeholder">
+                            <span>Geen poster beschikbaar</span>
                         </div>
                     </section>
 
@@ -444,7 +445,7 @@
 
                 <section class="maintenance-group">
                     <h3>Importeren</h3>
-                    <button type="button">🎬 Film importeren</button>
+                    <button id="import-movie-button" type="button">🎬 Film importeren</button>
                     <button id="import-tv-series-button" type="button">📺 TV-serie importeren</button>
                     <button type="button">📚 Bulk importeren</button>
                 </section>
@@ -458,7 +459,7 @@
 
                 <section class="maintenance-group">
                     <h3>Foto's beheren</h3>
-                    <button type="button">🖼 Ontbrekende foto's aanvullen</button>
+                    <button id="fill-missing-photos-button" type="button">🖼 Ontbrekende foto's aanvullen</button>
                     <button type="button">⭐ Verbeter alle foto's</button>
                     <button type="button">📋 Foto-audit &amp; rapport</button>
                 </section>
@@ -535,6 +536,36 @@
     </div>
 
 
+
+    <!-- FILM IMPORTER -->
+    <div class="studio-modal" id="movie-import-modal" hidden>
+        <div class="studio-modal-backdrop" data-close-movie-importer></div>
+
+        <section class="studio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="movie-import-title">
+            <header class="studio-modal-header">
+                <div>
+                    <span class="panel-step">Importeren</span>
+                    <h2 id="movie-import-title">Film zoeken bij TMDB</h2>
+                </div>
+
+                <button class="studio-modal-close" id="movie-import-close" type="button" aria-label="Sluiten">×</button>
+            </header>
+
+            <div class="studio-modal-content">
+                <form class="tv-import-search" id="movie-import-search-form">
+                    <label for="movie-import-search-input">Naam van de film</label>
+                    <div>
+                        <input id="movie-import-search-input" type="search" placeholder="Bijvoorbeeld: The Godfather, Jaws of Titanic" autocomplete="off">
+                        <button id="movie-import-search-button" type="submit">🔍 Zoeken</button>
+                    </div>
+                </form>
+
+                <p class="tv-import-status" id="movie-import-status">Zoek een film en kies daarna Toevoegen.</p>
+                <div class="tv-import-results" id="movie-import-results"></div>
+            </div>
+        </section>
+    </div>
+
     <!-- TV-SERIE IMPORTER -->
     <div class="studio-modal" id="tv-import-modal" hidden>
         <div class="studio-modal-backdrop" data-close-tv-importer></div>
@@ -564,8 +595,8 @@
         </section>
     </div>
 
-    <script src="config.js"></script>
-    <script src="script.js"></script>
+    <script src="config.js?v=0174?v=0.17.3"></script>
+    <script src="script.js?v=0174?v=0.17.3"></script>
 
 </body>
 </html>

@@ -539,44 +539,45 @@ loadDatabase();
 
 async function loadDatabase() {
     startBtn.disabled = true;
-    startBtn.textContent = "Databases laden...";
+    startBtn.textContent = "Database laden...";
 
     try {
-        const [movieResponse, tvResponse] = await Promise.all([
-            fetch("../data/cinegrid_database.json"),
-            fetch("../data/moviemind_tv_database.json")
-        ]);
+        const response = await fetch("../data/moviemind_database.json");
 
-        if (!movieResponse.ok) {
-            throw new Error("Filmdatabase niet gevonden.");
+        if (!response.ok) {
+            throw new Error(
+                "MovieMind-database niet gevonden (HTTP " +
+                response.status +
+                ")."
+            );
         }
 
-        if (!tvResponse.ok) {
-            throw new Error("TV-database niet gevonden.");
+        const combinedData = await response.json();
+
+        if (!combinedData || !Array.isArray(combinedData.films)) {
+            throw new Error(
+                "moviemind_database.json bevat geen geldige films-lijst."
+            );
         }
 
-        const movieData = await movieResponse.json();
-        const tvData = await tvResponse.json();
-
-        if (!Array.isArray(movieData.films)) {
-            throw new Error("Ongeldige filmdatabase.");
-        }
-
-        if (!Array.isArray(tvData.series)) {
-            throw new Error("Ongeldige TV-database.");
-        }
-
-        const movies = movieData.films.map(function (item) {
-            return normalizeMediaItem(item, "movie");
+        const normalizedTitles = combinedData.films.map(function (item) {
+            return normalizeMediaItem(
+                item,
+                item && item.media_type === "tv" ? "tv" : "movie"
+            );
         });
 
-        const series = tvData.series.map(function (item) {
-            return normalizeMediaItem(item, "tv");
-        });
-
-        database = [...movies, ...series]
+        database = normalizedTitles
             .filter(isUsableMedia)
             .filter(removeDuplicateMedia);
+
+        const movieCount = database.filter(function (item) {
+            return item.media_type !== "tv";
+        }).length;
+
+        const seriesCount = database.filter(function (item) {
+            return item.media_type === "tv";
+        }).length;
 
         buildLookupCaches();
 
@@ -585,24 +586,26 @@ async function loadDatabase() {
         startBtn.textContent = "Start spel";
 
         console.log(
-            "Databases geladen:",
-            movies.filter(isUsableMedia).length,
+            "MovieMind-database geladen:",
+            movieCount,
             "films en",
-            series.filter(isUsableMedia).length,
+            seriesCount,
             "series"
         );
 
     } catch (error) {
         console.error("Databasefout:", error);
 
+        databaseLoaded = false;
         startBtn.disabled = true;
         startBtn.textContent = "Database niet gevonden";
 
         alert(
-            "De databases konden niet worden geladen.\n\n" +
-            "Controleer of deze bestanden bestaan:\n" +
-            "data/cinegrid_database.json\n" +
-            "data/moviemind_tv_database.json"
+            "De MovieMind-database kon niet worden geladen.\n\n" +
+            "Controleer of dit bestand bestaat:\n" +
+            "data/moviemind_database.json\n\n" +
+            "Technische melding: " +
+            (error.message || "onbekende fout")
         );
     }
 }

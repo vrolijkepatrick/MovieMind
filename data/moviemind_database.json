@@ -16444,7 +16444,69 @@
         "Bogs Diamond"
       ],
       "fullDetails": true,
-      "media_type": "movie"
+      "media_type": "movie",
+      "poster_path": "/aAdnwqwkKX5PPcr8EdtaiA8AZVl.jpg",
+      "backdrop_path": "/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg",
+      "overview": "Andy Dufresne betrapt zijn vrouw met een ander en wordt vervolgens beschuldigd van de moord op zijn vrouw en haar minnaar. Hij houdt vol dat hij onschuldig is, maar krijgt toch tweemaal levenslang in de strenge gevangenis Shawshank.",
+      "rating": 8.726,
+      "runtime": 142,
+      "cast_details": [
+        {
+          "id": 504,
+          "name": "Tim Robbins",
+          "character": "Andy Dufresne",
+          "profile_path": "/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg"
+        },
+        {
+          "id": 192,
+          "name": "Morgan Freeman",
+          "character": "Ellis Boyd 'Red' Redding",
+          "profile_path": "/905k0RFzH0Kd6gx8oSxRdnr6FL.jpg"
+        },
+        {
+          "id": 4029,
+          "name": "Bob Gunton",
+          "character": "Warden Norton",
+          "profile_path": "/ulbVvuBToBN3aCGcV028hwO0MOP.jpg"
+        },
+        {
+          "id": 6573,
+          "name": "William Sadler",
+          "character": "Heywood",
+          "profile_path": "/rWeb2kjYCA7V9MC9kRwRpm57YoY.jpg"
+        },
+        {
+          "id": 6574,
+          "name": "Clancy Brown",
+          "character": "Captain Byron T. Hadley",
+          "profile_path": "/1JeBRNG7VS7r64V9lOvej9bZXW5.jpg"
+        },
+        {
+          "id": 6575,
+          "name": "Gil Bellows",
+          "character": "Tommy",
+          "profile_path": "/eCOIv2nSGnWTHdn88NoMyNOKWyR.jpg"
+        },
+        {
+          "id": 6577,
+          "name": "James Whitmore",
+          "character": "Brooks Hatlen",
+          "profile_path": "/nYMAbkfwFIgKK84vnLoQctI6vHg.jpg"
+        },
+        {
+          "id": 6576,
+          "name": "Mark Rolston",
+          "character": "Bogs Diamond",
+          "profile_path": "/hcrNRIptYMRXgkJ9k76BlQu6DQp.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 4027,
+          "name": "Frank Darabont",
+          "profile_path": "/vZ50guP86otYTiBSGfi35GNHWVf.jpg"
+        }
+      ]
     },
     {
       "id": 33,
@@ -31400,7 +31462,69 @@
         "Mike"
       ],
       "fullDetails": true,
-      "media_type": "movie"
+      "media_type": "movie",
+      "poster_path": "/aYtBYWqCdUqcnoodWJdcTG3pFev.jpg",
+      "backdrop_path": "/xUZ2G8MRGEljqgqLxMJItK4iHfY.jpg",
+      "overview": "Rocky Balboa is een tweederangs bokser uit Philadelphia. Hij is een mislukking: hij woont in een afgedankt appartement en als bijbaantje is hij een inner van schulden. Ook probeert hij indruk te maken op de ietwat verlegen Adrian, zijn grote liefde.",
+      "rating": 7.801,
+      "runtime": 119,
+      "cast_details": [
+        {
+          "id": 16483,
+          "name": "Sylvester Stallone",
+          "character": "Robert 'Rocky' Balboa",
+          "profile_path": "/gn3pDWthJqR0VDYGViGD3048og7.jpg"
+        },
+        {
+          "id": 3094,
+          "name": "Talia Shire",
+          "character": "Adrianna 'Adrian' Pennino",
+          "profile_path": "/oktJmlLeyYKBCWPNjHskDwAfjct.jpg"
+        },
+        {
+          "id": 4521,
+          "name": "Burt Young",
+          "character": "Paulie Pennino",
+          "profile_path": "/6QWnsSbjYog0D6hkPhg7Frty54D.jpg"
+        },
+        {
+          "id": 1101,
+          "name": "Carl Weathers",
+          "character": "Apollo Creed",
+          "profile_path": "/oUwtC5hEbcIZv53WPerZ9HhlSJR.jpg"
+        },
+        {
+          "id": 16523,
+          "name": "Burgess Meredith",
+          "character": "Mickey Goldmill",
+          "profile_path": "/2ozNyIbHChcqIBANwvCDpUZGA9b.jpg"
+        },
+        {
+          "id": 16524,
+          "name": "Thayer David",
+          "character": "George 'Miles' Jergens",
+          "profile_path": "/gAkmthly4dMu2Az8SNVWNSeRsYy.jpg"
+        },
+        {
+          "id": 16525,
+          "name": "Joe Spinell",
+          "character": "Tony Gazzo",
+          "profile_path": "/jiok99ZvHDOj51BBgio2qvum0Mb.jpg"
+        },
+        {
+          "id": 16526,
+          "name": "Jimmy Gambina",
+          "character": "Mike",
+          "profile_path": "/7z9cLBNBk67xstIS4dp2pMAgVyr.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 16513,
+          "name": "John G. Avildsen",
+          "profile_path": "/cBpz7xPTfT0cfPhQoGrp7x7esma.jpg"
+        }
+      ]
     },
     {
       "id": 10590,
@@ -106765,6 +106889,283 @@
         "General Hunt Stockwell"
       ],
       "media_type": "tv"
+    },
+    {
+      "id": 11016,
+      "title": "Hulk Hogan's Rock 'n' Wrestling",
+      "year": 1985,
+      "genre": [
+        "Animatie",
+        "Action & Adventure",
+        "Komedie"
+      ],
+      "director": [],
+      "actors": [
+        "Brad Garrett",
+        "James Avery",
+        "Charlie Adler",
+        "Pat Fraley",
+        "Neil Ross",
+        "George DiCenzo",
+        "Aron Kincaid",
+        "Ron Gans"
+      ],
+      "characters": [
+        "Hulk Hogan (voice)",
+        "(voice)",
+        "(voice)",
+        "(voice)",
+        "(voice)",
+        "(voice)",
+        "(voice)",
+        "(voice)"
+      ],
+      "media_type": "tv"
+    },
+    {
+      "id": 82782,
+      "title": "The Righteous Gemstones",
+      "year": 2019,
+      "genre": [
+        "Komedie",
+        "Drama"
+      ],
+      "director": [
+        "Danny McBride"
+      ],
+      "actors": [
+        "Danny McBride",
+        "Adam Devine",
+        "Edi Patterson",
+        "John Goodman",
+        "Cassidy Freeman",
+        "Tony Cavalero",
+        "Tim Baltz",
+        "Skyler Gisondo"
+      ],
+      "characters": [
+        "Jesse Gemstone",
+        "Kelvin Gemstone",
+        "Judy Gemstone",
+        "Eli Gemstone",
+        "Amber Gemstone",
+        "Keefe Chambers",
+        "Benjamin Jason 'BJ' Barnes",
+        "Gideon Gemstone"
+      ],
+      "media_type": "tv"
+    },
+    {
+      "id": 14408,
+      "title": "Popples",
+      "year": 1986,
+      "genre": [
+        "Animatie"
+      ],
+      "director": [],
+      "actors": [
+        "Danny Mann",
+        "Maurice LaMarche",
+        "Valri Bromfield",
+        "Jeannie Elias",
+        "Dan Hennessey",
+        "Donna Christie",
+        "Len Carlson",
+        "Stevie Vallance"
+      ],
+      "characters": [],
+      "media_type": "tv"
+    },
+    {
+      "id": 10246,
+      "title": "Porky’s",
+      "year": 1981,
+      "genre": [
+        "Komedie"
+      ],
+      "director": [
+        "Bob Clark"
+      ],
+      "actors": [
+        "Dan Monahan",
+        "Mark Herrier",
+        "Wyatt Knight",
+        "Roger Wilson",
+        "Cyril O'Reilly",
+        "Tony Ganios",
+        "Kaki Hunter",
+        "Kim Cattrall"
+      ],
+      "characters": [
+        "Pee Wee",
+        "Billy",
+        "Tommy",
+        "Micky",
+        "Tim",
+        "Meat",
+        "Wendy",
+        "Honeywell"
+      ],
+      "poster_path": "/AqCOt1cWfKqCepxK7LIdT812idH.jpg",
+      "backdrop_path": "/97f4GFF2Vv6v40Ee5S00nuvAr4i.jpg",
+      "overview": "Porky's speelt ergens in de jaren vijftig. De scholieren van Angel Beach High hebben slechts één levensvraag: hoe raak ik mijn maagdelijkheid kwijt. Ze mogen gluren wat ze willen en er volcontinu over praten, uiteindeijk zal het er niet van komen. Hun pogingen de striptent van de redneck Porky binnen te dringen en zijn Cubaanse prostituees te bestijgen, eindigen in een fiasco.",
+      "rating": 6.407,
+      "runtime": 94,
+      "cast_details": [
+        {
+          "id": 64221,
+          "name": "Dan Monahan",
+          "character": "Pee Wee",
+          "profile_path": "/6UiySllIZFL1jpnZ7PTqtSR0vJz.jpg"
+        },
+        {
+          "id": 64222,
+          "name": "Mark Herrier",
+          "character": "Billy",
+          "profile_path": "/dN48RAgmDBHt5D1200fWZomxHfl.jpg"
+        },
+        {
+          "id": 64223,
+          "name": "Wyatt Knight",
+          "character": "Tommy",
+          "profile_path": "/o6KnUTYeoSoRKK4QF7zGu6lRYWC.jpg"
+        },
+        {
+          "id": 174653,
+          "name": "Roger Wilson",
+          "character": "Micky",
+          "profile_path": "/9h2SqEtA3qDuBmnisZguudOoqK1.jpg"
+        },
+        {
+          "id": 64224,
+          "name": "Cyril O'Reilly",
+          "character": "Tim",
+          "profile_path": "/wu7DMX8C8v7RVTzua0uhBQflAz7.jpg"
+        },
+        {
+          "id": 3010,
+          "name": "Tony Ganios",
+          "character": "Meat",
+          "profile_path": "/AmYgThhIQv7KwzDyFW08C4Xcbcx.jpg"
+        },
+        {
+          "id": 86994,
+          "name": "Kaki Hunter",
+          "character": "Wendy",
+          "profile_path": "/faPk2sD8Nu1KZspInabHdvS1QNX.jpg"
+        },
+        {
+          "id": 2109,
+          "name": "Kim Cattrall",
+          "character": "Honeywell",
+          "profile_path": "/6X6x8gLSOWxwhoquIi37769m0k0.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 12698,
+          "name": "Bob Clark",
+          "profile_path": "/9T202dlMtzl1cA143aW3y6jTVXB.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 23169,
+      "title": "Remember Me",
+      "year": 2010,
+      "genre": [
+        "Drama",
+        "Romantiek"
+      ],
+      "director": [
+        "Allen Coulter"
+      ],
+      "actors": [
+        "Robert Pattinson",
+        "Emilie de Ravin",
+        "Pierce Brosnan",
+        "Lena Olin",
+        "Chris Cooper",
+        "Ruby Jerins",
+        "Gregory Jbara",
+        "Tate Ellington"
+      ],
+      "characters": [
+        "Tyler Hawkins",
+        "Ally Craig",
+        "Charles Hawkins",
+        "Diane Hirsch",
+        "Neil Craig",
+        "Caroline Hawkins",
+        "Les Hirsch",
+        "Aidan Hall"
+      ],
+      "poster_path": "/j7umuMiLCHvWT7wYhFKJOTFSokF.jpg",
+      "backdrop_path": "/kbxk09QgBJfJjnp66ey3JCEshKf.jpg",
+      "overview": "Tyler Hawkins is een jongen die na de zelfmoord van zijn broer en de scheiding van zijn ouders in een staat van totale lethargie belandt.",
+      "rating": 7.1,
+      "runtime": 113,
+      "cast_details": [
+        {
+          "id": 11288,
+          "name": "Robert Pattinson",
+          "character": "Tyler Hawkins",
+          "profile_path": "/3qZ09UE7lN6AtorfXFRYpEtSY93.jpg"
+        },
+        {
+          "id": 28660,
+          "name": "Emilie de Ravin",
+          "character": "Ally Craig",
+          "profile_path": "/T4pyhFEPC8zSgUz9p3uQT2J5zX.jpg"
+        },
+        {
+          "id": 517,
+          "name": "Pierce Brosnan",
+          "character": "Charles Hawkins",
+          "profile_path": "/dzXVwwJLPwiZeXOnf7YxorqVEEM.jpg"
+        },
+        {
+          "id": 5313,
+          "name": "Lena Olin",
+          "character": "Diane Hirsch",
+          "profile_path": "/tUg7cH4qLqs5WdOIH0WMQby9kWH.jpg"
+        },
+        {
+          "id": 2955,
+          "name": "Chris Cooper",
+          "character": "Neil Craig",
+          "profile_path": "/j0sQDzaDlnNAdaYhy6HRRAFi22.jpg"
+        },
+        {
+          "id": 1218228,
+          "name": "Ruby Jerins",
+          "character": "Caroline Hawkins",
+          "profile_path": "/kt8tj1jLapxT0FfqNHJQNn0FmAR.jpg"
+        },
+        {
+          "id": 24360,
+          "name": "Gregory Jbara",
+          "character": "Les Hirsch",
+          "profile_path": "/nYkdyh9E0iNuue8k4437gCWD70G.jpg"
+        },
+        {
+          "id": 965205,
+          "name": "Tate Ellington",
+          "character": "Aidan Hall",
+          "profile_path": "/oEVLDskW1iyC06VAdnNdqKpHosy.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 16834,
+          "name": "Allen Coulter",
+          "profile_path": "/q3KnyrQqaJ20kkIyo3Z5PqNCWlE.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
     }
   ]
 }

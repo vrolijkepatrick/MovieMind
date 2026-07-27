@@ -1,7 +1,7 @@
 /* =========================================================
    MOVIEMIND STUDIO
    Hoofdscript
-   Versie 0.16
+   Versie 0.17.2
 ========================================================= */
 
 "use strict";
@@ -25,12 +25,15 @@ var studioPhotoState = {
 
 document.addEventListener("DOMContentLoaded", function () {
     prepareExistingInterface();
+    initialiseRecentTitleChanges();
     initialiseMaintenancePanel();
     initialiseDatabaseLoader();
     initialiseDatabaseMerger();
     initialiseSearch();
     initialiseNavigation();
     initialiseStudioPhotoManager();
+    initialiseMissingPhotosFiller();
+    initialiseMovieImporter();
     initialiseTvSeriesImporter();
     showEmptyState("Database wordt gecontroleerd...");
     restoreStudioConnections();
@@ -1349,12 +1352,10 @@ function appendPageButton(
    EERSTE DETAILWEERGAVE
 ========================================================= */
 
-function showTitleDetails(record) {
+async function showTitleDetails(record) {
     var title = document.querySelector(".selected-title h3");
     var year = document.querySelector(".selected-title p");
-    var detailValues = document.querySelectorAll(
-        ".detail-list dd"
-    );
+    var detailValues = document.querySelectorAll(".detail-list dd");
     var peopleGrid = document.querySelector(".people-grid");
     var directorRow = document.querySelector(".director-row");
     var genreList = document.querySelector(".genre-list");
@@ -1364,25 +1365,70 @@ function showTitleDetails(record) {
     }
 
     if (year) {
-        year.textContent = record.year
-            ? "(" + record.year + ")"
-            : "";
+        year.textContent = record.year ? "(" + record.year + ")" : "";
     }
 
-    if (detailValues.length >= 6) {
-        detailValues[0].textContent = record.title || "-";
-        detailValues[1].textContent = record.year || "-";
-        detailValues[2].textContent =
-            getRecordType(record) === "tv" ? "Serie" : "Film";
-        detailValues[3].textContent = record.rating || "-";
-        detailValues[4].textContent =
-            record.runtime || record.duration || "-";
-        detailValues[5].textContent = record.id || "-";
-    }
-
-    renderPeopleGrid(peopleGrid, record.actors);
-    renderDirectorRow(directorRow, record.director);
+    renderTitlePoster(record);
+    renderPeopleGrid(peopleGrid, record.actors, record.cast_details);
+    renderDirectorRow(directorRow, record.director, record.director_details);
     renderGenreList(genreList, record.genre);
+    updateTitleDetailValues(detailValues, record);
+
+    if (!record.poster_path || !Array.isArray(record.cast_details)) {
+        try {
+            await enrichTitleRecordFromTmdb(record);
+            renderTitlePoster(record);
+            renderPeopleGrid(peopleGrid, record.actors, record.cast_details);
+            renderDirectorRow(directorRow, record.director, record.director_details);
+            updateTitleDetailValues(detailValues, record);
+        } catch (error) {
+            console.warn("Extra titelgegevens ophalen mislukt:", error);
+        }
+    }
+}
+
+function updateTitleDetailValues(detailValues, record) {
+    if (detailValues.length < 6) {
+        return;
+    }
+
+    detailValues[0].textContent = record.title || "-";
+    detailValues[1].textContent = record.year || "-";
+    detailValues[2].textContent = getRecordType(record) === "tv" ? "Serie" : "Film";
+    detailValues[3].textContent = record.rating ? Number(record.rating).toFixed(1) : "-";
+    detailValues[4].textContent = record.runtime ? record.runtime + " min" : (record.duration || "-");
+    detailValues[5].textContent = record.id || "-";
+}
+
+function renderTitlePoster(record) {
+    var image = document.getElementById("studio-title-poster");
+    var placeholder = document.getElementById("studio-poster-placeholder");
+    var path = record.poster_path || record.poster || "";
+
+    if (!image || !placeholder) {
+        return;
+    }
+
+    if (path) {
+        image.src = path.indexOf("http") === 0 ? path : "https://image.tmdb.org/t/p/w500" + path;
+        image.alt = "Poster van " + (record.title || "deze titel");
+        image.hidden = false;
+        image.style.display = "block";
+        placeholder.hidden = true;
+        placeholder.style.display = "none";
+        image.onerror = function () {
+            image.hidden = true;
+            image.style.display = "none";
+            placeholder.hidden = false;
+            placeholder.style.display = "flex";
+        };
+    } else {
+        image.removeAttribute("src");
+        image.hidden = true;
+        image.style.display = "none";
+        placeholder.hidden = false;
+        placeholder.style.display = "flex";
+    }
 }
 
 
@@ -1410,48 +1456,65 @@ async function showActorDetails(actor) {
 }
 
 
-function renderPeopleGrid(container, actors) {
+function renderPeopleGrid(container, actors, castDetails) {
     if (!container) {
         return;
     }
 
     container.innerHTML = "";
 
-    (Array.isArray(actors) ? actors.slice(0, 3) : []).forEach(
-        function (actorName) {
-            var article = document.createElement("article");
-            var photo = document.createElement("div");
-            var name = document.createElement("p");
+    (Array.isArray(actors) ? actors.slice(0, 8) : []).forEach(function (actorName, index) {
+        var article = document.createElement("article");
+        var photo;
+        var name = document.createElement("p");
+        var detail = Array.isArray(castDetails) ? castDetails[index] : null;
 
-            article.className = "person-card";
+        article.className = "person-card";
+        name.textContent = actorName;
+
+        if (detail && detail.profile_path) {
+            photo = document.createElement("img");
+            photo.className = "person-photo-placeholder";
+            photo.src = "https://image.tmdb.org/t/p/w185" + detail.profile_path;
+            photo.alt = "Foto van " + actorName;
+            photo.loading = "lazy";
+        } else {
+            photo = document.createElement("div");
             photo.className = "person-photo-placeholder";
             photo.textContent = "Foto";
-            name.textContent = actorName;
-
-            article.appendChild(photo);
-            article.appendChild(name);
-            container.appendChild(article);
         }
-    );
+
+        article.appendChild(photo);
+        article.appendChild(name);
+        container.appendChild(article);
+    });
 }
 
-
-function renderDirectorRow(container, directors) {
+function renderDirectorRow(container, directors, directorDetails) {
     var names;
+    var firstDetail = Array.isArray(directorDetails) ? directorDetails[0] : null;
+    var photoHtml;
 
     if (!container) {
         return;
     }
 
-    names = Array.isArray(directors)
-        ? directors.join(", ")
-        : directors || "-";
+    names = Array.isArray(directors) ? directors.join(", ") : directors || "-";
+    photoHtml = firstDetail && firstDetail.profile_path
+        ? '<img class="person-photo-placeholder person-photo-small" src="https://image.tmdb.org/t/p/w185' + firstDetail.profile_path + '" alt="Foto van ' + escapeHtml(names) + '">'
+        : '<div class="person-photo-placeholder person-photo-small">Foto</div>';
 
-    container.innerHTML =
-        '<div class="person-photo-placeholder person-photo-small">' +
-        "Foto</div><p></p>";
-
+    container.innerHTML = photoHtml + "<p></p>";
     container.querySelector("p").textContent = names;
+}
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
@@ -1470,6 +1533,166 @@ function renderGenreList(container, genres) {
             container.appendChild(item);
         }
     );
+}
+
+
+/* =========================================================
+   LAATST GEWIJZIGDE TITELS - VERSIE 0.17.2
+========================================================= */
+
+var STUDIO_RECENT_TITLES_KEY = "moviemind_studio_recent_titles_v1";
+var STUDIO_RECENT_TITLES_LIMIT = 5;
+
+function initialiseRecentTitleChanges() {
+    renderRecentTitleChanges(loadRecentTitleChanges());
+}
+
+function getRecentTitleChangesList() {
+    var headings = document.querySelectorAll(
+        ".workspace-bottom-grid .compact-panel h3"
+    );
+    var list = null;
+
+    headings.forEach(function (heading) {
+        if (
+            normaliseText(heading.textContent) ===
+            normaliseText("Laatst gewijzigde films")
+        ) {
+            list = heading.parentElement
+                ? heading.parentElement.querySelector("ul.compact-list")
+                : null;
+        }
+    });
+
+    return list;
+}
+
+function loadRecentTitleChanges() {
+    try {
+        var storedValue = window.localStorage.getItem(
+            STUDIO_RECENT_TITLES_KEY
+        );
+        var parsedValue = storedValue
+            ? JSON.parse(storedValue)
+            : [];
+
+        return Array.isArray(parsedValue)
+            ? parsedValue.filter(function (entry) {
+                return (
+                    entry &&
+                    typeof entry.title === "string" &&
+                    entry.title.trim()
+                );
+            }).slice(0, STUDIO_RECENT_TITLES_LIMIT)
+            : [];
+    } catch (error) {
+        console.warn(
+            "Laatst gewijzigde titels konden niet worden geladen:",
+            error
+        );
+        return [];
+    }
+}
+
+function saveRecentTitleChanges(entries) {
+    try {
+        window.localStorage.setItem(
+            STUDIO_RECENT_TITLES_KEY,
+            JSON.stringify(entries)
+        );
+    } catch (error) {
+        console.warn(
+            "Laatst gewijzigde titels konden niet worden bewaard:",
+            error
+        );
+    }
+}
+
+function addRecentTitleChange(record, action) {
+    if (!record || !String(record.title || "").trim()) {
+        return;
+    }
+
+    var entries = loadRecentTitleChanges();
+    var recordType = getRecordType(record);
+    var identity =
+        recordType +
+        "|" +
+        String(record.id === null || record.id === undefined
+            ? ""
+            : record.id) +
+        "|" +
+        normaliseText(record.title);
+    var newEntry = {
+        identity: identity,
+        title: String(record.title).trim(),
+        type: recordType,
+        action: action || "gewijzigd",
+        timestamp: new Date().toISOString()
+    };
+
+    entries = entries.filter(function (entry) {
+        return entry.identity !== identity;
+    });
+
+    entries.unshift(newEntry);
+    entries = entries.slice(0, STUDIO_RECENT_TITLES_LIMIT);
+
+    saveRecentTitleChanges(entries);
+    renderRecentTitleChanges(entries);
+}
+
+function renderRecentTitleChanges(entries) {
+    var list = getRecentTitleChangesList();
+
+    if (!list) {
+        return;
+    }
+
+    list.innerHTML = "";
+
+    if (!entries.length) {
+        var emptyItem = document.createElement("li");
+        var emptyText = document.createElement("span");
+
+        emptyItem.className = "recent-title-empty";
+        emptyText.textContent = "Nog geen titels gewijzigd.";
+        emptyItem.appendChild(emptyText);
+        list.appendChild(emptyItem);
+        return;
+    }
+
+    entries.forEach(function (entry) {
+        var item = document.createElement("li");
+        var titleElement = document.createElement("span");
+        var timeElement = document.createElement("time");
+        var date = new Date(entry.timestamp);
+        var typeLabel = entry.type === "tv" ? "Serie" : "Film";
+
+        titleElement.textContent =
+            entry.title + " · " + typeLabel;
+
+        if (Number.isNaN(date.getTime())) {
+            timeElement.textContent = "";
+        } else {
+            timeElement.dateTime = entry.timestamp;
+            timeElement.textContent =
+                date.toLocaleDateString("nl-NL", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                }) +
+                " " +
+                date.toLocaleTimeString("nl-NL", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+        }
+
+        item.appendChild(titleElement);
+        item.appendChild(timeElement);
+        list.appendChild(item);
+    });
 }
 
 
@@ -2287,6 +2510,274 @@ function updateStudioPhotoSaveButton() {
    TV-SERIE IMPORTER - VERSIE 0.15.1
 ========================================================= */
 
+/* =========================================================
+   FILMIMPORTER + TMDB-VERRIJKING - VERSIE 0.17.1
+========================================================= */
+
+var movieImporterState = { searchRequestId: 0 };
+
+function initialiseMovieImporter() {
+    var openButton = document.getElementById("import-movie-button");
+    var closeButton = document.getElementById("movie-import-close");
+    var modal = document.getElementById("movie-import-modal");
+    var form = document.getElementById("movie-import-search-form");
+    var backdrop = modal ? modal.querySelector("[data-close-movie-importer]") : null;
+
+    if (!openButton || !closeButton || !modal || !form) {
+        console.error("Filmimporter kan niet starten: vereiste HTML-onderdelen ontbreken.");
+        return;
+    }
+
+    /* Voorkomt dubbele koppelingen wanneer het script opnieuw geladen wordt. */
+    if (openButton.dataset.movieImporterReady !== "true") {
+        openButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openMovieImporter();
+        });
+        openButton.dataset.movieImporterReady = "true";
+    }
+
+    if (closeButton.dataset.movieImporterReady !== "true") {
+        closeButton.addEventListener("click", closeMovieImporter);
+        closeButton.dataset.movieImporterReady = "true";
+    }
+
+    if (backdrop && backdrop.dataset.movieImporterReady !== "true") {
+        backdrop.addEventListener("click", closeMovieImporter);
+        backdrop.dataset.movieImporterReady = "true";
+    }
+
+    if (form.dataset.movieImporterReady !== "true") {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            searchMoviesAtTmdb();
+        });
+        form.dataset.movieImporterReady = "true";
+    }
+}
+
+function openMovieImporter() {
+    var modal = document.getElementById("movie-import-modal");
+    var input = document.getElementById("movie-import-search-input");
+
+    if (!modal) {
+        showNotification("Filmimporter kon niet worden geopend: venster ontbreekt.", "error");
+        console.error("Element #movie-import-modal ontbreekt.");
+        return;
+    }
+
+    /* Het venster opent altijd. Zo lijkt de knop nooit meer 'dood'. */
+    modal.hidden = false;
+    modal.removeAttribute("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    if (movieMindState.records.length === 0) {
+        setMovieImportStatus(
+            "Je kunt al zoeken. Laad vóór Toevoegen eerst moviemind_database.json.",
+            "error"
+        );
+    } else {
+        setMovieImportStatus("Zoek een film en kies daarna Toevoegen.", "");
+    }
+
+    window.setTimeout(function () {
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }, 30);
+}
+
+/* Ook beschikbaar voor handmatige of inline aanroepen. */
+window.openMovieImporter = openMovieImporter;
+
+function closeMovieImporter() {
+    var modal = document.getElementById("movie-import-modal");
+    if (modal) { modal.hidden = true; }
+    document.body.style.overflow = "";
+}
+
+async function searchMoviesAtTmdb() {
+    var input = document.getElementById("movie-import-search-input");
+    var results = document.getElementById("movie-import-results");
+    var query = input ? input.value.trim() : "";
+    var requestId;
+    if (!query) { setMovieImportStatus("Vul eerst de naam van een film in.", "error"); return; }
+    requestId = ++movieImporterState.searchRequestId;
+    results.innerHTML = "";
+    setMovieImporterBusy(true);
+    setMovieImportStatus("TMDB wordt doorzocht...", "");
+    try {
+        var response = await fetch("https://api.themoviedb.org/3/search/movie?api_key=" + encodeURIComponent(TMDB_API_KEY) + "&language=nl-NL&include_adult=false&query=" + encodeURIComponent(query));
+        if (!response.ok) { throw new Error("TMDB gaf foutcode " + response.status + "."); }
+        var payload = await response.json();
+        if (requestId !== movieImporterState.searchRequestId) { return; }
+        renderMovieImportResults((payload.results || []).slice(0, 12));
+    } catch (error) {
+        setMovieImportStatus("Zoeken bij TMDB is mislukt: " + (error.message || "onbekende fout"), "error");
+    } finally { setMovieImporterBusy(false); }
+}
+
+function renderMovieImportResults(movies) {
+    var container = document.getElementById("movie-import-results");
+    container.innerHTML = "";
+    if (!movies.length) { setMovieImportStatus("Geen films gevonden.", "error"); return; }
+    setMovieImportStatus(movies.length + " resultaten gevonden.", "");
+    movies.forEach(function (item) { container.appendChild(createMovieImportResult(item)); });
+}
+
+function createMovieImportResult(item) {
+    var article = document.createElement("article");
+    var poster = item.poster_path ? document.createElement("img") : document.createElement("div");
+    var text = document.createElement("div");
+    var title = document.createElement("h3");
+    var metadata = document.createElement("p");
+    var overview = document.createElement("p");
+    var button = document.createElement("button");
+    article.className = "tv-import-result";
+    if (item.poster_path) { poster.src = "https://image.tmdb.org/t/p/w154" + item.poster_path; poster.alt = "Poster van " + item.title; }
+    else { poster.className = "tv-import-poster-placeholder"; poster.textContent = "🎬"; }
+    title.textContent = item.title || "Film zonder titel";
+    metadata.textContent = (item.release_date ? item.release_date.slice(0,4) : "jaar onbekend") + " · TMDB " + item.id;
+    overview.textContent = item.overview ? shortenTvOverview(item.overview,170) : "Geen omschrijving beschikbaar.";
+    button.type = "button";
+    if (isMovieAlreadyImported(item.id)) { button.textContent = "Al aanwezig"; button.disabled = true; }
+    else { button.textContent = "＋ Toevoegen"; button.addEventListener("click", function () { importMovie(item.id, button); }); }
+    text.appendChild(title); text.appendChild(metadata); text.appendChild(overview);
+    article.appendChild(poster); article.appendChild(text); article.appendChild(button);
+    return article;
+}
+
+function isMovieAlreadyImported(tmdbId) {
+    return movieMindState.records.some(function (record) { return getRecordType(record) === "movie" && Number(record.id) === Number(tmdbId); });
+}
+
+async function importMovie(tmdbId, button) {
+    var originalText = button.textContent;
+    var record;
+    button.disabled = true; button.textContent = "Ophalen...";
+    setMovieImportStatus("Filmgegevens en acteurs worden opgehaald...", "");
+    try {
+        var details = await fetchTmdbTitleDetails("movie", tmdbId);
+        record = createMovieDatabaseRecord(details);
+        if (isMovieAlreadyImported(record.id)) { button.textContent = "Al aanwezig"; return; }
+        movieMindState.records.push(record); synchroniseLoadedDatabaseRecords(); await saveUpdatedStudioDatabase();
+        updateDatabaseStatistics(movieMindState.records);
+        addRecentTitleChange(record, "toegevoegd");
+        addLogEntry("Film toegevoegd: " + record.title);
+        button.textContent = "✓ Toegevoegd"; setMovieImportStatus(record.title + " is toegevoegd en opgeslagen.", "success");
+        showNotification("Film toegevoegd: " + record.title, "success");
+        if (movieMindState.view === "films") { applyCurrentView(); }
+    } catch (error) {
+        if (record) { movieMindState.records = movieMindState.records.filter(function (r) { return r !== record; }); synchroniseLoadedDatabaseRecords(); }
+        button.disabled = false; button.textContent = originalText;
+        setMovieImportStatus("Toevoegen is mislukt: " + (error.message || "onbekende fout"), "error");
+    }
+}
+
+function createMovieDatabaseRecord(details) {
+    var credits = details.credits || {};
+    var cast = Array.isArray(credits.cast) ? credits.cast.slice(0, 8) : [];
+    var crew = Array.isArray(credits.crew) ? credits.crew : [];
+    var directors = crew.filter(function (p) { return p.job === "Director"; });
+    return {
+        id: details.id, title: details.title || details.original_title || "Film zonder titel",
+        year: details.release_date ? Number(details.release_date.slice(0,4)) : null,
+        genre: (details.genres || []).map(function (g) { return g.name; }),
+        director: directors.map(function (p) { return p.name; }),
+        actors: cast.map(function (p) { return p.name; }).filter(Boolean),
+        characters: cast.map(function (p) { return p.character || ""; }).filter(Boolean),
+        poster_path: details.poster_path || null, backdrop_path: details.backdrop_path || null,
+        overview: details.overview || "", rating: Number(details.vote_average || 0), runtime: details.runtime || null,
+        cast_details: cast.map(function (p) { return { id:p.id, name:p.name, character:p.character || "", profile_path:p.profile_path || null }; }),
+        director_details: directors.map(function (p) { return { id:p.id, name:p.name, profile_path:p.profile_path || null }; }),
+        fullDetails: true, media_type: "movie"
+    };
+}
+
+async function fetchTmdbTitleDetails(type, id) {
+    var response = await fetch("https://api.themoviedb.org/3/" + type + "/" + encodeURIComponent(id) + "?api_key=" + encodeURIComponent(TMDB_API_KEY) + "&language=nl-NL&append_to_response=credits");
+    if (!response.ok) { throw new Error("TMDB gaf foutcode " + response.status + "."); }
+    return await response.json();
+}
+
+async function enrichTitleRecordFromTmdb(record) {
+    if (!record || !record.id) { return; }
+    var type = getRecordType(record);
+    var details = await fetchTmdbTitleDetails(type, record.id);
+    var enriched = type === "tv" ? createTvDatabaseRecord(details) : createMovieDatabaseRecord(details);
+    Object.keys(enriched).forEach(function (key) { record[key] = enriched[key]; });
+    synchroniseLoadedDatabaseRecords();
+    await saveUpdatedStudioDatabase();
+    addRecentTitleChange(record, "aangevuld");
+    addLogEntry("Afbeeldingen aangevuld: " + record.title);
+}
+
+function setMovieImportStatus(message, type) {
+    var status = document.getElementById("movie-import-status");
+    if (!status) { return; }
+    status.textContent = message; status.classList.remove("is-error","is-success");
+    if (type === "error") { status.classList.add("is-error"); }
+    if (type === "success") { status.classList.add("is-success"); }
+}
+
+function setMovieImporterBusy(isBusy) {
+    var button = document.getElementById("movie-import-search-button");
+    var input = document.getElementById("movie-import-search-input");
+    if (button) { button.disabled = isBusy; button.textContent = isBusy ? "Zoeken..." : "🔍 Zoeken"; }
+    if (input) { input.disabled = isBusy; }
+}
+
+/* =========================================================
+   ONTBREKENDE ACTEURSFOTO'S AANVULLEN
+========================================================= */
+
+function initialiseMissingPhotosFiller() {
+    var button = document.getElementById("fill-missing-photos-button");
+    if (button) { button.addEventListener("click", fillMissingActorPhotos); }
+}
+
+async function fillMissingActorPhotos() {
+    var button = document.getElementById("fill-missing-photos-button");
+    if (!studioPhotoState.directoryHandle) {
+        showNotification("Kies eerst bij Acteursfoto beheren de map game/images/actors.", "error");
+        return;
+    }
+    if (!window.confirm("Alle ontbrekende acteursfoto's aanvullen? Dit kan bij duizenden acteurs geruime tijd duren.")) { return; }
+    var names = buildActorItems().map(function (a) { return a.name; });
+    var saved = 0, skipped = 0, failed = 0;
+    button.disabled = true;
+    try {
+        for (var i=0; i<names.length; i+=1) {
+            button.textContent = "Foto's aanvullen " + (i+1) + "/" + names.length;
+            var existing = await findStudioActorPhotoFile(names[i]);
+            if (existing) { skipped += 1; continue; }
+            try {
+                var actor = await findStudioTmdbActor(names[i]);
+                if (!actor || !actor.profile_path) { failed += 1; continue; }
+                await saveActorPhotoDirectly(names[i], actor.profile_path);
+                saved += 1;
+            } catch (error) { failed += 1; console.warn("Foto overslaan:", names[i], error); }
+            await new Promise(function (resolve) { window.setTimeout(resolve, 120); });
+        }
+        addLogEntry("Foto-aanvulling klaar: " + saved + " opgeslagen");
+        showNotification("Klaar: " + saved + " foto's opgeslagen, " + skipped + " al aanwezig, " + failed + " niet gevonden.", "success");
+    } finally {
+        button.disabled = false; button.textContent = "🖼 Ontbrekende foto's aanvullen";
+    }
+}
+
+async function saveActorPhotoDirectly(actorName, profilePath) {
+    var response = await fetch("https://image.tmdb.org/t/p/w500" + profilePath, { mode:"cors", cache:"no-store" });
+    if (!response.ok) { throw new Error("HTTP " + response.status); }
+    var blob = await response.blob();
+    var fileHandle = await studioPhotoState.directoryHandle.getFileHandle(createStudioActorPhotoFilename(actorName), { create:true });
+    var writable = await fileHandle.createWritable();
+    await writable.write(blob); await writable.close();
+}
+
 var tvImporterState = {
     searchRequestId: 0,
     isBusy: false
@@ -2572,6 +3063,7 @@ async function importTvSeries(tmdbId, button) {
 
         updateDatabaseStatistics(movieMindState.records);
         movieMindState.currentPage = 1;
+        addRecentTitleChange(record, "toegevoegd");
         addLogEntry("TV-serie toegevoegd: " + record.title);
 
         button.textContent = "✓ Toegevoegd";
@@ -2648,6 +3140,16 @@ function createTvDatabaseRecord(details) {
         characters: cast.map(function (person) {
             return person.character || person.roles && person.roles[0] && person.roles[0].character || "";
         }).filter(Boolean),
+        poster_path: details.poster_path || null,
+        backdrop_path: details.backdrop_path || null,
+        overview: details.overview || "",
+        rating: Number(details.vote_average || 0),
+        runtime: Array.isArray(details.episode_run_time) && details.episode_run_time[0] ? details.episode_run_time[0] : null,
+        cast_details: cast.map(function (person) {
+            return { id: person.id, name: person.name, character: person.character || "", profile_path: person.profile_path || null };
+        }),
+        director_details: directors.map(function (name) { return { name: name, profile_path: null }; }),
+        fullDetails: true,
         media_type: "tv"
     };
 }
