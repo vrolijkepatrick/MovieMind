@@ -1,0 +1,4 @@
+/* MovieMind Studio - TMDB-instellingen */
+"use strict";
+
+const TMDB_API_KEY = "34b35735f08f883abddf3380df01b57c";

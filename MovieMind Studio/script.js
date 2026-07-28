@@ -1,7 +1,7 @@
 /* =========================================================
    MOVIEMIND STUDIO
    Hoofdscript
-   Versie 0.17.2
+   Versie 0.17.3
 ========================================================= */
 
 "use strict";
@@ -25,7 +25,6 @@ var studioPhotoState = {
 
 document.addEventListener("DOMContentLoaded", function () {
     prepareExistingInterface();
-    initialiseRecentTitleChanges();
     initialiseMaintenancePanel();
     initialiseDatabaseLoader();
     initialiseDatabaseMerger();
@@ -1537,166 +1536,6 @@ function renderGenreList(container, genres) {
 
 
 /* =========================================================
-   LAATST GEWIJZIGDE TITELS - VERSIE 0.17.2
-========================================================= */
-
-var STUDIO_RECENT_TITLES_KEY = "moviemind_studio_recent_titles_v1";
-var STUDIO_RECENT_TITLES_LIMIT = 5;
-
-function initialiseRecentTitleChanges() {
-    renderRecentTitleChanges(loadRecentTitleChanges());
-}
-
-function getRecentTitleChangesList() {
-    var headings = document.querySelectorAll(
-        ".workspace-bottom-grid .compact-panel h3"
-    );
-    var list = null;
-
-    headings.forEach(function (heading) {
-        if (
-            normaliseText(heading.textContent) ===
-            normaliseText("Laatst gewijzigde films")
-        ) {
-            list = heading.parentElement
-                ? heading.parentElement.querySelector("ul.compact-list")
-                : null;
-        }
-    });
-
-    return list;
-}
-
-function loadRecentTitleChanges() {
-    try {
-        var storedValue = window.localStorage.getItem(
-            STUDIO_RECENT_TITLES_KEY
-        );
-        var parsedValue = storedValue
-            ? JSON.parse(storedValue)
-            : [];
-
-        return Array.isArray(parsedValue)
-            ? parsedValue.filter(function (entry) {
-                return (
-                    entry &&
-                    typeof entry.title === "string" &&
-                    entry.title.trim()
-                );
-            }).slice(0, STUDIO_RECENT_TITLES_LIMIT)
-            : [];
-    } catch (error) {
-        console.warn(
-            "Laatst gewijzigde titels konden niet worden geladen:",
-            error
-        );
-        return [];
-    }
-}
-
-function saveRecentTitleChanges(entries) {
-    try {
-        window.localStorage.setItem(
-            STUDIO_RECENT_TITLES_KEY,
-            JSON.stringify(entries)
-        );
-    } catch (error) {
-        console.warn(
-            "Laatst gewijzigde titels konden niet worden bewaard:",
-            error
-        );
-    }
-}
-
-function addRecentTitleChange(record, action) {
-    if (!record || !String(record.title || "").trim()) {
-        return;
-    }
-
-    var entries = loadRecentTitleChanges();
-    var recordType = getRecordType(record);
-    var identity =
-        recordType +
-        "|" +
-        String(record.id === null || record.id === undefined
-            ? ""
-            : record.id) +
-        "|" +
-        normaliseText(record.title);
-    var newEntry = {
-        identity: identity,
-        title: String(record.title).trim(),
-        type: recordType,
-        action: action || "gewijzigd",
-        timestamp: new Date().toISOString()
-    };
-
-    entries = entries.filter(function (entry) {
-        return entry.identity !== identity;
-    });
-
-    entries.unshift(newEntry);
-    entries = entries.slice(0, STUDIO_RECENT_TITLES_LIMIT);
-
-    saveRecentTitleChanges(entries);
-    renderRecentTitleChanges(entries);
-}
-
-function renderRecentTitleChanges(entries) {
-    var list = getRecentTitleChangesList();
-
-    if (!list) {
-        return;
-    }
-
-    list.innerHTML = "";
-
-    if (!entries.length) {
-        var emptyItem = document.createElement("li");
-        var emptyText = document.createElement("span");
-
-        emptyItem.className = "recent-title-empty";
-        emptyText.textContent = "Nog geen titels gewijzigd.";
-        emptyItem.appendChild(emptyText);
-        list.appendChild(emptyItem);
-        return;
-    }
-
-    entries.forEach(function (entry) {
-        var item = document.createElement("li");
-        var titleElement = document.createElement("span");
-        var timeElement = document.createElement("time");
-        var date = new Date(entry.timestamp);
-        var typeLabel = entry.type === "tv" ? "Serie" : "Film";
-
-        titleElement.textContent =
-            entry.title + " · " + typeLabel;
-
-        if (Number.isNaN(date.getTime())) {
-            timeElement.textContent = "";
-        } else {
-            timeElement.dateTime = entry.timestamp;
-            timeElement.textContent =
-                date.toLocaleDateString("nl-NL", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric"
-                }) +
-                " " +
-                date.toLocaleTimeString("nl-NL", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
-        }
-
-        item.appendChild(titleElement);
-        item.appendChild(timeElement);
-        list.appendChild(item);
-    });
-}
-
-
-/* =========================================================
    HULPFUNCTIES
 ========================================================= */
 
@@ -2664,9 +2503,7 @@ async function importMovie(tmdbId, button) {
         record = createMovieDatabaseRecord(details);
         if (isMovieAlreadyImported(record.id)) { button.textContent = "Al aanwezig"; return; }
         movieMindState.records.push(record); synchroniseLoadedDatabaseRecords(); await saveUpdatedStudioDatabase();
-        updateDatabaseStatistics(movieMindState.records);
-        addRecentTitleChange(record, "toegevoegd");
-        addLogEntry("Film toegevoegd: " + record.title);
+        updateDatabaseStatistics(movieMindState.records); addLogEntry("Film toegevoegd: " + record.title);
         button.textContent = "✓ Toegevoegd"; setMovieImportStatus(record.title + " is toegevoegd en opgeslagen.", "success");
         showNotification("Film toegevoegd: " + record.title, "success");
         if (movieMindState.view === "films") { applyCurrentView(); }
@@ -2711,7 +2548,6 @@ async function enrichTitleRecordFromTmdb(record) {
     Object.keys(enriched).forEach(function (key) { record[key] = enriched[key]; });
     synchroniseLoadedDatabaseRecords();
     await saveUpdatedStudioDatabase();
-    addRecentTitleChange(record, "aangevuld");
     addLogEntry("Afbeeldingen aangevuld: " + record.title);
 }
 
@@ -3063,7 +2899,6 @@ async function importTvSeries(tmdbId, button) {
 
         updateDatabaseStatistics(movieMindState.records);
         movieMindState.currentPage = 1;
-        addRecentTitleChange(record, "toegevoegd");
         addLogEntry("TV-serie toegevoegd: " + record.title);
 
         button.textContent = "✓ Toegevoegd";
@@ -3178,28 +3013,69 @@ function synchroniseLoadedDatabaseRecords() {
 async function saveUpdatedStudioDatabase() {
     var databaseText;
     var writable;
+    var handles;
 
     synchroniseLoadedDatabaseRecords();
     databaseText = JSON.stringify(window.movieMindDatabase, null, 2);
 
-    if (movieMindState.databaseFileHandle) {
-        if (!await ensureStudioFilePermission(movieMindState.databaseFileHandle)) {
+    /*
+     * Is de database nog niet met een schrijfbare bestandshandle geopend,
+     * laat de gebruiker dan het bestaande MovieMind-databasebestand kiezen.
+     * Er wordt bewust geen los JSON-bestand meer gedownload.
+     */
+    if (!movieMindState.databaseFileHandle) {
+        if (!("showOpenFilePicker" in window)) {
             throw new Error(
-                "Geen schrijftoestemming voor de database. Klik opnieuw op Database laden."
+                "De browser kan de database niet rechtstreeks opslaan. " +
+                "Open MovieMind Studio in Chrome of Edge en klik opnieuw op Database laden."
             );
         }
 
-        writable = await movieMindState.databaseFileHandle.createWritable();
-        await writable.write(databaseText);
-        await writable.close();
-        return;
+        handles = await window.showOpenFilePicker({
+            multiple: false,
+            types: [{
+                description: "MovieMind database",
+                accept: {
+                    "application/json": [".json"]
+                }
+            }]
+        });
+
+        if (!handles || !handles[0]) {
+            throw new Error(
+                "Er is geen databasebestand gekozen."
+            );
+        }
+
+        movieMindState.databaseFileHandle = handles[0];
+        window.movieMindDatabaseFileName = handles[0].name;
+        await saveStudioHandle("database", handles[0]);
     }
 
-    downloadUpdatedStudioDatabase(databaseText);
-    showNotification(
-        "De bijgewerkte database is gedownload. Vervang hiermee je oude JSON-bestand.",
-        "success"
-    );
+    if (!await ensureStudioFilePermission(movieMindState.databaseFileHandle)) {
+        throw new Error(
+            "Geen schrijftoestemming voor de database. " +
+            "Klik opnieuw op Database laden."
+        );
+    }
+
+    writable = await movieMindState.databaseFileHandle.createWritable();
+
+    try {
+        await writable.write(databaseText);
+        await writable.close();
+    } catch (error) {
+        try {
+            await writable.abort();
+        } catch (abortError) {
+            console.warn(
+                "Opslaan afbreken is mislukt:",
+                abortError
+            );
+        }
+
+        throw error;
+    }
 }
 
 async function ensureStudioFilePermission(handle) {
@@ -3226,22 +3102,6 @@ async function ensureStudioFilePermission(handle) {
     return permission === "granted";
 }
 
-function downloadUpdatedStudioDatabase(databaseText) {
-    var blob = new Blob([databaseText], { type: "application/json" });
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement("a");
-    var fileName = window.movieMindDatabaseFileName || "moviemind-database.json";
-
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    window.setTimeout(function () {
-        URL.revokeObjectURL(url);
-    }, 1000);
-}
 
 function setTvImportStatus(message, type) {
     var status = document.getElementById("tv-import-status");

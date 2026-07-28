@@ -107166,6 +107166,1001 @@
       ],
       "fullDetails": true,
       "media_type": "movie"
+    },
+    {
+      "id": 5683,
+      "title": "Roger Ramjet",
+      "year": 1965,
+      "genre": [
+        "Familie",
+        "Animatie"
+      ],
+      "director": [],
+      "actors": [
+        "Dick Beals"
+      ],
+      "characters": [],
+      "poster_path": "/aU4izsLC7bYBMteWIfDmDXL2Qz7.jpg",
+      "backdrop_path": "/711pjOE7VJU0ufjVw8xx3y7A0Jr.jpg",
+      "overview": "",
+      "rating": 7.6,
+      "runtime": 6,
+      "cast_details": [
+        {
+          "id": 189884,
+          "name": "Dick Beals",
+          "character": "",
+          "profile_path": "/jwNqw7A959JzDM9ruJZkqJOWhla.jpg"
+        }
+      ],
+      "director_details": [],
+      "fullDetails": true,
+      "media_type": "tv"
+    },
+    {
+      "id": 96541,
+      "title": "Theo en Thea en de ontmaskering van het tenenkaasimperium",
+      "year": 1989,
+      "genre": [
+        "Familie",
+        "Komedie",
+        "Avontuur"
+      ],
+      "director": [
+        "Pieter Kramer"
+      ],
+      "actors": [
+        "Arjan Ederveen",
+        "Tosca Niterink",
+        "Marco Bakker",
+        "Adèle Bloemendaal",
+        "Leny Breederveld",
+        "Beppie Melissen",
+        "Cecile Heuer",
+        "Paul van der Lek"
+      ],
+      "characters": [
+        "Theo",
+        "Thea",
+        "Marco Bakker",
+        "Brigitta Berber",
+        "Magda",
+        "Ingrid",
+        "Mw. De Vries",
+        "Van Zwieten"
+      ],
+      "poster_path": "/fxW0iaGkbzXpdr8oOBTFO4JFKRP.jpg",
+      "backdrop_path": "/wLKiTAqgOD2cQDK2L6Cem0PZyS3.jpg",
+      "overview": "Theo en Thea willen het sprookje van Sneeuwwitje op hun eigen wijze verfilmen. Daarbij gaan echter allerlei dingen mis. De grootste teleurstelling komt, wanneer de zanger Gerard Joling afzegt, die de rol van de Prins zou spelen. Er moet een nieuwe Prins worden gevonden. Door middel van een list wordt de beroemde zanger Marco Bakker gestrikt. Hij moet echter voor een optreden naar Oostenrijk. De filmploeg gaat met hem mee. In haar kasteel op de top van een Tiroolse (Tiroler?) Berg beraamt de machtswellustige Brigitta Berber snode plannen. Ze neemt Marco Bakker gevangen. Ze heeft hem namelijk nodig bij het ritueel, waarmee ze een toverkaas bereidt. Theo en Thea voltooien de opnamen voor hun Sneeuwwitje-film, maar zijn inmiddels ook in een ander spannend avontuur beland. Ze ontmaskeren het mysterie van het Tenenkaasimperium en redden daarmee de wereld.",
+      "rating": 6.6,
+      "runtime": 104,
+      "cast_details": [
+        {
+          "id": 88071,
+          "name": "Arjan Ederveen",
+          "character": "Theo",
+          "profile_path": "/oXwbjaeohwDM4L9jU2De0wCoVSj.jpg"
+        },
+        {
+          "id": 1473737,
+          "name": "Tosca Niterink",
+          "character": "Thea",
+          "profile_path": "/3Z6dqlFdgOWdVUy312mcAlTpyGP.jpg"
+        },
+        {
+          "id": 1245223,
+          "name": "Marco Bakker",
+          "character": "Marco Bakker",
+          "profile_path": "/4N7rA9UBpDyipKMJMhQyZJwhWCH.jpg"
+        },
+        {
+          "id": 211150,
+          "name": "Adèle Bloemendaal",
+          "character": "Brigitta Berber",
+          "profile_path": "/9yXZ1RaVdv7gKrypXRSrxcs31Tr.jpg"
+        },
+        {
+          "id": 27836,
+          "name": "Leny Breederveld",
+          "character": "Magda",
+          "profile_path": "/wBELV4OuiPdShZNcRa7GLEQddQN.jpg"
+        },
+        {
+          "id": 211089,
+          "name": "Beppie Melissen",
+          "character": "Ingrid",
+          "profile_path": "/piTNgDXkDv4ERhBDhPOj3PTXrmM.jpg"
+        },
+        {
+          "id": 211133,
+          "name": "Cecile Heuer",
+          "character": "Mw. De Vries",
+          "profile_path": "/dCH6N5hezEt2tEF9VVSAKgKCfjP.jpg"
+        },
+        {
+          "id": 2722855,
+          "name": "Paul van der Lek",
+          "character": "Van Zwieten",
+          "profile_path": null
+        }
+      ],
+      "director_details": [
+        {
+          "id": 88046,
+          "name": "Pieter Kramer",
+          "profile_path": "/4reMWEMiZMOC5Hb9Fv9hcHhZrGt.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 551115,
+      "title": "Penoza: The Final Chapter",
+      "year": 2019,
+      "genre": [
+        "Actie",
+        "Misdaad",
+        "Thriller",
+        "Drama"
+      ],
+      "director": [
+        "Diederik Van Rooijen"
+      ],
+      "actors": [
+        "Monic Hendrickx",
+        "Niels Gomperts",
+        "Sigrid ten Napel",
+        "Stijn Taverne",
+        "Olga Zuiderhoek",
+        "Raymond Thiry",
+        "Loek Peters",
+        "Hajo Bruins"
+      ],
+      "characters": [
+        "Carmen van Walraven-de Rue",
+        "Lucien van Walraven",
+        "Natalie van Walraven",
+        "Boris van Walraven",
+        "Fiep Homoet",
+        "Nicolaas Luther",
+        "Berry Reitens",
+        "Jim Leeflang"
+      ],
+      "poster_path": "/1ABkQC0jfNbqAfGtGrtXq3ylxa8.jpg",
+      "backdrop_path": "/i7mK8CmRFT0Lg7yzqxC6DtZ7sF3.jpg",
+      "overview": "Drugskoningin Carmen van Walraven zit ondergedoken in Canada en leidt daar een anoniem leven. Ze houdt zich overal buiten, totdat er op een avond een collega lastiggevallen wordt en Carmen niet anders kan dan haar te hulp schieten. Uit zelfverdediging vermoordt ze de dader, wordt opgepakt en uitgeleverd aan Nederland. Terwijl haar kinderen in shock zijn dat hun moeder nog leeft, zijn er ook wat mensen die nog een rekening met Carmen hebben openstaan. Iedereen wordt weer meegesleurd in een emotionele rollercoaster waarbij de problemen zich in rap tempo opstapelen. Carmen zal nu definitief moeten afrekenen met haar verleden om haar familie te redden.",
+      "rating": 6.7,
+      "runtime": 116,
+      "cast_details": [
+        {
+          "id": 41356,
+          "name": "Monic Hendrickx",
+          "character": "Carmen van Walraven-de Rue",
+          "profile_path": "/e8wYKDH0LNMyjrl8533p9y2kOj4.jpg"
+        },
+        {
+          "id": 228329,
+          "name": "Niels Gomperts",
+          "character": "Lucien van Walraven",
+          "profile_path": "/xS3JPJor389nYSUDZyzVCWg1tqq.jpg"
+        },
+        {
+          "id": 1198292,
+          "name": "Sigrid ten Napel",
+          "character": "Natalie van Walraven",
+          "profile_path": "/sp9CSIjxPnkkeqU20jIDCDYi0zn.jpg"
+        },
+        {
+          "id": 1411063,
+          "name": "Stijn Taverne",
+          "character": "Boris van Walraven",
+          "profile_path": "/mu79quPC0uz506CLhAjehJHnfV4.jpg"
+        },
+        {
+          "id": 27881,
+          "name": "Olga Zuiderhoek",
+          "character": "Fiep Homoet",
+          "profile_path": "/upW1t4av2aWaJRZm4yYykvhG6fg.jpg"
+        },
+        {
+          "id": 83357,
+          "name": "Raymond Thiry",
+          "character": "Nicolaas Luther",
+          "profile_path": "/eta0sCxA0bTJMIVxkIYFVdwe47S.jpg"
+        },
+        {
+          "id": 228327,
+          "name": "Loek Peters",
+          "character": "Berry Reitens",
+          "profile_path": "/dmp4cxe4HsqG0nqErZ39clcMMsF.jpg"
+        },
+        {
+          "id": 1365645,
+          "name": "Hajo Bruins",
+          "character": "Jim Leeflang",
+          "profile_path": "/vI5mmr3GZkvN48ys4E44dysh6Ud.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 102355,
+          "name": "Diederik Van Rooijen",
+          "profile_path": "/vcaYY4QFphgO1tx7EV7mb0W49GI.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 856,
+      "title": "Who Framed Roger Rabbit",
+      "year": 1988,
+      "genre": [
+        "Fantasie",
+        "Animatie",
+        "Komedie",
+        "Misdaad"
+      ],
+      "director": [
+        "Robert Zemeckis"
+      ],
+      "actors": [
+        "Bob Hoskins",
+        "Christopher Lloyd",
+        "Joanna Cassidy",
+        "Charles Fleischer",
+        "Kathleen Turner",
+        "Stubby Kaye",
+        "Alan Tilvern",
+        "Richard LeParmentier"
+      ],
+      "characters": [
+        "Eddie Valiant",
+        "Judge Doom",
+        "Dolores",
+        "Roger Rabbit / Benny The Cab / Greasy / Psycho (voice)",
+        "Jessica Rabbit (voice) (uncredited)",
+        "Marvin Acme",
+        "R.K. Maroon",
+        "Lt. Santino"
+      ],
+      "poster_path": "/lYfRc57Kx9VgLZ48iulu0HKnM15.jpg",
+      "backdrop_path": "/udIE8Cdon9wnYmVIOFYrBPfA2Mq.jpg",
+      "overview": "Omdat de populaire cartoonster Roger Rabbit denkt dat zijn mooie vrouw Jessica vreemdgaat, huurt de studio privé-detective Eddie Valiant in om de zaak te onderzoeken. Valiant ontdekt vervolgens dat er inderdaad iets aan de hand is tussen Jessica en de succesvolle ondernemer Marvin Acme. Als Acme dan plotseling dood wordt gevonden, is Roger de voornaamste verdachte en wordt hij opgejaagd door de Judge Doom. Roger besluit om hulp te zoeken bij Valiant, die moet proberen de onschuld van het konijn te bewijzen.",
+      "rating": 7.54,
+      "runtime": 104,
+      "cast_details": [
+        {
+          "id": 382,
+          "name": "Bob Hoskins",
+          "character": "Eddie Valiant",
+          "profile_path": "/qOeE7bVHAsNTbP77Qk6TwrrWHZc.jpg"
+        },
+        {
+          "id": 1062,
+          "name": "Christopher Lloyd",
+          "character": "Judge Doom",
+          "profile_path": "/nxVjpyb3UrfbPZnEyDNlQVlFAs5.jpg"
+        },
+        {
+          "id": 593,
+          "name": "Joanna Cassidy",
+          "character": "Dolores",
+          "profile_path": "/cgyR6QLZdC6apR8eHnhgqDQmqyr.jpg"
+        },
+        {
+          "id": 12826,
+          "name": "Charles Fleischer",
+          "character": "Roger Rabbit / Benny The Cab / Greasy / Psycho (voice)",
+          "profile_path": "/go7hUIC6mE2Tc0oy1pHeEqjlO3U.jpg"
+        },
+        {
+          "id": 3391,
+          "name": "Kathleen Turner",
+          "character": "Jessica Rabbit (voice) (uncredited)",
+          "profile_path": "/hvmMGjWKy1CGmaJzPtOtbb3fD57.jpg"
+        },
+        {
+          "id": 12827,
+          "name": "Stubby Kaye",
+          "character": "Marvin Acme",
+          "profile_path": "/wGFkSBPHkGWz2uLrTLfC9vAbd2Z.jpg"
+        },
+        {
+          "id": 12828,
+          "name": "Alan Tilvern",
+          "character": "R.K. Maroon",
+          "profile_path": "/6S1WHKzfLw02fFKjiN9LpvYM4XU.jpg"
+        },
+        {
+          "id": 12829,
+          "name": "Richard LeParmentier",
+          "character": "Lt. Santino",
+          "profile_path": "/sxKfuif3ngW26TZOhKgyc1beJzC.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 24,
+          "name": "Robert Zemeckis",
+          "profile_path": "/lPYDQ5LYNJ12rJZENtyASmVZ1Ql.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 30860,
+      "title": "06/05",
+      "year": 2004,
+      "genre": [
+        "Drama",
+        "Thriller"
+      ],
+      "director": [
+        "Theo van Gogh"
+      ],
+      "actors": [
+        "Thijs Römer",
+        "Tara Elders",
+        "Cahit Ölmez",
+        "Jack Wouterse",
+        "Johnny de Mol",
+        "Caro Lenssen",
+        "Femke Lakerveld",
+        "Ariane Schluter"
+      ],
+      "characters": [
+        "Jim de Booy",
+        "Ayse Him",
+        "Erdogan Demir",
+        "Van Dam",
+        "John",
+        "Marije de Booy",
+        "Lisa",
+        "Ex Jim"
+      ],
+      "poster_path": "/ciBeBTiqA43cS2miZEDXmedD5FD.jpg",
+      "backdrop_path": "/y7uCaIOE4u61aPWZww9iUhwb0yT.jpg",
+      "overview": "Maandag 6 mei 2002, zes uur 's avonds. Fotograaf Jim de Booy staat bij het hek van het Hilversumse Mediapark het soapsterretje Birgit te fotograferen. Er rijdt een blauw ME-busje langs en kort daarna volgt een politie-auto. Als Jim weg wil gaan, trekt een geparkeerde auto met gierende banden op en rijdt Jim bijna omver.",
+      "rating": 5.614,
+      "runtime": 117,
+      "cast_details": [
+        {
+          "id": 91348,
+          "name": "Thijs Römer",
+          "character": "Jim de Booy",
+          "profile_path": "/l7QJDLUajLw9C7dMDf69aGQVRdx.jpg"
+        },
+        {
+          "id": 54884,
+          "name": "Tara Elders",
+          "character": "Ayse Him",
+          "profile_path": "/dAzLbaBkwjzecz2QV4yWEQaXjL2.jpg"
+        },
+        {
+          "id": 107154,
+          "name": "Cahit Ölmez",
+          "character": "Erdogan Demir",
+          "profile_path": "/7QyZ1kqBVWOTSmzZmHi1EgxVoJ8.jpg"
+        },
+        {
+          "id": 28896,
+          "name": "Jack Wouterse",
+          "character": "Van Dam",
+          "profile_path": "/oAD1JgtQgAYT5H5E4hJiabYCMtm.jpg"
+        },
+        {
+          "id": 107204,
+          "name": "Johnny de Mol",
+          "character": "John",
+          "profile_path": "/5HZ0wzFOElpbQ1cUnBH2up67RYS.jpg"
+        },
+        {
+          "id": 139555,
+          "name": "Caro Lenssen",
+          "character": "Marije de Booy",
+          "profile_path": "/lBsC0gWUAGxZArcu0PDUzEZbDWh.jpg"
+        },
+        {
+          "id": 1147364,
+          "name": "Femke Lakerveld",
+          "character": "Lisa",
+          "profile_path": "/8fgNVegrYRLnieNvWgExDNJ0kgP.jpg"
+        },
+        {
+          "id": 45746,
+          "name": "Ariane Schluter",
+          "character": "Ex Jim",
+          "profile_path": "/oQdGo6V7yLOMfr9xl9uXo9u7PtL.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 28889,
+          "name": "Theo van Gogh",
+          "profile_path": "/jNR3c2pb1jmPa4i0cAchTmROFUK.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 1940,
+      "title": "Porgy and Bess",
+      "year": 1959,
+      "genre": [
+        "Muziek",
+        "Drama",
+        "Romantiek"
+      ],
+      "director": [
+        "Otto Preminger"
+      ],
+      "actors": [
+        "Sidney Poitier",
+        "Dorothy Dandridge",
+        "Sammy Davis Jr.",
+        "Pearl Bailey",
+        "Brock Peters",
+        "Diahann Carroll",
+        "Leslie Scott",
+        "Ruth Attaway"
+      ],
+      "characters": [
+        "Porgy",
+        "Bess",
+        "Sportin' Life",
+        "Maria",
+        "Crowne",
+        "Clara",
+        "Jake",
+        "Serena Robbins"
+      ],
+      "poster_path": "/g4zwlj8bgRYsUoF0VEwPEgldCvn.jpg",
+      "backdrop_path": "/hFaFE7EpKTnjG3LDhoV40gd9vsU.jpg",
+      "overview": "Porgy is een kreupele man die leeft in het desolate stadje Catfish Row. Hij is verliefd op Bess, een mooie maar drugsverslaafde vrouw. Bess wordt desalniettemin door meerdere mannen geadoreerd, waaronder Crown, een domme kracht, die een andere vriend van Bess vermoord.",
+      "rating": 6.278,
+      "runtime": 138,
+      "cast_details": [
+        {
+          "id": 16897,
+          "name": "Sidney Poitier",
+          "character": "Porgy",
+          "profile_path": "/fhMiCe3ScxBGKEX6Y6flEJm7iHd.jpg"
+        },
+        {
+          "id": 20155,
+          "name": "Dorothy Dandridge",
+          "character": "Bess",
+          "profile_path": "/8T0Qg4GA1aUvlrOfLMDOnFtwpte.jpg"
+        },
+        {
+          "id": 20156,
+          "name": "Sammy Davis Jr.",
+          "character": "Sportin' Life",
+          "profile_path": "/b6UVWbUBAR280fSC85FgyPSmxHe.jpg"
+        },
+        {
+          "id": 20157,
+          "name": "Pearl Bailey",
+          "character": "Maria",
+          "profile_path": "/oX4MFLmCuZWQQctbgx4nsQtGJvG.jpg"
+        },
+        {
+          "id": 2112,
+          "name": "Brock Peters",
+          "character": "Crowne",
+          "profile_path": "/8KpQAlUFlJuHhgUmGAR6LnzHOhb.jpg"
+        },
+        {
+          "id": 20158,
+          "name": "Diahann Carroll",
+          "character": "Clara",
+          "profile_path": "/7LrrYWQykcL0mFaGhXshwVCoByZ.jpg"
+        },
+        {
+          "id": 20159,
+          "name": "Leslie Scott",
+          "character": "Jake",
+          "profile_path": "/8YJXMrBjeb2eHwndTu233mzfEFQ.jpg"
+        },
+        {
+          "id": 20160,
+          "name": "Ruth Attaway",
+          "character": "Serena Robbins",
+          "profile_path": "/jJJ52XIt0KMogDvvWjAA0c6rWsr.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 834,
+          "name": "Otto Preminger",
+          "profile_path": "/zmJuWBIbWURkB138eD9IPVzpAUt.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 10570,
+      "title": "Flodder",
+      "year": 1986,
+      "genre": [
+        "Komedie"
+      ],
+      "director": [
+        "Dick Maas"
+      ],
+      "actors": [
+        "Nelly Frijda",
+        "Huub Stapel",
+        "René van 't Hof",
+        "Tatjana Simić",
+        "Horace Cohen",
+        "Lou Landré",
+        "Apollonia van Ravenstein",
+        "Herbert Flack"
+      ],
+      "characters": [
+        "Ma Flodder",
+        "Johnnie",
+        "Kees Flodder (Son)",
+        "Kees Flodder (Daughter)",
+        "Henkie",
+        "Jacques \"Sjakie\" van Kooten",
+        "Yolanda Kruisman",
+        "Wim Kruisman"
+      ],
+      "poster_path": "/rbQX4kpoyj3Xj3Km4fPmWO7edst.jpg",
+      "backdrop_path": "/wsY9QOF5OeFS2mTJwjTiFrsmWPM.jpg",
+      "overview": "Het volstrekt asociale gezin Flodder woont in een achterbuurt en bestaat uit zeven personen. De moeder, drie zonen, twee dochters, en een seniele opa van een jaar of vijfenzeventig. De zonen zijn niet vrij van crimineel gedrag en de welgevormde dochter Kees van zestien neemt het niet zo nauw met de zeden.",
+      "rating": 6.354,
+      "runtime": 111,
+      "cast_details": [
+        {
+          "id": 34871,
+          "name": "Nelly Frijda",
+          "character": "Ma Flodder",
+          "profile_path": "/r3YpjAV9xAd0gKMqBM3I66bOtTg.jpg"
+        },
+        {
+          "id": 1854,
+          "name": "Huub Stapel",
+          "character": "Johnnie",
+          "profile_path": "/Ar41d7m6EA9eHGc7sMYTligjA77.jpg"
+        },
+        {
+          "id": 45758,
+          "name": "René van 't Hof",
+          "character": "Kees Flodder (Son)",
+          "profile_path": "/lJRseOkh4sQW7IGE4YpZCDWFP7c.jpg"
+        },
+        {
+          "id": 65004,
+          "name": "Tatjana Simić",
+          "character": "Kees Flodder (Daughter)",
+          "profile_path": "/7BiiIuTY67mOGm8hIZllcybWxfC.jpg"
+        },
+        {
+          "id": 91352,
+          "name": "Horace Cohen",
+          "character": "Henkie",
+          "profile_path": "/rJHjVLYrikvzabT4HWychfHmiIb.jpg"
+        },
+        {
+          "id": 21450,
+          "name": "Lou Landré",
+          "character": "Jacques \"Sjakie\" van Kooten",
+          "profile_path": "/e6feX8LhSPCirMb8WY4mfR8QmSO.jpg"
+        },
+        {
+          "id": 146766,
+          "name": "Apollonia van Ravenstein",
+          "character": "Yolanda Kruisman",
+          "profile_path": "/n8YR98wX02KDQbmcjWuGVRIMFSV.jpg"
+        },
+        {
+          "id": 113590,
+          "name": "Herbert Flack",
+          "character": "Wim Kruisman",
+          "profile_path": "/ruJXheeI6YsIEImZ4VaKmZaBn82.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21440,
+          "name": "Dick Maas",
+          "profile_path": "/tNVHmf93U9uL3PJyP09EVs7NEh1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 10408,
+      "title": "Flodder in Amerika!",
+      "year": 1992,
+      "genre": [
+        "Komedie"
+      ],
+      "director": [
+        "Dick Maas"
+      ],
+      "actors": [
+        "Huub Stapel",
+        "Nelly Frijda",
+        "Tatjana Simić",
+        "René van 't Hof",
+        "Jon Polito",
+        "Lou Landré",
+        "Lonny Price",
+        "Dan Frazer"
+      ],
+      "characters": [
+        "Johnny Flodder",
+        "Ma Flodder",
+        "Kees Flodder",
+        "Kees Flodder",
+        "Larry Rosenbaum",
+        "Jacques \"Sjakie\" van Kooten",
+        "Geoffrey",
+        "President"
+      ],
+      "poster_path": "/sgF2RyQTFl9lKyT0CJlZhzZfbNI.jpg",
+      "backdrop_path": "/gpbikFSRiA0uFCtGqmfQkpoyM9Y.jpg",
+      "overview": "Het gemeentebestuur van Zonnedael stuurt de familie Flodder in het kader van een cultureel uitwisselingsprogramma naar de Verenigde Staten. Op het vliegveld van New York worden de Flodders aangezien voor een Russische delegatie van wetenschappers en komen terecht in het exclusieve Plaza Hotel.",
+      "rating": 5.716,
+      "runtime": 120,
+      "cast_details": [
+        {
+          "id": 1854,
+          "name": "Huub Stapel",
+          "character": "Johnny Flodder",
+          "profile_path": "/Ar41d7m6EA9eHGc7sMYTligjA77.jpg"
+        },
+        {
+          "id": 34871,
+          "name": "Nelly Frijda",
+          "character": "Ma Flodder",
+          "profile_path": "/r3YpjAV9xAd0gKMqBM3I66bOtTg.jpg"
+        },
+        {
+          "id": 65004,
+          "name": "Tatjana Simić",
+          "character": "Kees Flodder",
+          "profile_path": "/7BiiIuTY67mOGm8hIZllcybWxfC.jpg"
+        },
+        {
+          "id": 45758,
+          "name": "René van 't Hof",
+          "character": "Kees Flodder",
+          "profile_path": "/lJRseOkh4sQW7IGE4YpZCDWFP7c.jpg"
+        },
+        {
+          "id": 4253,
+          "name": "Jon Polito",
+          "character": "Larry Rosenbaum",
+          "profile_path": "/4HjxMy4Ir2dWz7ycX5l3sgxOY4g.jpg"
+        },
+        {
+          "id": 21450,
+          "name": "Lou Landré",
+          "character": "Jacques \"Sjakie\" van Kooten",
+          "profile_path": "/e6feX8LhSPCirMb8WY4mfR8QmSO.jpg"
+        },
+        {
+          "id": 729,
+          "name": "Lonny Price",
+          "character": "Geoffrey",
+          "profile_path": "/jyZFeo6AFJSN7MPCn2v8WNTAZeb.jpg"
+        },
+        {
+          "id": 40463,
+          "name": "Dan Frazer",
+          "character": "President",
+          "profile_path": "/tBe7tZ4Hyzs7cnGFSpBiEGcwQII.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21440,
+          "name": "Dick Maas",
+          "profile_path": "/tNVHmf93U9uL3PJyP09EVs7NEh1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 11084,
+      "title": "Flodder 3",
+      "year": 1995,
+      "genre": [
+        "Komedie"
+      ],
+      "director": [
+        "Dick Maas"
+      ],
+      "actors": [
+        "Nelly Frijda",
+        "Coen van Vrijberghe de Coningh",
+        "Stefan de Walle",
+        "Tatjana Simić",
+        "Lou Landré",
+        "Sander Swart",
+        "Bert André",
+        "Edmond Classen"
+      ],
+      "characters": [
+        "Ma Flodder",
+        "Johnnie Flodder",
+        "Kees Flodder",
+        "Kees Flodder",
+        "Jacques \"Sjakie\" van Kooten",
+        "Henkie Flodder",
+        "Neighbor Neuteboom",
+        "Ambtenaar"
+      ],
+      "poster_path": "/lygAXQ3vw8Le0jUslzGt91LluHY.jpg",
+      "backdrop_path": "/bqnM8i8hxf9ZdC7OyAelTpG133b.jpg",
+      "overview": "Het 25-jarig jubileum van Zonnedael komt eraan en de buurtbewoners willen dit graag in stijl vieren. Tijdens de voorbereidingen voor dat feest willen ze graag voor altijd van die Flodders af zijn, zodat zij dit ook niet zullen verzieken.",
+      "rating": 5.793,
+      "runtime": 125,
+      "cast_details": [
+        {
+          "id": 34871,
+          "name": "Nelly Frijda",
+          "character": "Ma Flodder",
+          "profile_path": "/r3YpjAV9xAd0gKMqBM3I66bOtTg.jpg"
+        },
+        {
+          "id": 68181,
+          "name": "Coen van Vrijberghe de Coningh",
+          "character": "Johnnie Flodder",
+          "profile_path": "/9Xp8u5jWZs5quEkE04JW06JYnEt.jpg"
+        },
+        {
+          "id": 68182,
+          "name": "Stefan de Walle",
+          "character": "Kees Flodder",
+          "profile_path": "/urE8mkFySX2gDmMLlsjC1zhouIw.jpg"
+        },
+        {
+          "id": 65004,
+          "name": "Tatjana Simić",
+          "character": "Kees Flodder",
+          "profile_path": "/7BiiIuTY67mOGm8hIZllcybWxfC.jpg"
+        },
+        {
+          "id": 21450,
+          "name": "Lou Landré",
+          "character": "Jacques \"Sjakie\" van Kooten",
+          "profile_path": "/e6feX8LhSPCirMb8WY4mfR8QmSO.jpg"
+        },
+        {
+          "id": 68183,
+          "name": "Sander Swart",
+          "character": "Henkie Flodder",
+          "profile_path": null
+        },
+        {
+          "id": 211259,
+          "name": "Bert André",
+          "character": "Neighbor Neuteboom",
+          "profile_path": "/6XO8c8Kdgbka0Gg86UkLeWCTHd6.jpg"
+        },
+        {
+          "id": 928764,
+          "name": "Edmond Classen",
+          "character": "Ambtenaar",
+          "profile_path": "/4lK0LojcFWtTnngcCPRrKwG6yv6.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21440,
+          "name": "Dick Maas",
+          "profile_path": "/tNVHmf93U9uL3PJyP09EVs7NEh1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 2093,
+      "title": "Amsterdamned",
+      "year": 1988,
+      "genre": [
+        "Actie",
+        "Horror",
+        "Thriller"
+      ],
+      "director": [
+        "Dick Maas"
+      ],
+      "actors": [
+        "Huub Stapel",
+        "Monique van de Ven",
+        "Serge-Henri Valcke",
+        "Lou Landré",
+        "Tatum Dagelet",
+        "Jaap Stobbe",
+        "Bert Haanstra",
+        "Tanneke Hartzuiker"
+      ],
+      "characters": [
+        "Eric Visser",
+        "Laura",
+        "Vermeer",
+        "Chef",
+        "Anneke Visser",
+        "Taxi Driver",
+        "Conductor",
+        "Potter"
+      ],
+      "poster_path": "/npJIuoRidanKvK38YkvDdt9Bxqz.jpg",
+      "backdrop_path": "/cbo6XxLWVtZCJpKHx5IZ8C0q7OE.jpg",
+      "overview": "Een psychopathische moordenaar maakt de Amsterdamse grachten onveilig. Hij duikt letterlijk op de meest onverwachte momenten en plaatsen op en maakt het ene na het andere slachtoffer. Er heerst een sfeer van terreur in de stad. Politiedetective Eric Visser gaat op zoek naar de moordenaar, maar het onderzoek schiet niet echt op. Tot Visser de hulp inroept van een duikersvereniging. Zo maakt hij kennis met de knappe Laura. Zijn nieuwe vriendin en zijn dochter komen uiteindelijk dichter bij de dader dan hijzelf...",
+      "rating": 6.353,
+      "runtime": 114,
+      "cast_details": [
+        {
+          "id": 1854,
+          "name": "Huub Stapel",
+          "character": "Eric Visser",
+          "profile_path": "/Ar41d7m6EA9eHGc7sMYTligjA77.jpg"
+        },
+        {
+          "id": 21445,
+          "name": "Monique van de Ven",
+          "character": "Laura",
+          "profile_path": "/h8eLWSkJr4dkphnA2joqlqTVsfO.jpg"
+        },
+        {
+          "id": 21446,
+          "name": "Serge-Henri Valcke",
+          "character": "Vermeer",
+          "profile_path": "/zRYqWx6JB1Bp5pJAYsnOM9D2TxF.jpg"
+        },
+        {
+          "id": 21450,
+          "name": "Lou Landré",
+          "character": "Chef",
+          "profile_path": "/e6feX8LhSPCirMb8WY4mfR8QmSO.jpg"
+        },
+        {
+          "id": 21451,
+          "name": "Tatum Dagelet",
+          "character": "Anneke Visser",
+          "profile_path": "/uwvNEI6iWYwb3NMLgP6hWZxd5rw.jpg"
+        },
+        {
+          "id": 934557,
+          "name": "Jaap Stobbe",
+          "character": "Taxi Driver",
+          "profile_path": "/tR9M8lnJoRZOTTafeh9NTvWbALx.jpg"
+        },
+        {
+          "id": 122597,
+          "name": "Bert Haanstra",
+          "character": "Conductor",
+          "profile_path": "/eZ5IJ3iq95lntxhshy5dAmW4zn3.jpg"
+        },
+        {
+          "id": 21447,
+          "name": "Tanneke Hartzuiker",
+          "character": "Potter",
+          "profile_path": "/tjW5HKhS4hlbnx9Hbp7tPXrNdnj.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21440,
+          "name": "Dick Maas",
+          "profile_path": "/tNVHmf93U9uL3PJyP09EVs7NEh1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 1179684,
+      "title": "Amsterdamned II",
+      "year": 2025,
+      "genre": [
+        "Actie",
+        "Thriller",
+        "Horror"
+      ],
+      "director": [
+        "Dick Maas"
+      ],
+      "actors": [
+        "Huub Stapel",
+        "Holly Mae Brood",
+        "Tatum Dagelet",
+        "Bas Keijzer",
+        "Ruben Brinkman",
+        "Lesley Grant",
+        "Pierre Bokma",
+        "Florence Vos Weeda"
+      ],
+      "characters": [
+        "Eric Visser",
+        "Tara Lee",
+        "Anneke Visser",
+        "Jozef Visbeen",
+        "",
+        "Jane",
+        "",
+        "Sandra"
+      ],
+      "poster_path": "/4QjVgN5Wdexo6wfIZh0pRXQefTZ.jpg",
+      "backdrop_path": "/qV3NFmHbLiYYNBiPaG2v2iZWGM.jpg",
+      "overview": "Amsterdam wordt opgeschrikt door een reeks gruwelijke moorden. Wanneer jonge rechercheur Tara Lee dieper graaft in de zaak, ontdekt ze verbanden met een duister verleden dat de stad bijna veertig jaar geleden in zijn greep hield. Samen met oud-inspecteur Eric Visser begint de jacht op een moordenaar die de grachten opnieuw rood kleurt. Terwijl het dodental stijgt, komt de angst weer boven drijven. Niemand is veilig in dit langverwachte vervolg op de blockbuster uit ’88.",
+      "rating": 5.25,
+      "runtime": 110,
+      "cast_details": [
+        {
+          "id": 1854,
+          "name": "Huub Stapel",
+          "character": "Eric Visser",
+          "profile_path": "/Ar41d7m6EA9eHGc7sMYTligjA77.jpg"
+        },
+        {
+          "id": 1486382,
+          "name": "Holly Mae Brood",
+          "character": "Tara Lee",
+          "profile_path": "/qMuMi409ww5b9QJKF3LCTL4Se6u.jpg"
+        },
+        {
+          "id": 21451,
+          "name": "Tatum Dagelet",
+          "character": "Anneke Visser",
+          "profile_path": "/uwvNEI6iWYwb3NMLgP6hWZxd5rw.jpg"
+        },
+        {
+          "id": 43720,
+          "name": "Bas Keijzer",
+          "character": "Jozef Visbeen",
+          "profile_path": "/ArCG5qlOrUbXaKCLrt3DEMNgQu1.jpg"
+        },
+        {
+          "id": 1209121,
+          "name": "Ruben Brinkman",
+          "character": "",
+          "profile_path": "/zAB7WQT2tWsr142LoS33uVE3IIN.jpg"
+        },
+        {
+          "id": 2462099,
+          "name": "Lesley Grant",
+          "character": "Jane",
+          "profile_path": "/70n4uD7rh4LczMSB3kbAjGAzDDx.jpg"
+        },
+        {
+          "id": 45751,
+          "name": "Pierre Bokma",
+          "character": "",
+          "profile_path": "/6s4lpbszhXQYBgvbkVBbO1HmwhF.jpg"
+        },
+        {
+          "id": 1620208,
+          "name": "Florence Vos Weeda",
+          "character": "Sandra",
+          "profile_path": "/ilOGCoxhOywCbR6lb1VFPgfsISv.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21440,
+          "name": "Dick Maas",
+          "profile_path": "/tNVHmf93U9uL3PJyP09EVs7NEh1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
     }
   ]
 }
