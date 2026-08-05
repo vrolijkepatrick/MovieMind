@@ -2,11 +2,16 @@ let currentPlayer = 1;
 let selectedCell = null;
 let database = [];
 let gameOver = false;
+let consecutivePasses = 0;
+let lastPassingPlayer = null;
 let databaseLoaded = false;
 let difficulty = "blockbuster";
 
 let playerBlue = "";
 let playerOrange = "";
+
+let playerOneToken = "projector";
+let playerTwoToken = "clapperboard";
 
 let columns = [];
 let rows = [];
@@ -103,6 +108,9 @@ const newRoundBtn = document.getElementById("newRoundBtn");
 const playerBlueInput = document.getElementById("playerBlueInput");
 const playerOrangeInput = document.getElementById("playerOrangeInput");
 
+const tokenPickers = document.querySelectorAll(".token-picker");
+const tokenOptions = document.querySelectorAll(".token-option");
+
 const difficultyCards =
     document.querySelectorAll(".difficulty-card");
 
@@ -113,6 +121,7 @@ const board = document.getElementById("board");
 
 const popup = document.getElementById("popup");
 const question = document.getElementById("question");
+const questionHint = document.getElementById("questionHint");
 
 const answerInput = document.getElementById("answerInput");
 const movieSuggestions = document.getElementById("movieSuggestions");
@@ -127,9 +136,96 @@ const winnerMessage = document.getElementById("winnerMessage");
 const screenFrame = document.getElementById("screenFrame");
 const winnerOverlay = document.getElementById("winnerOverlay");
 const winnerOverlayText = document.getElementById("winnerOverlayText");
+const winnerDifficulty = document.getElementById("winnerDifficulty");
+const winnerClaimedCount = document.getElementById("winnerClaimedCount");
 const winnerNewGameBtn = document.getElementById("winnerNewGameBtn");
+
+const drawOverlay = document.getElementById("drawOverlay");
+const drawReason = document.getElementById("drawReason");
+const drawPlayerBlue = document.getElementById("drawPlayerBlue");
+const drawPlayerOrange = document.getElementById("drawPlayerOrange");
+const drawBlueCount = document.getElementById("drawBlueCount");
+const drawOrangeCount = document.getElementById("drawOrangeCount");
+const drawNewGameBtn = document.getElementById("drawNewGameBtn");
+
 const loadingScreen = document.getElementById("loadingScreen");
 const loadingMessage = document.getElementById("loadingMessage");
+const feedbackOverlay = document.getElementById("feedbackOverlay");
+const feedbackTitle = document.getElementById("feedbackTitle");
+const feedbackMessage = document.getElementById("feedbackMessage");
+const feedbackHint = document.getElementById("feedbackHint");
+const feedbackOkBtn = document.getElementById("feedbackOkBtn");
+let feedbackDismissAction = null;
+const loadingIcon = document.getElementById("loadingIcon");
+
+
+/* =========================================
+   GELUIDEN
+========================================= */
+
+const SOUND_FOLDER = "sounds/";
+
+const SOUND_FILES = {
+    start: "game-start.mp3",
+    curtains: "curtains.mp3",
+    click: "ui-click.mp3",
+    select: "select.mp3",
+    claim: "claim.mp3",
+    correct: "correct.mp3",
+    wrong: "wrong.mp3",
+    winner: "winner.mp3"
+};
+
+const soundCache = new Map();
+
+function getSound(name) {
+    const filename = SOUND_FILES[name];
+
+    if (!filename) {
+        return null;
+    }
+
+    if (!soundCache.has(name)) {
+        const audio = new Audio(SOUND_FOLDER + filename);
+        audio.preload = "auto";
+        soundCache.set(name, audio);
+    }
+
+    return soundCache.get(name);
+}
+
+function playSound(name, options = {}) {
+    try {
+        const source = getSound(name);
+
+        if (!source) {
+            return;
+        }
+
+        const audio = source.cloneNode();
+        audio.volume = typeof options.volume === "number"
+            ? Math.max(0, Math.min(1, options.volume))
+            : 0.72;
+
+        if (typeof options.playbackRate === "number") {
+            audio.playbackRate = options.playbackRate;
+        }
+
+        const playPromise = audio.play();
+
+        if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(function () {
+                /* Audio mag de game nooit blokkeren. */
+            });
+        }
+    } catch (error) {
+        console.warn("Geluid kon niet worden afgespeeld:", name, error);
+    }
+}
+
+Object.keys(SOUND_FILES).forEach(function (name) {
+    getSound(name);
+});
 
 const developerToggleBtn =
     document.getElementById("developerToggleBtn");
@@ -179,10 +275,16 @@ function initializeGameHud() {
 
         difficultyPanel.className = "hud-difficulty";
         difficultyPanel.innerHTML =
-            '<span id="hudDifficultyIcon" ' +
-            'class="hud-difficulty-icon" ' +
-            'aria-hidden="true">🎬</span>' +
-            '<span id="hudDifficulty">Blockbuster</span>';
+            '<span class="hud-clapper" aria-hidden="true">' +
+                '<span class="hud-clapper-top"></span>' +
+                '<span class="hud-clapper-body">' +
+                    '<span class="hud-clapper-star">★</span>' +
+                '</span>' +
+            '</span>' +
+            '<span class="hud-meta-copy">' +
+                '<span class="hud-meta-label">Moeilijkheid</span>' +
+                '<span id="hudDifficulty">Blockbuster</span>' +
+            '</span>';
 
         turnIndicator.insertBefore(
             difficultyPanel,
@@ -196,7 +298,11 @@ function initializeGameHud() {
 
         progressPanel.className = "hud-progress";
         progressPanel.innerHTML =
-            '<span id="hudRemaining">Nog 9 vakjes</span>';
+            '<span class="hud-reel" aria-hidden="true"></span>' +
+            '<span class="hud-progress-copy">' +
+                '<span class="hud-progress-label">Nog</span>' +
+                '<span id="hudRemaining">9 vakjes</span>' +
+            '</span>';
 
         turnIndicator.appendChild(progressPanel);
     }
@@ -207,108 +313,14 @@ function initializeGameHud() {
 }
 
 function addGameHudStyles() {
-    if (document.getElementById("movieMindHudStyles")) {
-        return;
-    }
-
-    const style = document.createElement("style");
-    style.id = "movieMindHudStyles";
-
-    style.textContent = `
-        .status.hud-ready {
-            grid-template-columns:
-                minmax(0, 1fr)
-                minmax(0, 1.65fr)
-                minmax(0, 1fr);
-            height: 7%;
-            padding: 0 2.5%;
-        }
-
-        .status.hud-ready::before,
-        .status.hud-ready::after {
-            display: none;
-        }
-
-        .status.hud-ready .hud-difficulty,
-        .status.hud-ready .hud-progress {
-            display: flex;
-            align-items: center;
-            min-width: 0;
-            white-space: nowrap;
-        }
-
-        .status.hud-ready .hud-difficulty {
-            justify-content: flex-start;
-            gap: clamp(5px, 0.5vw, 10px);
-            color: var(--gold-light);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(8px, 0.76vw, 15px);
-            font-weight: 800;
-            letter-spacing: 0.045em;
-        }
-
-        .status.hud-ready .hud-difficulty-icon {
-            font-size: clamp(10px, 0.95vw, 18px);
-            line-height: 1;
-        }
-
-        .status.hud-ready .status-center {
-            justify-content: center;
-            gap: clamp(7px, 0.65vw, 13px);
-        }
-
-        .status.hud-ready .status-icon {
-            width: clamp(22px, 2vw, 38px);
-            height: clamp(22px, 2vw, 38px);
-            font-size: clamp(10px, 1vw, 19px);
-        }
-
-        .status.hud-ready .status-copy {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: clamp(5px, 0.5vw, 10px);
-            min-width: 0;
-        }
-
-        .status.hud-ready .status-label {
-            color: #e2e6e9;
-            font-size: clamp(7px, 0.62vw, 12px);
-            font-weight: 700;
-            letter-spacing: 0.015em;
-            text-transform: none;
-        }
-
-        .status.hud-ready #player {
-            max-width: 15em;
-            font-size: clamp(11px, 1.02vw, 20px);
-            letter-spacing: 0.025em;
-        }
-
-        .status.hud-ready .hud-progress {
-            justify-content: flex-end;
-            color: #d9dfe3;
-            font-size: clamp(7px, 0.63vw, 12px);
-            font-weight: 700;
-            letter-spacing: 0.025em;
-        }
-
-        .status.hud-ready .hud-progress.endgame {
-            color: var(--gold-light);
-        }
-    `;
-
-    document.head.appendChild(style);
+    /*
+    De HUD-styling staat voortaan uitsluitend in style.css.
+    Zo kunnen oude en nieuwe stijlregels elkaar niet meer overschrijven.
+    */
 }
 
 function getDifficultyIcon(value) {
-    const icons = {
-        moviehouse: "🍿",
-        blockbuster: "🎬",
-        oscarnight: "🏆"
-    };
-
-    return icons[value] || "🎬";
+    return "★";
 }
 
 function getRemainingCellCount() {
@@ -352,8 +364,40 @@ function updateGameHud() {
     }
 
     if (statusIcon) {
-        statusIcon.textContent =
-            currentPlayer === 1 ? "🔵" : "🟠";
+        const activeToken = currentPlayer === 1
+            ? playerOneToken
+            : playerTwoToken;
+
+        const tokenFilenames = {
+            projector: "projector-token.png",
+            clapperboard: "clapperboard-token.png",
+            "directors-chair": "directors-chair-token.png",
+            statuette: "statuette-token.png"
+        };
+
+        const tokenNames = {
+            projector: "Filmprojector",
+            clapperboard: "Filmklapper",
+            "directors-chair": "Regisseursstoel",
+            statuette: "Filmbeeldje"
+        };
+
+        statusIcon.textContent = "";
+
+        const tokenImage = document.createElement("img");
+        tokenImage.className = "hud-player-token";
+        tokenImage.src =
+            "images/tokens/" +
+            (tokenFilenames[activeToken] || tokenFilenames.projector);
+        tokenImage.alt =
+            tokenNames[activeToken] || tokenNames.projector;
+        tokenImage.draggable = false;
+
+        tokenImage.addEventListener("error", function () {
+            statusIcon.textContent = "★";
+        });
+
+        statusIcon.appendChild(tokenImage);
     }
 
     if (difficultyText) {
@@ -373,12 +417,11 @@ function updateGameHud() {
             remainingText.textContent = "Bord vol";
         } else if (remaining <= 3) {
             remainingText.textContent =
-                "⚡ Eindspel · nog " +
+                "Eindspel · " +
                 remaining +
                 (remaining === 1 ? " vakje" : " vakjes");
         } else {
             remainingText.textContent =
-                "Nog " +
                 remaining +
                 " vakjes";
         }
@@ -394,6 +437,8 @@ function updateGameHud() {
 
 function returnToStartScreen() {
     gameOver = true;
+    consecutivePasses = 0;
+    lastPassingPlayer = null;
     selectedCell = null;
 
     closePopup();
@@ -405,6 +450,19 @@ function returnToStartScreen() {
 
     if (winnerOverlayText) {
         winnerOverlayText.textContent = "";
+    }
+
+    if (drawOverlay) {
+        drawOverlay.classList.add("hidden");
+        drawOverlay.classList.remove("show");
+    }
+
+    if (winnerDifficulty) {
+        winnerDifficulty.textContent = "-";
+    }
+
+    if (winnerClaimedCount) {
+        winnerClaimedCount.textContent = "-";
     }
 
     if (winnerMessage) {
@@ -445,6 +503,7 @@ function returnToStartScreen() {
 
 difficultyCards.forEach(function (card) {
     card.addEventListener("click", function () {
+        playSound("click", { volume: 0.42 });
         selectDifficulty(card.dataset.difficulty);
     });
 });
@@ -531,6 +590,82 @@ function getAnswerDifficultyDistance(actor, category, profile) {
 }
 
 loadDatabase();
+initializeTokenPickersSafely();
+
+function initializeTokenPickersSafely() {
+    try {
+        if (!tokenOptions || tokenOptions.length === 0) {
+            return;
+        }
+
+        tokenOptions.forEach(function (option) {
+            option.addEventListener("click", function () {
+                const picker = option.closest(".token-picker");
+
+                if (
+                    !picker ||
+                    option.classList.contains("token-unavailable")
+                ) {
+                    return;
+                }
+
+                playSound("click", { volume: 0.42 });
+
+                const playerNumber = Number(picker.dataset.player);
+                const selectedToken = option.dataset.token;
+
+                if (!selectedToken) {
+                    return;
+                }
+
+                if (playerNumber === 1) {
+                    playerOneToken = selectedToken;
+                } else if (playerNumber === 2) {
+                    playerTwoToken = selectedToken;
+                }
+
+                updateTokenPickerState();
+            });
+        });
+
+        updateTokenPickerState();
+    } catch (error) {
+        console.warn(
+            "Pionkeuze kon niet worden gestart; de game blijft wel beschikbaar.",
+            error
+        );
+    }
+}
+
+function updateTokenPickerState() {
+    if (!tokenPickers || tokenPickers.length === 0) {
+        return;
+    }
+
+    tokenPickers.forEach(function (picker) {
+        const playerNumber = Number(picker.dataset.player);
+        const ownToken = playerNumber === 1
+            ? playerOneToken
+            : playerTwoToken;
+        const otherToken = playerNumber === 1
+            ? playerTwoToken
+            : playerOneToken;
+
+        picker.querySelectorAll(".token-option").forEach(function (option) {
+            const token = option.dataset.token;
+            const isSelected = token === ownToken;
+            const isUnavailable = token === otherToken && !isSelected;
+
+            option.classList.toggle("selected", isSelected);
+            option.classList.toggle("token-unavailable", isUnavailable);
+            option.setAttribute("aria-pressed", isSelected ? "true" : "false");
+            option.setAttribute("aria-disabled", isUnavailable ? "true" : "false");
+            option.title = isUnavailable
+                ? "Deze pion is al gekozen"
+                : (option.querySelector("img")?.alt || "Kies deze pion");
+        });
+    });
+}
 
 
 /* =========================================
@@ -867,8 +1002,52 @@ startBtn.addEventListener("click", async function () {
         getDifficultyLabel(difficulty)
     );
 
+    console.log(
+        "Gekozen pionnen:",
+        playerOneToken,
+        "en",
+        playerTwoToken
+    );
+
+    playSound("start", { volume: 0.72 });
     await startGameWithLoadingScreen();
 });
+
+const LOADING_ICONS = {
+    audience: `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M14 45v-8c0-5 4-9 9-9h18c5 0 9 4 9 9v8" />
+            <circle cx="24" cy="20" r="6" />
+            <circle cx="40" cy="20" r="6" />
+            <path d="M7 48h50M12 55h40" />
+        </svg>`,
+    popcorn: `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M17 25h30l-4 30H21z" />
+            <path d="M23 27l3 26M32 27v26M41 27l-3 26" />
+            <path d="M18 25c-5-7 3-13 9-9 2-8 13-7 14 1 7-4 13 4 7 9" />
+        </svg>`,
+    projector: `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="20" cy="19" r="10" />
+            <circle cx="43" cy="19" r="10" />
+            <circle cx="20" cy="19" r="3" />
+            <circle cx="43" cy="19" r="3" />
+            <path d="M15 31h32v19H15zM47 36l10-5v19l-10-5M24 50v6M39 50v6" />
+        </svg>`,
+    board: `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <rect x="10" y="11" width="44" height="42" rx="3" />
+            <path d="M24.5 11v42M39.5 11v42M10 25h44M10 39h44" />
+            <path d="M15 7l5 4 5-4 5 4 5-4 5 4 5-4 5 4" />
+        </svg>`,
+    curtain: `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M10 8h44M16 9c0 18-1 32-8 47 12-2 18-9 24-20M48 9c0 18 1 32 8 47-12-2-18-9-24-20" />
+            <path d="M32 10v42M26 53h12" />
+            <path d="M27 18l5-4 5 4M27 27l5-4 5 4" />
+        </svg>`
+};
 
 async function startGameWithLoadingScreen() {
     startBtn.disabled = true;
@@ -890,24 +1069,25 @@ async function startGameWithLoadingScreen() {
     }
 
     document.body.classList.add("loading-active");
-    showLoadingScreen("De zaal loopt vol...");
+    showLoadingScreen("De zaal loopt vol...", "audience");
 
     await waitForPaint();
     await delay(450);
-    setLoadingMessage("🍿 Popcorn wordt klaargezet...");
+    setLoadingPhase("Popcorn wordt klaargezet...", "popcorn");
 
     await delay(450);
-    setLoadingMessage("🎥 Projector wordt opgestart...");
+    setLoadingPhase("De projector wordt opgestart...", "projector");
 
     await delay(350);
-    setLoadingMessage("🎞️ Speelbord wordt samengesteld...");
+    setLoadingPhase("Het speelbord wordt samengesteld...", "board");
 
     await waitForPaint();
 
     try {
         startRound();
 
-        setLoadingMessage("✨ De voorstelling kan beginnen!");
+        setLoadingPhase("De voorstelling kan beginnen!", "curtain");
+        playSound("curtains", { volume: 0.66 });
         await delay(400);
 
         hideLoadingScreen();
@@ -937,8 +1117,8 @@ async function startGameWithLoadingScreen() {
     }
 }
 
-function showLoadingScreen(message) {
-    setLoadingMessage(message);
+function showLoadingScreen(message, iconName = "projector") {
+    setLoadingPhase(message, iconName);
 
     if (!loadingScreen) {
         return;
@@ -959,6 +1139,27 @@ function hideLoadingScreen() {
         loadingScreen.classList.add("hidden");
         loadingScreen.classList.remove("loading-leave");
     }, 360);
+}
+
+function setLoadingPhase(message, iconName = "projector") {
+    setLoadingIcon(iconName);
+    setLoadingMessage(message);
+}
+
+function setLoadingIcon(iconName) {
+    if (!loadingIcon) {
+        return;
+    }
+
+    const iconMarkup =
+        LOADING_ICONS[iconName] ||
+        LOADING_ICONS.projector;
+
+    loadingIcon.classList.remove("icon-change");
+    void loadingIcon.offsetWidth;
+    loadingIcon.innerHTML = iconMarkup;
+    loadingIcon.dataset.icon = iconName;
+    loadingIcon.classList.add("icon-change");
 }
 
 function setLoadingMessage(message) {
@@ -995,6 +1196,10 @@ if (winnerNewGameBtn) {
     );
 }
 
+if (drawNewGameBtn) {
+    drawNewGameBtn.addEventListener("click", returnToStartScreen);
+}
+
 
 developerToggleBtn.addEventListener(
     "click",
@@ -1017,6 +1222,7 @@ weakCombinationsBtn.addEventListener(
 );
 
 function startNewGameFromWinner() {
+    playSound("click", { volume: 0.42 });
     returnToStartScreen();
 }
 
@@ -1024,6 +1230,8 @@ function startRound() {
     currentPlayer = 1;
     selectedCell = null;
     gameOver = false;
+    consecutivePasses = 0;
+    lastPassingPlayer = null;
 
     usedMediaKeys = [];
     usedCoStarNames = [];
@@ -1044,6 +1252,11 @@ function startRound() {
 
     if (winnerOverlayText) {
         winnerOverlayText.textContent = "";
+    }
+
+    if (drawOverlay) {
+        drawOverlay.classList.add("hidden");
+        drawOverlay.classList.remove("show");
     }
 
     if (screenFrame) {
@@ -1089,32 +1302,36 @@ function getCategoryImage(category) {
 
 function createCategorySide(category) {
     const side = document.createElement("div");
-    side.className = "side";
+    side.className = "side genre-panel";
 
     const imageFilename = getCategoryImage(category);
 
     if (imageFilename) {
-        const icon = document.createElement("img");
-        icon.className = "side-icon side-icon-image";
-        icon.src = CATEGORY_IMAGE_FOLDER + imageFilename;
-        icon.alt = "";
-        icon.setAttribute("aria-hidden", "true");
+        const artwork = document.createElement("img");
+        artwork.className = "side-icon side-icon-image genre-panel-artwork";
+        artwork.src = CATEGORY_IMAGE_FOLDER + imageFilename;
+        artwork.alt = "";
+        artwork.setAttribute("aria-hidden", "true");
 
-        icon.addEventListener("error", function () {
-            icon.remove();
+        artwork.addEventListener("error", function () {
+            artwork.remove();
             side.classList.add("side-without-image");
         });
 
-        side.appendChild(icon);
+        side.appendChild(artwork);
     } else {
         side.classList.add("side-without-image");
     }
 
+    const labelPlate = document.createElement("div");
+    labelPlate.className = "genre-label-plate";
+
     const label = document.createElement("span");
-    label.className = "side-label";
+    label.className = "side-label genre-label";
     label.textContent = category;
 
-    side.appendChild(label);
+    labelPlate.appendChild(label);
+    side.appendChild(labelPlate);
 
     return side;
 }
@@ -1538,6 +1755,7 @@ function openAnswerPopup(cell) {
         return;
     }
 
+    playSound("select", { volume: 0.52 });
     selectedCell = cell;
 
     const rowIndex = Number(cell.dataset.row);
@@ -1547,12 +1765,20 @@ function openAnswerPopup(cell) {
     const genre = rows[rowIndex];
 
     question.textContent =
-        actor + " + " + genre;
+        actor + " × " + genre.replace(/\.\.\.$/, "");
+
+    if (questionHint) {
+        questionHint.textContent =
+            genre === PLAYED_TOGETHER_CATEGORY
+                ? "Noem een acteur die samen met " + actor + " heeft gespeeld."
+                : "Noem een film of serie waarin " + actor +
+                  " en het genre " + genre + " samen voorkomen.";
+    }
 
     answerInput.placeholder =
         genre === PLAYED_TOGETHER_CATEGORY
             ? "Typ de naam van een acteur..."
-            : "Typ een film- of serietitel...";
+            : "Typ de titel hier...";
 
     answerInput.value = "";
 
@@ -1714,6 +1940,93 @@ function showActorSuggestions(searchText, requiredActor) {
     movieSuggestions.classList.remove("hidden");
 }
 
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showFeedback(options = {}) {
+    if (!feedbackOverlay) {
+        return;
+    }
+
+    const title = options.title || "Helaas, dit is niet juist";
+    const message = options.message || "Dit antwoord is niet geldig.";
+    const hint = options.hint || "Probeer het opnieuw!";
+    const buttonText = options.buttonText || "Oké";
+
+    if (feedbackTitle) {
+        feedbackTitle.textContent = title;
+    }
+
+    if (feedbackMessage) {
+        feedbackMessage.innerHTML = message;
+    }
+
+    if (feedbackHint) {
+        feedbackHint.textContent = hint;
+    }
+
+    if (feedbackOkBtn) {
+        feedbackOkBtn.childNodes[0].nodeValue = buttonText + " ";
+    }
+
+    feedbackDismissAction =
+        typeof options.onDismiss === "function"
+            ? options.onDismiss
+            : null;
+
+    feedbackOverlay.classList.remove("hidden");
+
+    window.setTimeout(function () {
+        if (feedbackOkBtn) {
+            feedbackOkBtn.focus();
+        }
+    }, 20);
+}
+
+function hideFeedback() {
+    if (!feedbackOverlay) {
+        return;
+    }
+
+    feedbackOverlay.classList.add("hidden");
+
+    const action = feedbackDismissAction;
+    feedbackDismissAction = null;
+
+    if (action) {
+        action();
+    }
+}
+
+if (feedbackOkBtn) {
+    feedbackOkBtn.addEventListener("click", hideFeedback);
+}
+
+if (feedbackOverlay) {
+    feedbackOverlay.addEventListener("click", function (event) {
+        if (event.target === feedbackOverlay) {
+            hideFeedback();
+        }
+    });
+}
+
+document.addEventListener("keydown", function (event) {
+    if (
+        event.key === "Escape" &&
+        feedbackOverlay &&
+        !feedbackOverlay.classList.contains("hidden")
+    ) {
+        hideFeedback();
+    }
+});
+
 /* =========================================
    ANTWOORD BEVESTIGEN
 ========================================= */
@@ -1747,11 +2060,18 @@ function submitAnswer() {
         const selectedCategory =
             rows[Number(selectedCell.dataset.row)];
 
-        alert(
-            selectedCategory === PLAYED_TOGETHER_CATEGORY
-                ? "Typ eerst de naam van een acteur."
-                : "Typ eerst een film- of serietitel."
-        );
+        showFeedback({
+            title: "Nog geen antwoord ingevuld",
+            message:
+                selectedCategory === PLAYED_TOGETHER_CATEGORY
+                    ? "Typ eerst de naam van een acteur."
+                    : "Typ eerst een film- of serietitel.",
+            hint: "Vul een antwoord in om verder te gaan.",
+            buttonText: "Terug naar mijn antwoord",
+            onDismiss: function () {
+                answerInput.focus();
+            }
+        });
         return;
     }
 
@@ -1761,41 +2081,68 @@ function submitAnswer() {
     const result = checkAnswer(answer, rowIndex, columnIndex);
 
     if (result.status === "not-found") {
-        alert(
-            rows[rowIndex] === PLAYED_TOGETHER_CATEGORY
-                ? "❌ Deze acteur staat niet in de database."
-                : "❌ Deze film of serie staat niet in de database."
-        );
-        closePopup();
-        switchPlayer();
+        playSound("wrong", { volume: 0.68 });
+        showFeedback({
+            title: "Niet gevonden",
+            message:
+                rows[rowIndex] === PLAYED_TOGETHER_CATEGORY
+                    ? "Deze acteur staat niet in de MovieMind-database."
+                    : "Deze film of serie staat niet in de MovieMind-database.",
+            hint: "Dit antwoord kan daarom niet worden goedgekeurd.",
+            buttonText: "Oké, volgende speler",
+            onDismiss: function () {
+                closePopup();
+                switchPlayer();
+            }
+        });
         return;
     }
 
     if (result.status === "wrong-combination") {
-        alert(
-            rows[rowIndex] === PLAYED_TOGETHER_CATEGORY
-                ? "❌ " + columns[columnIndex] +
-                  " heeft volgens de database niet samengespeeld met " +
-                  answer + "."
-                : "❌ Deze titel past niet bij " +
-                  columns[columnIndex] +
-                  " en " +
-                  rows[rowIndex] +
-                  "."
-        );
-        closePopup();
-        switchPlayer();
+        playSound("wrong", { volume: 0.68 });
+
+        const actorName = columns[columnIndex];
+        const categoryName = rows[rowIndex];
+
+        showFeedback({
+            title: "Helaas, dit is niet juist",
+            message:
+                categoryName === PLAYED_TOGETHER_CATEGORY
+                    ? "Volgens de database speelde <strong>" +
+                      escapeHtml(actorName) +
+                      "</strong> niet samen met <strong>" +
+                      escapeHtml(answer) +
+                      "</strong>."
+                    : "Deze titel past niet bij <strong>" +
+                      escapeHtml(actorName) +
+                      " × " +
+                      escapeHtml(categoryName) +
+                      "</strong>.",
+            hint: "De beurt gaat naar de volgende speler.",
+            buttonText: "Oké, volgende speler",
+            onDismiss: function () {
+                closePopup();
+                switchPlayer();
+            }
+        });
         return;
     }
 
     if (result.status === "already-used") {
-        alert(
-            rows[rowIndex] === PLAYED_TOGETHER_CATEGORY
-                ? "❌ Deze acteur is deze ronde al gebruikt."
-                : "❌ Deze film of serie is deze ronde al gebruikt."
-        );
-        closePopup();
-        switchPlayer();
+        playSound("wrong", { volume: 0.68 });
+        showFeedback({
+            title: "Al eerder gebruikt",
+            message:
+                rows[rowIndex] === PLAYED_TOGETHER_CATEGORY
+                    ? "Deze acteur is deze ronde al genoemd."
+                    : "Deze film of serie is deze ronde al genoemd.",
+            hint: "Ieder antwoord mag maar één keer worden gebruikt.",
+            buttonText: "Oké, volgende speler",
+            onDismiss: function () {
+                closePopup();
+                switchPlayer();
+            }
+        });
         return;
     }
 
@@ -1899,10 +2246,11 @@ function checkMedia(title, rowIndex, columnIndex) {
 }
 
 function placeMedia(item) {
+    let answerTitle = "";
+
     if (item.answer_type === "actor") {
         usedCoStarNames.push(normalizeText(item.name));
-
-        selectedCell.textContent = item.name;
+        answerTitle = item.name;
 
         const sharedTitleNames = item.shared_titles
             .slice(0, 3)
@@ -1919,8 +2267,8 @@ function placeMedia(item) {
                 : "");
     } else {
         usedMediaKeys.push(item.game_key);
+        answerTitle = item.title;
 
-        selectedCell.textContent = item.title;
         selectedCell.title =
             (item.media_type === "tv" ? "Serie: " : "Film: ") +
             item.title +
@@ -1928,6 +2276,15 @@ function placeMedia(item) {
             (item.year || "?") +
             ")";
     }
+
+    const ownerName =
+        currentPlayer === 1
+            ? playerBlue
+            : playerOrange;
+
+    selectedCell.replaceChildren(
+        createClaimedCard(answerTitle, ownerName)
+    );
 
     if (currentPlayer === 1) {
         selectedCell.classList.add("blue");
@@ -1938,6 +2295,14 @@ function placeMedia(item) {
     selectedCell.classList.remove("movie-placed");
     void selectedCell.offsetWidth;
     selectedCell.classList.add("movie-placed");
+
+    consecutivePasses = 0;
+    lastPassingPlayer = null;
+
+    playSound("correct", { volume: 0.68 });
+    window.setTimeout(function () {
+        playSound("claim", { volume: 0.58 });
+    }, 120);
 
     updateGameHud();
     closePopup();
@@ -1957,6 +2322,64 @@ function placeMedia(item) {
     switchPlayer();
 }
 
+function createClaimedCard(title, ownerName) {
+    const card = document.createElement("div");
+    card.className = "claimed-card";
+
+    const selectedToken = currentPlayer === 1
+        ? playerOneToken
+        : playerTwoToken;
+
+    const tokenFilenames = {
+        projector: "projector-token.png",
+        clapperboard: "clapperboard-token.png",
+        "directors-chair": "directors-chair-token.png",
+        statuette: "statuette-token.png"
+    };
+
+    const tokenNames = {
+        projector: "Filmprojector",
+        clapperboard: "Filmklapper",
+        "directors-chair": "Regisseursstoel",
+        statuette: "Filmbeeldje"
+    };
+
+    const tokenWrap = document.createElement("div");
+    tokenWrap.className = "claimed-token-wrap";
+
+    const tokenImage = document.createElement("img");
+    tokenImage.className = "claimed-token";
+    tokenImage.src =
+        "images/tokens/" +
+        (tokenFilenames[selectedToken] || tokenFilenames.projector);
+    tokenImage.alt =
+        (tokenNames[selectedToken] || tokenNames.projector) +
+        " van " +
+        (ownerName || "speler");
+    tokenImage.draggable = false;
+
+    tokenImage.addEventListener("error", function () {
+        tokenWrap.classList.add("claimed-token-missing");
+        tokenImage.remove();
+    });
+
+    tokenWrap.appendChild(tokenImage);
+
+    const titleElement = document.createElement("div");
+    titleElement.className = "claimed-title";
+    titleElement.textContent = title;
+
+    const owner = document.createElement("div");
+    owner.className = "claimed-owner";
+    owner.textContent = ownerName || "Speler";
+
+    card.appendChild(tokenWrap);
+    card.appendChild(titleElement);
+    card.appendChild(owner);
+
+    return card;
+}
+
 /* =========================================
    PASSEN EN ANNULEREN
 ========================================= */
@@ -1964,16 +2387,49 @@ function placeMedia(item) {
 passBtn.addEventListener(
     "click",
     function () {
-        if (!gameOver) {
-            closePopup();
-            switchPlayer();
+        if (gameOver) {
+            return;
         }
+
+        playSound("click", { volume: 0.42 });
+        closePopup();
+
+        const passingPlayer = currentPlayer;
+        const otherPlayerPassedImmediatelyBefore =
+            lastPassingPlayer !== null &&
+            lastPassingPlayer !== passingPlayer;
+
+        /*
+        Alleen twee verschillende spelers die direct na elkaar
+        passen veroorzaken remise. Een dubbele verwerking van
+        dezelfde klik kan de partij daardoor nooit beëindigen.
+        */
+        if (otherPlayerPassedImmediatelyBefore) {
+            consecutivePasses = 2;
+
+            const winner = checkWinner();
+
+            if (winner) {
+                finishGame(winner);
+            } else {
+                finishDraw("Beide spelers hebben achter elkaar gepast.");
+            }
+
+            return;
+        }
+
+        consecutivePasses = 1;
+        lastPassingPlayer = passingPlayer;
+        switchPlayer();
     }
 );
 
 cancelBtn.addEventListener(
     "click",
-    closePopup
+    function () {
+        playSound("click", { volume: 0.42 });
+        closePopup();
+    }
 );
 
 popup.addEventListener(
@@ -2075,6 +2531,7 @@ function checkWinner() {
 
 function finishGame(winner) {
     gameOver = true;
+    playSound("winner", { volume: 0.82 });
 
     winnerMessage.textContent =
         "🏆 " +
@@ -2086,8 +2543,28 @@ function finishGame(winner) {
     winnerMessage.classList.add("winner-reveal");
 
     if (winnerOverlayText) {
-        winnerOverlayText.textContent =
-            winner + " heeft gewonnen!";
+        winnerOverlayText.textContent = winner;
+    }
+
+    if (winnerDifficulty) {
+        winnerDifficulty.textContent =
+            getDifficultyLabel(difficulty);
+    }
+
+    if (winnerClaimedCount) {
+        const winnerClass =
+            winner === playerBlue
+                ? "blue"
+                : "orange";
+
+        const claimedByWinner =
+            cells.filter(function (cell) {
+                return cell.classList.contains(winnerClass);
+            }).length;
+
+        winnerClaimedCount.textContent =
+            claimedByWinner +
+            (claimedByWinner === 1 ? " vak" : " vakken");
     }
 
     if (winnerOverlay) {
@@ -2114,22 +2591,51 @@ function finishGame(winner) {
     newRoundBtn.classList.remove("hidden");
 }
 
-function finishDraw() {
+function finishDraw(reason = "Het bord is vol.") {
     gameOver = true;
+    consecutivePasses = 0;
+    lastPassingPlayer = null;
 
-    winnerMessage.textContent =
-        "🤝 Gelijkspel: het bord is vol.";
+    const blueClaimed = cells.filter(function (cell) {
+        return cell.classList.contains("blue");
+    }).length;
 
+    const orangeClaimed = cells.filter(function (cell) {
+        return cell.classList.contains("orange");
+    }).length;
+
+    winnerMessage.textContent = "";
     winnerMessage.classList.remove("winner-reveal");
-    void winnerMessage.offsetWidth;
-    winnerMessage.classList.add("winner-reveal");
 
     if (winnerOverlay) {
         winnerOverlay.classList.add("hidden");
         winnerOverlay.classList.remove("show");
     }
 
-    newRoundBtn.classList.remove("hidden");
+    if (drawReason) {
+        drawReason.textContent = reason;
+    }
+    if (drawPlayerBlue) {
+        drawPlayerBlue.textContent = playerBlue || "Speler 1";
+    }
+    if (drawPlayerOrange) {
+        drawPlayerOrange.textContent = playerOrange || "Speler 2";
+    }
+    if (drawBlueCount) {
+        drawBlueCount.textContent = blueClaimed + (blueClaimed === 1 ? " vakje" : " vakjes");
+    }
+    if (drawOrangeCount) {
+        drawOrangeCount.textContent = orangeClaimed + (orangeClaimed === 1 ? " vakje" : " vakjes");
+    }
+
+    if (drawOverlay) {
+        drawOverlay.classList.remove("hidden");
+        drawOverlay.classList.remove("show");
+        void drawOverlay.offsetWidth;
+        drawOverlay.classList.add("show");
+    }
+
+    newRoundBtn.classList.add("hidden");
 }
 
 function isOccupiedCell(cell) {
@@ -2899,6 +3405,14 @@ function createActorHeader(actor) {
 
     portrait.addEventListener("load", function () {
         header.classList.add("actor-header-has-photo");
+
+        const loadedPhoto =
+            portrait.currentSrc || portrait.src;
+
+        header.style.setProperty(
+            "--actor-photo",
+            'url("' + loadedPhoto.replace(/"/g, '\\"') + '")'
+        );
     });
 
     portrait.addEventListener("error", function handleImageError() {

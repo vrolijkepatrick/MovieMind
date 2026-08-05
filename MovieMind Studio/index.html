@@ -3,600 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MovieMind Studio</title>
-    <link rel="stylesheet" href="style.css?v=0174?v=0.17.2">
+    <title>MovieMind Studio 2.0</title>
+    <link rel="stylesheet" href="style.css?v=2.0.2">
+    <style>
+        .search-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .search-pagination[hidden] {
+            display: none;
+        }
+
+        #search-page-info {
+            min-width: 120px;
+            text-align: center;
+            font-weight: 700;
+        }
+    </style>
 </head>
-
 <body>
-
-    <!-- =====================================================
-         MOVIEMIND STUDIO
-         Hoofdscherm
-    ====================================================== -->
-
     <div class="studio-shell">
-
-        <!-- HEADER -->
         <header class="studio-header">
-            <div class="studio-brand">
-                <span class="studio-brand-icon" aria-hidden="true">🎞️</span>
-
-                <div class="studio-brand-text">
-                    <h1>MovieMind Studio</h1>
-                    <p>Database Manager</p>
-                </div>
-
-                <span class="studio-brand-icon" aria-hidden="true">🎞️</span>
+            <div>
+                <p class="eyebrow">MOVIEMIND</p>
+                <h1>MovieMind Studio</h1>
+                <p class="subtitle">Films, series en acteurs beheren voor de game</p>
             </div>
 
-            <div class="header-actions">
-                <button class="header-button" type="button">
-                    <span aria-hidden="true">⚙</span>
-                    Instellingen
-                </button>
+            <div class="database-chip" id="database-chip" data-state="offline">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong id="database-chip-title">Geen database gekoppeld</strong>
+                    <small id="database-chip-text">Open Stap 4 om te koppelen</small>
+                </div>
             </div>
         </header>
 
-        <div
-            class="studio-notification"
-            id="studio-notification"
-            role="status"
-            aria-live="polite"
-            hidden
-        ></div>
+        <main class="studio-grid">
+            <!-- STAP 1 -->
+            <section class="studio-card step-one">
+                <header class="card-header">
+                    <span class="step-badge">Stap 1</span>
+                    <div>
+                        <h2>Wat wil je toevoegen?</h2>
+                        <p>Kies het onderdeel dat je aan MovieMind wilt toevoegen.</p>
+                    </div>
+                </header>
 
+                <div class="type-grid" role="tablist" aria-label="Type kiezen">
+                    <button class="type-button is-active" type="button" data-type="movie">
+                        <span class="type-icon">🎬</span>
+                        <span><strong>Films</strong><small>Zoek en voeg films toe</small></span>
+                    </button>
 
-        <!-- HOOFDINDELING -->
-        <main class="studio-main">
+                    <button class="type-button" type="button" data-type="tv">
+                        <span class="type-icon">📺</span>
+                        <span><strong>Series</strong><small>Zoek en voeg series toe</small></span>
+                    </button>
 
-            <!-- STAP 1 - DATABASE -->
-            <aside class="studio-panel studio-sidebar">
+                    <button class="type-button" type="button" data-type="person">
+                        <span class="type-icon">👤</span>
+                        <span><strong>Acteurs</strong><small>Zoek acteurs en foto's</small></span>
+                    </button>
+                </div>
+            </section>
 
-                <div class="panel-heading">
-                    <span class="panel-step">Stap 1</span>
-                    <h2>Database</h2>
+            <!-- STAP 2 -->
+            <section class="studio-card step-two">
+                <header class="card-header">
+                    <span class="step-badge">Stap 2</span>
+                    <div>
+                        <h2 id="search-heading">Film zoeken</h2>
+                        <p>Na drie letters zoekt MovieMind automatisch bij TMDB.</p>
+                    </div>
+                </header>
+
+                <label class="search-label" for="search-input">Naam</label>
+
+                <div class="search-bar">
+                    <input id="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Typ minimaal 3 letters...">
+                    <button id="search-button" type="button">Zoeken</button>
                 </div>
 
-                <div class="sidebar-content">
+                <p class="search-status" id="search-status">Begin met typen om te zoeken.</p>
 
-                    <nav class="main-navigation" aria-label="Hoofdnavigatie">
-                        <button class="nav-button is-active" type="button" data-view="films">
-                            <span class="nav-icon" aria-hidden="true">🎬</span>
-                            <span>Films</span>
-                        </button>
-
-                        <button class="nav-button" type="button" data-view="series">
-                            <span class="nav-icon" aria-hidden="true">📺</span>
-                            <span>TV-series</span>
-                        </button>
-
-                        <button class="nav-button" type="button" data-view="actors">
-                            <span class="nav-icon" aria-hidden="true">👤</span>
-                            <span>Acteurs</span>
-                        </button>
-                    </nav>
-
-
-                    <section class="sidebar-section">
-                        <h3>Database</h3>
-
-                        <button class="action-button" id="load-database-button" type="button">
-                            <span aria-hidden="true">📂</span>
-                            Database laden
-                        </button>
-
-                        <input
-                            id="database-file-input"
-                            class="visually-hidden"
-                            type="file"
-                            accept=".json,application/json"
-                        >
-
-                        <button class="action-button action-button-accent" id="merge-databases-button" type="button">
-                            <span aria-hidden="true">🔗</span>
-                            Film- en TV-database samenvoegen
-                        </button>
-
-                        <button class="action-button" type="button">
-                            <span aria-hidden="true">⬆</span>
-                            Database exporteren
-                        </button>
-
-                        <button class="action-button" type="button">
-                            <span aria-hidden="true">💾</span>
-                            Back-up maken
-                        </button>
-                    </section>
-
-
-                    <section class="sidebar-section statistics-section">
-                        <h3>Statistieken</h3>
-
-                        <dl class="statistics-list">
-                            <div class="statistic-row">
-                                <dt>Alle titels</dt>
-                                <dd>2.069</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Films</dt>
-                                <dd>1.784</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Series</dt>
-                                <dd>285</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Acteurs</dt>
-                                <dd>7.630</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Regisseurs</dt>
-                                <dd>1.254</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Genres</dt>
-                                <dd>21</dd>
-                            </div>
-
-                            <div class="statistic-row">
-                                <dt>Acteurs met foto</dt>
-                                <dd>7.502</dd>
-                            </div>
-
-                            <div class="statistic-row statistic-warning">
-                                <dt>Ontbrekende foto's</dt>
-                                <dd>128</dd>
-                            </div>
-                        </dl>
-
-                        <p class="sidebar-meta" id="last-loaded-text">
-                            Laatst geladen: nog niet geladen
-                        </p>
-                    </section>
-
-                </div>
-            </aside>
-
-
-            <!-- STAP 2 - ZOEKEN EN RESULTATEN -->
-            <section class="studio-workspace studio-panel">
-
-                <div class="panel-heading">
-                    <span class="panel-step">Stap 2</span>
-                    <h2>Film zoeken / Acteur zoeken</h2>
+                <div class="search-results" id="search-results" aria-live="polite">
+                    <div class="empty-state">
+                        <span>🔎</span>
+                        <strong>Nog geen zoekresultaten</strong>
+                        <p>Zoek hierboven naar een film, serie of acteur.</p>
+                    </div>
                 </div>
 
-                <div class="workspace-content">
+                <div class="search-pagination" id="search-pagination" hidden>
+                    <button id="search-prev-page" class="ghost-button" type="button">
+                        ← Vorige
+                    </button>
+                    <span id="search-page-info">Pagina 1 van 1</span>
+                    <button id="search-next-page" class="ghost-button" type="button">
+                        Volgende →
+                    </button>
+                </div>
+            </section>
 
-                    <section class="search-panel" aria-label="Zoeken">
+            <!-- STAP 3 -->
+            <section class="studio-card step-three">
+                <header class="card-header">
+                    <span class="step-badge">Stap 3</span>
+                    <div>
+                        <h2>Poster en acteursfoto's</h2>
+                        <p>Controleer de titel en de afbeeldingen vóór het toevoegen.</p>
+                    </div>
+                </header>
 
-                        <div class="search-field-group">
-                            <label class="visually-hidden" for="main-search">
-                                Zoek op titel, acteur of regisseur
-                            </label>
+                <div class="preview-layout">
+                    <div class="poster-frame">
+                        <img id="preview-poster" alt="" hidden>
+                        <div id="poster-placeholder" class="poster-placeholder">
+                            <span>🎞️</span>
+                            <p>Selecteer eerst een resultaat</p>
+                        </div>
+                    </div>
 
-                            <input
-                                id="main-search"
-                                class="search-input"
-                                type="search"
-                                placeholder="Zoek op titel, acteur, regisseur..."
-                                autocomplete="off"
-                            >
-
-                            <button class="search-button" id="search-button" type="button" aria-label="Zoeken">
-                                🔍
-                            </button>
+                    <div class="preview-content">
+                        <div class="selected-title">
+                            <p class="eyebrow">GESELECTEERD</p>
+                            <h3 id="preview-title">Nog geen titel geselecteerd</h3>
+                            <p id="preview-meta">Kies een resultaat uit Stap 2.</p>
                         </div>
 
-                        <div class="search-filter-group">
-                            <label for="search-scope">Zoek in</label>
+                        <p id="preview-overview" class="overview"></p>
 
-                            <select id="search-scope" class="filter-select">
-                                <option value="all">Alle titels</option>
-                                <option value="movies">Films</option>
-                                <option value="series">TV-series</option>
-                                <option value="actors">Acteurs</option>
-                            </select>
+                        <div>
+                            <div class="section-label-row">
+                                <h4 id="people-heading">Acteurs</h4>
+                                <span id="people-count">0 geselecteerd</span>
+                            </div>
+                            <div class="people-grid" id="people-grid">
+                                <div class="people-empty">Acteursfoto's verschijnen hier.</div>
+                            </div>
                         </div>
 
-                        <div class="search-filter-group">
-                            <label for="search-type">Type</label>
+                        <button id="add-selected-button" class="primary-button" type="button" disabled>
+                            ＋ Toevoegen aan MovieMind
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-                            <select id="search-type" class="filter-select">
-                                <option value="all">Alle</option>
-                                <option value="movie">Film</option>
-                                <option value="tv">Serie</option>
-                            </select>
+            <!-- STAP 4 -->
+            <section class="studio-card maintenance-card is-collapsed" id="maintenance-card">
+                <button class="maintenance-toggle" id="maintenance-toggle" type="button" aria-expanded="false">
+                    <span class="step-badge">Stap 4</span>
+                    <span class="maintenance-toggle-copy">
+                        <strong>Database onderhouden</strong>
+                        <small>Koppelen, controleren en statistieken bekijken</small>
+                    </span>
+                    <span class="toggle-chevron" aria-hidden="true">⌄</span>
+                </button>
+
+                <div class="maintenance-body" id="maintenance-body">
+                    <div class="maintenance-grid">
+                        <div class="maintenance-block">
+                            <h3>Vaste database</h3>
+                            <p>Kies eenmalig de samengevoegde database. MovieMind onthoudt het bestand en schrijft nieuwe titels rechtstreeks weg.</p>
+                            <button id="connect-database-button" class="secondary-button" type="button">📂 Database koppelen</button>
+                            <button id="reconnect-database-button" class="ghost-button" type="button" hidden>🔐 Toestemming herstellen</button>
+                            <p class="database-status" id="database-status">Nog geen database gekoppeld.</p>
                         </div>
 
-                    </section>
-
-
-                    <section class="results-panel">
-
-                        <div class="section-heading-row">
-                            <h3>Filmlijst <span id="results-count">(0)</span></h3>
+                        <div class="maintenance-block">
+                            <h3>Databasegegevens</h3>
+                            <dl class="statistics-list">
+                                <div><dt>Alle titels</dt><dd id="stat-total">0</dd></div>
+                                <div><dt>Films</dt><dd id="stat-movies">0</dd></div>
+                                <div><dt>Series</dt><dd id="stat-series">0</dd></div>
+                                <div><dt>Acteurs</dt><dd id="stat-actors">0</dd></div>
+                                <div><dt>Regisseurs</dt><dd id="stat-directors">0</dd></div>
+                                <div><dt>Laatste wijziging</dt><dd id="stat-modified">—</dd></div>
+                            </dl>
                         </div>
 
-                        <div class="results-table-wrapper">
-                            <table class="results-table">
-                                <thead>
-                                    <tr>
-                                        <th>Titel</th>
-                                        <th>Jaar</th>
-                                        <th>Type</th>
-                                        <th>Acteurs</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="results-body">
-                                    <tr class="results-empty-row">
-                                        <td colspan="4">
-                                            Laad eerst de MovieMind-database.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="maintenance-block">
+                            <h3>Acteursfoto's</h3>
+                            <p>Koppel eenmalig de map <strong>game/images/actors</strong>. Nieuwe of gewijzigde acteursfoto's worden daarna rechtstreeks in deze map opgeslagen.</p>
+                            <button id="connect-actors-folder-button" class="secondary-button" type="button">📁 Acteursmap koppelen</button>
+                            <button id="reconnect-actors-folder-button" class="ghost-button" type="button" hidden>🔐 Toestemming herstellen</button>
+                            <p class="database-status" id="actors-folder-status">Nog geen acteursmap gekoppeld.</p>
                         </div>
 
-                        <nav class="pagination" id="results-pagination" aria-label="Paginanavigatie">
-                            <button type="button" disabled>1</button>
-                        </nav>
+                        <div class="maintenance-block">
+                            <h3>Veiligheid</h3>
+                            <p>Elke toevoeging wordt rechtstreeks naar het gekoppelde JSON-bestand geschreven. Acteursfoto's worden alleen opgeslagen wanneer de acteursmap is gekoppeld.</p>
+                            <button id="reload-database-button" class="secondary-button" type="button" disabled>↻ Database opnieuw laden</button>
+                            <button id="test-save-button" class="ghost-button" type="button" disabled>✓ Schrijftoegang controleren</button>
+                        </div>
+                    </div>
 
-                    </section>
+                    <div class="activity-log-block">
+                        <div class="activity-log-grid">
+                            <section class="activity-log-panel">
+                                <div class="activity-log-header">
+                                    <div>
+                                        <h3>Activiteiten</h3>
+                                        <p>De laatste 10 acties van MovieMind Studio.</p>
+                                    </div>
+                                    <button id="clear-activity-log-button" class="ghost-button activity-log-clear" type="button">
+                                        Log wissen
+                                    </button>
+                                </div>
 
+                                <div class="activity-log" id="activity-log" role="log" aria-live="polite" aria-relevant="additions">
+                                    <div class="activity-log-empty" id="activity-log-empty">
+                                        Nog geen activiteiten uitgevoerd.
+                                    </div>
+                                </div>
+                            </section>
 
-                    <div class="workspace-bottom-grid">
+                            <section class="activity-log-panel">
+                                <div class="activity-log-header">
+                                    <div>
+                                        <h3>Recent toegevoegd</h3>
+                                        <p>De laatste 10 toegevoegde films, series en acteurs.</p>
+                                    </div>
+                                </div>
 
-                        <section class="compact-panel">
-                            <h3>Laatst gewijzigde films</h3>
-
-                            <ul class="compact-list">
-                                <li><span>Oppenheimer</span><time>23-07-2026 10:52</time></li>
-                                <li><span>Interstellar</span><time>23-07-2026 10:41</time></li>
-                                <li><span>The Batman</span><time>23-07-2026 10:35</time></li>
-                                <li><span>Inception</span><time>23-07-2026 10:28</time></li>
-                                <li><span>The Godfather</span><time>23-07-2026 10:21</time></li>
-                            </ul>
-                        </section>
-
-
-                        <section class="compact-panel">
-                            <h3>Laatste acties / Logs</h3>
-
-                            <ul class="compact-list log-list" id="activity-log">
-                                <li><span>✓ Database geladen</span><time>11:08</time></li>
-                                <li><span>✓ Back-up gemaakt</span><time>11:07</time></li>
-                                <li><span>✓ Foto aangevuld: Aart Staartjes</span><time>11:05</time></li>
-                                <li><span>✓ Acteur toegevoegd: Jon Favreau</span><time>11:03</time></li>
-                                <li><span>✓ Film toegevoegd</span><time>10:59</time></li>
-                            </ul>
-
-                            <button class="small-button" type="button">
-                                Bekijk volledige log
-                            </button>
-                        </section>
-
+                                <div class="recent-items-list" id="recent-items-list" aria-live="polite">
+                                    <div class="activity-log-empty" id="recent-items-empty">
+                                        Nog niets toegevoegd.
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
                     </div>
 
                 </div>
             </section>
-
-
-            <!-- STAP 3 - DETAILS -->
-            <aside class="studio-panel studio-details">
-
-                <div class="panel-heading">
-                    <span class="panel-step">Stap 3</span>
-                    <h2>Details &amp; Gegevens</h2>
-                </div>
-
-                <div class="details-content">
-
-                    <section class="selected-title">
-                        <h3>The Shawshank Redemption</h3>
-                        <p>(1994)</p>
-                    </section>
-
-
-                    <section class="poster-card" id="studio-poster-card">
-                        <img id="studio-title-poster" alt="" hidden>
-                        <div class="poster-placeholder" id="studio-poster-placeholder">
-                            <span>Geen poster beschikbaar</span>
-                        </div>
-                    </section>
-
-                    <section class="detail-card actor-photo-manager" id="actor-photo-manager">
-                        <h3>Acteursfoto beheren</h3>
-
-                        <div class="studio-actor-photo-preview">
-                            <img id="studio-actor-photo-preview" alt="" hidden>
-                            <div id="studio-actor-photo-placeholder">👤</div>
-                        </div>
-
-                        <p id="studio-actor-photo-status" class="studio-photo-status">
-                            Kies links eerst Acteurs en klik daarna een acteur aan.
-                        </p>
-
-                        <button
-                            id="studio-choose-photo-folder"
-                            class="small-button"
-                            type="button">
-                            📁 Acteursfotomap kiezen
-                        </button>
-
-                        <div
-                            id="studio-actor-photo-choices"
-                            class="studio-actor-photo-choices"
-                            aria-label="Beschikbare acteurfoto's">
-                        </div>
-
-                        <button
-                            id="studio-save-actor-photo"
-                            class="small-button studio-save-photo-button"
-                            type="button"
-                            disabled>
-                            📸 Gekozen foto opslaan
-                        </button>
-                    </section>
-
-
-
-                    <section class="detail-card">
-                        <h3>Algemene gegevens</h3>
-
-                        <dl class="detail-list">
-                            <div><dt>Titel</dt><dd>The Shawshank Redemption</dd></div>
-                            <div><dt>Jaar</dt><dd>1994</dd></div>
-                            <div><dt>Type</dt><dd>Film</dd></div>
-                            <div><dt>Rating</dt><dd>9.3</dd></div>
-                            <div><dt>Duur</dt><dd>142 min</dd></div>
-                            <div><dt>TMDB ID</dt><dd>278</dd></div>
-                        </dl>
-                    </section>
-
-
-                    <section class="detail-card">
-                        <h3>Acteurs <span>(15)</span></h3>
-
-                        <div class="people-grid">
-                            <article class="person-card">
-                                <div class="person-photo-placeholder">Foto</div>
-                                <p>Tim Robbins</p>
-                            </article>
-
-                            <article class="person-card">
-                                <div class="person-photo-placeholder">Foto</div>
-                                <p>Morgan Freeman</p>
-                            </article>
-
-                            <article class="person-card">
-                                <div class="person-photo-placeholder">Foto</div>
-                                <p>Bob Gunton</p>
-                            </article>
-                        </div>
-
-                        <button class="small-button" type="button">
-                            Bekijk alle acteurs
-                        </button>
-                    </section>
-
-
-                    <section class="detail-card">
-                        <h3>Regisseurs <span>(1)</span></h3>
-
-                        <div class="director-row">
-                            <div class="person-photo-placeholder person-photo-small">Foto</div>
-                            <p>Frank Darabont</p>
-                        </div>
-
-                        <button class="small-button" type="button">
-                            Bekijk alle regisseurs
-                        </button>
-                    </section>
-
-
-                    <section class="detail-card">
-                        <h3>Genres <span>(3)</span></h3>
-
-                        <div class="genre-list">
-                            <span>Drama</span>
-                            <span>Misdaad</span>
-                            <span>Thriller</span>
-                        </div>
-
-                        <button class="small-button" type="button">
-                            Bekijk alle genres
-                        </button>
-                    </section>
-
-                </div>
-            </aside>
-
         </main>
 
-
-        <!-- STAP 4 - ONDERHOUD -->
-        <section class="maintenance-panel studio-panel is-collapsed" id="maintenance-panel">
-
-            <div class="panel-heading maintenance-heading">
-                <span class="panel-step">Stap 4</span>
-                <h2>Importeren, Controleren &amp; Onderhouden</h2>
-
-                <button
-                    class="maintenance-toggle"
-                    id="maintenance-toggle"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="maintenance-content"
-                    title="Onderhoudsmenu openen"
-                >
-                    <span class="maintenance-toggle-label">Openen</span>
-                    <span class="maintenance-toggle-icon" aria-hidden="true">⌄</span>
-                </button>
-            </div>
-
-            <div class="maintenance-grid" id="maintenance-content">
-
-                <section class="maintenance-group">
-                    <h3>Importeren</h3>
-                    <button id="import-movie-button" type="button">🎬 Film importeren</button>
-                    <button id="import-tv-series-button" type="button">📺 TV-serie importeren</button>
-                    <button type="button">📚 Bulk importeren</button>
-                </section>
-
-                <section class="maintenance-group">
-                    <h3>Controleren</h3>
-                    <button type="button">🔎 Database controleren</button>
-                    <button type="button">👥 Dubbele acteurs zoeken</button>
-                    <button type="button">✍ Spellingsverschillen</button>
-                </section>
-
-                <section class="maintenance-group">
-                    <h3>Foto's beheren</h3>
-                    <button id="fill-missing-photos-button" type="button">🖼 Ontbrekende foto's aanvullen</button>
-                    <button type="button">⭐ Verbeter alle foto's</button>
-                    <button type="button">📋 Foto-audit &amp; rapport</button>
-                </section>
-
-                <section class="maintenance-group">
-                    <h3>Database tools</h3>
-                    <button type="button">🎭 Genres beheren</button>
-                    <button type="button">🎥 Regisseurs beheren</button>
-                    <button type="button">🛠 Tools &amp; onderhoud</button>
-                </section>
-
-                <section class="maintenance-group">
-                    <h3>Rapportage</h3>
-                    <button type="button">📊 Database Health Report</button>
-                    <button type="button">⬇ Rapport downloaden</button>
-                </section>
-
-            </div>
-        </section>
-
-
-        <!-- STATUSBALK -->
-        <footer class="studio-footer">
-
-            <section class="health-summary">
-
-                <div class="health-rating">
-                    <span class="health-icon" aria-hidden="true">🛡</span>
-
-                    <div>
-                        <span>Database Gezondheid</span>
-                        <strong>UITSTEKEND</strong>
-                        <small>★★★★★</small>
-                    </div>
-                </div>
-
-                <div class="health-stat">
-                    <span>Foto's aanwezig</span>
-                    <strong>98,3%</strong>
-                </div>
-
-                <div class="health-stat">
-                    <span>Dubbele acteurs</span>
-                    <strong>0</strong>
-                </div>
-
-                <div class="health-stat">
-                    <span>Dubbele films</span>
-                    <strong>0</strong>
-                </div>
-
-                <div class="health-stat health-warning">
-                    <span>Ontbrekende foto's</span>
-                    <strong>128</strong>
-                </div>
-
-                <div class="health-stat health-warning">
-                    <span>Ontbrekende genres</span>
-                    <strong>3</strong>
-                </div>
-
-                <div class="health-stat">
-                    <span>Laatste scan</span>
-                    <strong>23-07-2026 11:08</strong>
-                </div>
-
-                <button class="refresh-button" type="button" aria-label="Database opnieuw controleren">
-                    ↻
-                </button>
-
-            </section>
-        </footer>
-
+        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
     </div>
 
-
-
-    <!-- FILM IMPORTER -->
-    <div class="studio-modal" id="movie-import-modal" hidden>
-        <div class="studio-modal-backdrop" data-close-movie-importer></div>
-
-        <section class="studio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="movie-import-title">
-            <header class="studio-modal-header">
-                <div>
-                    <span class="panel-step">Importeren</span>
-                    <h2 id="movie-import-title">Film zoeken bij TMDB</h2>
-                </div>
-
-                <button class="studio-modal-close" id="movie-import-close" type="button" aria-label="Sluiten">×</button>
-            </header>
-
-            <div class="studio-modal-content">
-                <form class="tv-import-search" id="movie-import-search-form">
-                    <label for="movie-import-search-input">Naam van de film</label>
-                    <div>
-                        <input id="movie-import-search-input" type="search" placeholder="Bijvoorbeeld: The Godfather, Jaws of Titanic" autocomplete="off">
-                        <button id="movie-import-search-button" type="submit">🔍 Zoeken</button>
-                    </div>
-                </form>
-
-                <p class="tv-import-status" id="movie-import-status">Zoek een film en kies daarna Toevoegen.</p>
-                <div class="tv-import-results" id="movie-import-results"></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- TV-SERIE IMPORTER -->
-    <div class="studio-modal" id="tv-import-modal" hidden>
-        <div class="studio-modal-backdrop" data-close-tv-importer></div>
-
-        <section class="studio-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="tv-import-title">
-            <header class="studio-modal-header">
-                <div>
-                    <span class="panel-step">Importeren</span>
-                    <h2 id="tv-import-title">TV-serie zoeken bij TMDB</h2>
-                </div>
-
-                <button class="studio-modal-close" id="tv-import-close" type="button" aria-label="Sluiten">×</button>
-            </header>
-
-            <div class="studio-modal-content">
-                <form class="tv-import-search" id="tv-import-search-form">
-                    <label for="tv-import-search-input">Naam van de TV-serie</label>
-                    <div>
-                        <input id="tv-import-search-input" type="search" placeholder="Bijvoorbeeld: The A-Team, Knight Rider of Airwolf" autocomplete="off">
-                        <button id="tv-import-search-button" type="submit">🔍 Zoeken</button>
-                    </div>
-                </form>
-
-                <p class="tv-import-status" id="tv-import-status">Zoek een serie en kies daarna Toevoegen.</p>
-                <div class="tv-import-results" id="tv-import-results"></div>
-            </div>
-        </section>
-    </div>
-
-    <script src="config.js?v=0174?v=0.17.3"></script>
-    <script src="script.js?v=0174?v=0.17.3"></script>
-
+<script src="config.js"></script>
+<script src="script.js?v=2.0.9"></script>
 </body>
 </html>

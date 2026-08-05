@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMind Analyzer</title>
+    <link rel="stylesheet" href="style.css?v=1.4.0">
+</head>
+<body>
+    <div class="analyzer-shell">
+        <header class="analyzer-header">
+            <div>
+                <p class="eyebrow">MOVIEMIND</p>
+                <h1>MovieMind Analyzer</h1>
+                <p class="subtitle">Analyseer de MovieMind-database en bereid de acteursranking voor.</p>
+            </div>
+
+            <div class="database-chip" id="database-chip" data-state="offline">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong id="database-chip-title">Geen database gekoppeld</strong>
+                    <small id="database-chip-text">Koppel eerst de MovieMind-database</small>
+                </div>
+            </div>
+        </header>
+
+        <main class="analyzer-grid">
+            <section class="analyzer-card">
+                <header class="card-header">
+                    <span class="step-badge">Stap 1</span>
+                    <div>
+                        <h2>Database koppelen</h2>
+                        <p>Kies dezelfde gecombineerde JSON-database die MovieMind Studio gebruikt.</p>
+                    </div>
+                </header>
+
+                <div class="button-row">
+                    <button id="connect-database-button" class="primary-button" type="button">
+                        📂 Database koppelen
+                    </button>
+                    <button id="reconnect-database-button" class="secondary-button" type="button" hidden>
+                        🔐 Toestemming herstellen
+                    </button>
+                </div>
+
+                <p class="database-status" id="database-status">Nog geen database gekoppeld.</p>
+            </section>
+
+            <section class="analyzer-card">
+                <header class="card-header">
+                    <span class="step-badge">Stap 2</span>
+                    <div>
+                        <h2>Databaseoverzicht</h2>
+                        <p>Controleer of de juiste database is geladen.</p>
+                    </div>
+                </header>
+
+                <dl class="statistics-list">
+                    <div><dt>Alle records</dt><dd id="stat-total">0</dd></div>
+                    <div><dt>Films</dt><dd id="stat-movies">0</dd></div>
+                    <div><dt>Series</dt><dd id="stat-series">0</dd></div>
+                    <div><dt>Losse acteursrecords</dt><dd id="stat-persons">0</dd></div>
+                    <div><dt>Unieke acteurs</dt><dd id="stat-actors">0</dd></div>
+                </dl>
+            </section>
+
+            <section class="analyzer-card analyzer-action-card">
+                <header class="card-header">
+                    <span class="step-badge">Stap 3</span>
+                    <div>
+                        <h2>Acteurs analyseren</h2>
+                        <p>De echte analyse-engine bouwen we in de volgende stap.</p>
+                    </div>
+                </header>
+
+                <button id="analyze-actors-button" class="primary-button large-button" type="button" disabled>
+                    🎭 Acteurs analyseren
+                </button>
+            </section>
+
+            <section class="analyzer-card results-card">
+                <header class="card-header">
+                    <span class="step-badge">Resultaten</span>
+                    <div>
+                        <h2>Analyseoverzicht</h2>
+                        <p>Hier verschijnen straks de gegevens per acteur.</p>
+                    </div>
+                </header>
+
+                <div id="analysis-results">
+                    <div class="empty-state" id="analysis-empty">
+                        <span>🎬</span>
+                        <strong>Nog geen analyse uitgevoerd</strong>
+                        <p>Koppel eerst de database en start daarna de acteursanalyse.</p>
+                    </div>
+
+                    <div id="analysis-content" hidden>
+                        <div class="analysis-summary">
+                            <div>
+                                <span>Geanalyseerde acteurs</span>
+                                <strong id="analysis-actor-count">0</strong>
+                            </div>
+                            <div>
+                                <span>Acteurs met 2+ titels</span>
+                                <strong id="analysis-playable-count">0</strong>
+                            </div>
+                            <div>
+                                <span>Gemiddeld aantal titels</span>
+                                <strong id="analysis-average-titles">0</strong>
+                            </div>
+                            <div>
+                                <span>Getoonde resultaten</span>
+                                <strong id="analysis-shown-count">0</strong>
+                            </div>
+                        </div>
+
+                        <div class="analysis-controls">
+                            <input
+                                id="analysis-search-input"
+                                type="search"
+                                placeholder="Zoek acteur..."
+                                autocomplete="off"
+                            >
+
+                            <select id="analysis-sort-select">
+                                <option value="score-desc">Score: hoog naar laag</option>
+                                <option value="score-asc">Score: laag naar hoog</option>
+                                <option value="titles-desc">Titels: meeste eerst</option>
+                                <option value="coactors-desc">Medespelers: meeste eerst</option>
+                                <option value="name-asc">Naam: A–Z</option>
+                            </select>
+                        </div>
+
+                        <div class="analysis-table-wrap">
+                            <table class="analysis-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rang</th>
+                                        <th>Acteur</th>
+                                        <th>Titels</th>
+                                        <th>Genres</th>
+                                        <th>Medespelers</th>
+                                        <th>Mogelijke antwoorden</th>
+                                        <th>TMDB-populariteit</th>
+                                        <th>Ruwe score</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analysis-table-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="analysis-pagination">
+                            <button id="analysis-prev-page" class="secondary-button" type="button">
+                                ← Vorige
+                            </button>
+                            <span id="analysis-page-info">Pagina 1 van 1</span>
+                            <button id="analysis-next-page" class="secondary-button" type="button">
+                                Volgende →
+                            </button>
+                        </div>
+
+                        <section class="actor-detail-panel" id="actor-detail-panel" hidden>
+                            <div class="actor-detail-header">
+                                <div>
+                                    <p class="eyebrow">ACTEURDETAILS</p>
+                                    <h3 id="actor-detail-name">Acteur</h3>
+                                    <p id="actor-detail-original-name" class="actor-original-name" hidden></p>
+                                </div>
+
+                                <button id="actor-detail-close" class="secondary-button" type="button">
+                                    Sluiten
+                                </button>
+                            </div>
+
+                            <div class="actor-detail-stats">
+                                <div><span>Titels</span><strong id="actor-detail-titles">0</strong></div>
+                                <div><span>Genres</span><strong id="actor-detail-genres">0</strong></div>
+                                <div><span>Medespelers</span><strong id="actor-detail-coactors">0</strong></div>
+                                <div><span>Mogelijke antwoorden</span><strong id="actor-detail-answers">0</strong></div>
+                                <div><span>TMDB-populariteit</span><strong id="actor-detail-popularity">—</strong></div>
+                                <div><span>Ruwe score</span><strong id="actor-detail-score">0</strong></div>
+                            </div>
+
+                            <div class="actor-detail-columns">
+                                <div>
+                                    <h4>Titels in MovieMind</h4>
+                                    <div id="actor-detail-title-list" class="actor-detail-list"></div>
+                                </div>
+
+                                <div>
+                                    <h4>Genres</h4>
+                                    <div id="actor-detail-genre-list" class="actor-tag-list"></div>
+
+                                    <h4>Voorbeeld medespelers</h4>
+                                    <div id="actor-detail-coactor-list" class="actor-detail-list compact"></div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js?v=1.4.0"></script>
+</body>
+</html>

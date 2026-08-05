@@ -25,15 +25,55 @@
                 <h2>Nieuwe wedstrijd</h2>
 
                 <div class="player-input-grid">
-                    <label class="player-field">
-                        <span>🔵 Speler 1</span>
-                        <input id="playerBlueInput" type="text" placeholder="Naam speler 1">
-                    </label>
+                    <div class="player-setup player-setup-one">
+                        <label class="player-field">
+                            <span><span class="player-avatar" aria-hidden="true">●</span> Speler 1</span>
+                            <input id="playerBlueInput" type="text" placeholder="Naam speler 1">
+                        </label>
 
-                    <label class="player-field">
-                        <span>🟠 Speler 2</span>
-                        <input id="playerOrangeInput" type="text" placeholder="Naam speler 2">
-                    </label>
+                        <fieldset class="token-picker" data-player="1">
+                            <legend>Kies jouw pion</legend>
+                            <div class="token-options">
+                                <button class="token-option selected" type="button" data-token="projector" aria-pressed="true" title="Filmprojector">
+                                    <img src="images/tokens/projector-token.png" alt="Filmprojector">
+                                </button>
+                                <button class="token-option" type="button" data-token="clapperboard" aria-pressed="false" title="Filmklapper">
+                                    <img src="images/tokens/clapperboard-token.png" alt="Filmklapper">
+                                </button>
+                                <button class="token-option" type="button" data-token="directors-chair" aria-pressed="false" title="Regisseursstoel">
+                                    <img src="images/tokens/directors-chair-token.png" alt="Regisseursstoel">
+                                </button>
+                                <button class="token-option" type="button" data-token="statuette" aria-pressed="false" title="Beeldje">
+                                    <img src="images/tokens/statuette-token.png" alt="Beeldje">
+                                </button>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div class="player-setup player-setup-two">
+                        <label class="player-field">
+                            <span><span class="player-avatar" aria-hidden="true">●</span> Speler 2</span>
+                            <input id="playerOrangeInput" type="text" placeholder="Naam speler 2">
+                        </label>
+
+                        <fieldset class="token-picker" data-player="2">
+                            <legend>Kies jouw pion</legend>
+                            <div class="token-options">
+                                <button class="token-option token-unavailable" type="button" data-token="projector" aria-pressed="false" aria-disabled="true" title="Filmprojector is al gekozen">
+                                    <img src="images/tokens/projector-token.png" alt="Filmprojector">
+                                </button>
+                                <button class="token-option selected" type="button" data-token="clapperboard" aria-pressed="true" title="Filmklapper">
+                                    <img src="images/tokens/clapperboard-token.png" alt="Filmklapper">
+                                </button>
+                                <button class="token-option" type="button" data-token="directors-chair" aria-pressed="false" title="Regisseursstoel">
+                                    <img src="images/tokens/directors-chair-token.png" alt="Regisseursstoel">
+                                </button>
+                                <button class="token-option" type="button" data-token="statuette" aria-pressed="false" title="Beeldje">
+                                    <img src="images/tokens/statuette-token.png" alt="Beeldje">
+                                </button>
+                            </div>
+                        </fieldset>
+                    </div>
                 </div>
 
                 <div class="difficulty-section">
@@ -44,8 +84,7 @@
 
                         <button class="difficulty-card" type="button" data-difficulty="moviehouse"
                             aria-pressed="false">
-                            <span class="difficulty-icon">🍿</span>
-                            <span class="difficulty-name">Movie House</span>
+<span class="difficulty-name">Makkelijk</span>
                             <span class="difficulty-stars" aria-label="2 van 5 sterren">
                                 <span class="star filled">★</span>
                                 <span class="star filled">★</span>
@@ -53,13 +92,12 @@
                                 <span class="star">★</span>
                                 <span class="star">★</span>
                             </span>
-                            <span class="difficulty-description">Ontspannen spelen</span>
+                            <span class="difficulty-description">Voor een ontspannen filmavond</span>
                         </button>
 
                         <button class="difficulty-card selected" type="button" data-difficulty="blockbuster"
                             aria-pressed="true">
-                            <span class="difficulty-icon">🎬</span>
-                            <span class="difficulty-name">Blockbuster</span>
+<span class="difficulty-name">Gemiddeld</span>
                             <span class="difficulty-stars" aria-label="4 van 5 sterren">
                                 <span class="star filled">★</span>
                                 <span class="star filled">★</span>
@@ -67,13 +105,12 @@
                                 <span class="star filled">★</span>
                                 <span class="star">★</span>
                             </span>
-                            <span class="difficulty-description">De standaard ervaring</span>
+                            <span class="difficulty-description">Voor de meeste filmfans</span>
                         </button>
 
                         <button class="difficulty-card" type="button" data-difficulty="oscarnight"
                             aria-pressed="false">
-                            <span class="difficulty-icon">🏆</span>
-                            <span class="difficulty-name">Oscar Night</span>
+<span class="difficulty-name">Moeilijk</span>
                             <span class="difficulty-stars" aria-label="5 van 5 sterren">
                                 <span class="star filled">★</span>
                                 <span class="star filled">★</span>
@@ -81,14 +118,14 @@
                                 <span class="star filled">★</span>
                                 <span class="star filled">★</span>
                             </span>
-                            <span class="difficulty-description">Voor echte film- en seriekenners</span>
+                            <span class="difficulty-description">Voor echte filmliefhebbers</span>
                         </button>
 
                     </div>
 
                     <div class="selected-difficulty-summary">
                         Gekozen:
-                        <strong id="selectedDifficultyLabel">Blockbuster</strong>
+                        <strong id="selectedDifficultyLabel">Gemiddeld</strong>
                     </div>
                 </div>
 
@@ -139,19 +176,59 @@
                     <div id="winnerMessage"></div>
 
                     <div id="winnerOverlay" class="winner-overlay hidden" aria-live="polite">
-                        <div class="winner-overlay-card">
+                        <div class="winner-spotlight winner-spotlight-left" aria-hidden="true"></div>
+                        <div class="winner-spotlight winner-spotlight-right" aria-hidden="true"></div>
+
+                        <div class="winner-overlay-card" role="dialog" aria-modal="true" aria-labelledby="winnerOverlayText">
+                            <div class="winner-kicker">En de winnaar is...</div>
+
                             <div class="winner-award">
                                 <img src="images/awards/popcorn-bling.png"
                                     alt="MovieMind winnaar popcornbeker"
                                     class="winner-popcorn-image">
                             </div>
 
+                            <div class="winner-divider" aria-hidden="true"></div>
+
                             <div id="winnerOverlayText" class="winner-overlay-text"></div>
                             <div class="winner-overlay-subtitle">MovieMind-kampioen</div>
 
+                            <div class="winner-stats">
+                                <div class="winner-stat">
+                                    <span class="winner-stat-label">Moeilijkheid</span>
+                                    <strong id="winnerDifficulty">-</strong>
+                                </div>
+                                <div class="winner-stat">
+                                    <span class="winner-stat-label">Vakken</span>
+                                    <strong id="winnerClaimedCount">-</strong>
+                                </div>
+                            </div>
+
                             <button id="winnerNewGameBtn" class="winner-new-game-btn" type="button">
-                                🎬 Nieuwe game
+                                Nieuwe game
                             </button>
+                        </div>
+                    </div>
+
+
+                    <div id="drawOverlay" class="draw-overlay hidden" aria-live="polite">
+                        <div class="draw-overlay-card" role="dialog" aria-modal="true" aria-labelledby="drawOverlayTitle">
+                            <div class="draw-kicker">De voorstelling eindigt onbeslist</div>
+                            <div class="draw-emblem" aria-hidden="true">=</div>
+                            <div class="draw-divider"></div>
+                            <div id="drawOverlayTitle" class="draw-title">Remise</div>
+                            <p id="drawReason" class="draw-reason">Beide spelers hebben gepast.</p>
+                            <div class="draw-scores">
+                                <div class="draw-score draw-score-blue">
+                                    <span id="drawPlayerBlue">Speler 1</span>
+                                    <strong id="drawBlueCount">0 vakken</strong>
+                                </div>
+                                <div class="draw-score draw-score-orange">
+                                    <span id="drawPlayerOrange">Speler 2</span>
+                                    <strong id="drawOrangeCount">0 vakken</strong>
+                                </div>
+                            </div>
+                            <button id="drawNewGameBtn" class="draw-new-game-btn" type="button">Nieuwe game</button>
                         </div>
                     </div>
 
@@ -168,32 +245,101 @@
 
 
     <div id="loadingScreen" class="loading-screen hidden" aria-live="polite" aria-busy="true">
-        <div class="loading-card">
-            <div class="loading-reel" aria-hidden="true">🎬</div>
-            <div class="loading-brand">MovieMind</div>
-            <div class="loading-divider"></div>
-            <p id="loadingMessage" class="loading-message">De zaal loopt vol...</p>
-            <div class="loading-progress" aria-hidden="true">
-                <span class="loading-progress-bar"></span>
+        <div class="projection-stage">
+
+            <div class="projection-beam" aria-hidden="true"></div>
+            <div class="projection-grain" aria-hidden="true"></div>
+            <div class="projection-flicker" aria-hidden="true"></div>
+
+            <div class="projection-content">
+                <div class="projection-eyebrow">Vanavond in MovieMind</div>
+
+                <div class="projection-brand">MovieMind</div>
+
+                <div class="projection-divider" aria-hidden="true">
+                    <span></span>
+                    <span class="projection-divider-star">★</span>
+                    <span></span>
+                </div>
+
+                <div id="loadingIcon" class="projection-icon" aria-hidden="true">
+                    <span class="projection-icon-reel"></span>
+                    <span class="projection-icon-body"></span>
+                    <span class="projection-icon-lens"></span>
+                </div>
+
+                <p id="loadingMessage" class="loading-message">De zaal loopt vol...</p>
+
+                <div class="loading-progress" aria-hidden="true">
+                    <span class="loading-progress-track">
+                        <span class="loading-progress-bar"></span>
+                    </span>
+                </div>
+
+                <p class="loading-hint">De voorstelling wordt voorbereid</p>
             </div>
-            <p class="loading-hint">Een speelbaar bord wordt samengesteld</p>
+
+        </div>
+    </div>
+
+    <div id="feedbackOverlay" class="feedback-overlay hidden" aria-live="assertive">
+        <div class="feedback-card" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+            <div class="feedback-emblem" aria-hidden="true">×</div>
+
+            <div class="feedback-kicker">MovieMind</div>
+            <h2 id="feedbackTitle">Helaas, dit is niet juist</h2>
+
+            <div class="feedback-divider" aria-hidden="true">
+                <span></span>
+                <span class="feedback-diamond">◆</span>
+                <span></span>
+            </div>
+
+            <p id="feedbackMessage" class="feedback-message"></p>
+
+            <div class="feedback-reel" aria-hidden="true">
+                <span class="feedback-reel-core"></span>
+            </div>
+
+            <p id="feedbackHint" class="feedback-hint">Probeer het opnieuw!</p>
+
+            <button id="feedbackOkBtn" class="feedback-ok-btn" type="button">
+                Oké
+                <span aria-hidden="true">›</span>
+            </button>
         </div>
     </div>
 
     <div id="popup" class="popup hidden">
 
-        <div class="popup-box">
+        <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="question">
 
-            <h2 id="question">Kies een antwoord</h2>
+            <div class="popup-film-emblem" aria-hidden="true">
+                <span class="popup-reel"></span>
+                <span class="popup-reel-line"></span>
+            </div>
 
-            <input id="answerInput" type="text" placeholder="Typ een film- of serietitel" autocomplete="off">
+            <div class="popup-eyebrow">Kies een film of serie</div>
+
+            <h2 id="question">Acteur × categorie</h2>
+
+            <p id="questionHint" class="popup-question-hint">
+                Noem een film of serie waarin deze acteur en dit genre samen voorkomen.
+            </p>
+
+            <div class="popup-divider" aria-hidden="true"></div>
+
+            <div class="popup-input-wrap">
+                <span class="popup-input-icon" aria-hidden="true">⌕</span>
+                <input id="answerInput" type="text" placeholder="Typ de titel hier..." autocomplete="off">
+            </div>
 
             <div id="movieSuggestions" class="movie-suggestions hidden"></div>
 
             <div class="buttons">
-                <button id="submitBtn">Bevestigen</button>
-                <button id="passBtn">Passen</button>
-                <button id="cancelBtn">Annuleren</button>
+                <button id="submitBtn" type="button">Bevestigen</button>
+                <button id="passBtn" type="button">Passen</button>
+                <button id="cancelBtn" type="button">Annuleren</button>
             </div>
 
         </div>

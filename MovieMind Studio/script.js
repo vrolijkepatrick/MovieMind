@@ -1,3135 +1,1727 @@
 /* =========================================================
-   MOVIEMIND STUDIO
-   Hoofdscript
-   Versie 0.17.3
+   MOVIEMIND STUDIO 2.0
+   Schone basis
 ========================================================= */
 
 "use strict";
 
-var movieMindState = {
+const MOVIEMIND_API_KEY =
+    typeof TMDB_API_KEY !== "undefined" ? TMDB_API_KEY : "";
+
+const state = {
+    type: "movie",
+    database: null,
     records: [],
-    filteredItems: [],
-    view: "films",
-    currentPage: 1,
-    resultsPerPage: 20,
-    databaseFileHandle: null
+    databaseHandle: null,
+    actorsFolderHandle: null,
+    selectedResult: null,
+    selectedDetails: null,
+    selectedPersonProfilePath: null,
+    searchTimer: null,
+    searchRequestId: 0,
+    searchQuery: "",
+    searchPage: 1,
+    searchTotalPages: 1
 };
 
-var studioPhotoState = {
-    directoryHandle: null,
-    selectedActor: null,
-    selectedCandidate: null,
-    previewObjectUrl: null,
-    requestId: 0
-};
+const DB_NAME = "MovieMindStudio2";
+const DB_VERSION = 1;
+const HANDLE_STORE = "handles";
+const DATABASE_HANDLE_KEY = "mainDatabase";
+const ACTORS_FOLDER_HANDLE_KEY = "actorsFolder";
+const SELECTED_TYPE_KEY = "moviemindStudioSelectedType";
 
-document.addEventListener("DOMContentLoaded", function () {
-    prepareExistingInterface();
-    initialiseMaintenancePanel();
-    initialiseDatabaseLoader();
-    initialiseDatabaseMerger();
+document.addEventListener("DOMContentLoaded", () => {
+    restoreSelectedType();
+    initialiseTypeButtons();
+    applySelectedTypeToUi();
     initialiseSearch();
-    initialiseNavigation();
-    initialiseStudioPhotoManager();
-    initialiseMissingPhotosFiller();
-    initialiseMovieImporter();
-    initialiseTvSeriesImporter();
-    showEmptyState("Database wordt gecontroleerd...");
-    restoreStudioConnections();
+    initialiseSearchPagination();
+    initialiseMaintenance();
+    initialiseDatabaseButtons();
+    initialiseActorsFolderButtons();
+    initialiseAddButton();
+    restoreDatabaseConnection();
+    restoreActorsFolderConnection();
 });
 
 
 /* =========================================================
-   BESTAANDE HTML ROBUUST VOORBEREIDEN
+   STAP 1 - TYPE KIEZEN
 ========================================================= */
 
-function prepareExistingInterface() {
-    var searchButton = document.querySelector(".search-button");
-    var resultsBody = document.querySelector(".results-table tbody");
-    var pagination = document.querySelector(".pagination");
-    var resultsHeadingCount = document.querySelector(
-        ".section-heading-row h3 span"
-    );
+function initialiseTypeButtons() {
+    document.querySelectorAll(".type-button").forEach((button) => {
+        button.addEventListener("click", () => {
+            document.querySelectorAll(".type-button").forEach((item) => {
+                item.classList.remove("is-active");
+            });
 
-    if (searchButton && !searchButton.id) {
-        searchButton.id = "search-button";
-    }
+            button.classList.add("is-active");
+            state.type = button.dataset.type || "movie";
+            localStorage.setItem(SELECTED_TYPE_KEY, state.type);
+            state.selectedResult = null;
+            state.selectedDetails = null;
+            state.selectedPersonProfilePath = null;
 
-    if (resultsBody && !resultsBody.id) {
-        resultsBody.id = "results-body";
-    }
+            updateSearchCopy();
+            resetSearchResults();
+            resetSearchPagination();
+            resetPreview();
 
-    if (pagination && !pagination.id) {
-        pagination.id = "results-pagination";
-    }
-
-    if (resultsHeadingCount && !resultsHeadingCount.id) {
-        resultsHeadingCount.id = "results-count";
-    }
-
-    setSelectValues();
+            const input = document.getElementById("search-input");
+            input.value = "";
+            input.focus();
+        });
+    });
 }
 
+function restoreSelectedType() {
+    const savedType = localStorage.getItem(SELECTED_TYPE_KEY);
 
-function setSelectValues() {
-    var searchScope = document.getElementById("search-scope");
-    var searchType = document.getElementById("search-type");
-
-    if (searchScope) {
-        setOptionValue(searchScope, "Alle titels", "all");
-        setOptionValue(searchScope, "Films", "movies");
-        setOptionValue(searchScope, "TV-series", "series");
-        setOptionValue(searchScope, "Acteurs", "actors");
-    }
-
-    if (searchType) {
-        setOptionValue(searchType, "Alle", "all");
-        setOptionValue(searchType, "Film", "movie");
-        setOptionValue(searchType, "Serie", "tv");
+    if (["movie", "tv", "person"].includes(savedType)) {
+        state.type = savedType;
     }
 }
 
+function applySelectedTypeToUi() {
+    document.querySelectorAll(".type-button").forEach((button) => {
+        button.classList.toggle(
+            "is-active",
+            button.dataset.type === state.type
+        );
+    });
 
-function setOptionValue(selectElement, optionText, value) {
-    var options = selectElement.options;
-    var index;
+    updateSearchCopy();
+}
 
-    for (index = 0; index < options.length; index += 1) {
-        if (options[index].text.trim() === optionText) {
-            options[index].value = value;
-        }
+
+function updateSearchCopy() {
+    const heading = document.getElementById("search-heading");
+    const peopleHeading = document.getElementById("people-heading");
+    const input = document.getElementById("search-input");
+
+    if (state.type === "tv") {
+        heading.textContent = "Serie zoeken";
+        peopleHeading.textContent = "Acteurs";
+        input.placeholder = "Typ minimaal 3 letters van een serie...";
+    } else if (state.type === "person") {
+        heading.textContent = "Acteur zoeken";
+        peopleHeading.textContent = "Foto's";
+        input.placeholder = "Typ minimaal 3 letters van een acteur...";
+    } else {
+        heading.textContent = "Film zoeken";
+        peopleHeading.textContent = "Acteurs";
+        input.placeholder = "Typ minimaal 3 letters van een film...";
     }
 }
 
 
 /* =========================================================
-   INKLAPBAAR ONDERHOUDSMENU
+   STAP 2 - AUTOMATISCH ZOEKEN NA 3 LETTERS
 ========================================================= */
 
-function initialiseMaintenancePanel() {
-    var maintenancePanel = document.getElementById("maintenance-panel");
-    var maintenanceToggle = document.getElementById("maintenance-toggle");
-    var maintenanceLabel = null;
+function initialiseSearch() {
+    const input = document.getElementById("search-input");
+    const button = document.getElementById("search-button");
 
-    if (maintenanceToggle) {
-        maintenanceLabel = maintenanceToggle.querySelector(
-            ".maintenance-toggle-label"
+    input.addEventListener("input", () => {
+        window.clearTimeout(state.searchTimer);
+
+        const query = input.value.trim();
+
+        if (query.length < 3) {
+            setSearchStatus(
+                query.length === 0
+                    ? "Begin met typen om te zoeken."
+                    : "Typ nog " + (3 - query.length) + " letter(s)."
+            );
+            resetSearchResults();
+            resetSearchPagination();
+            return;
+        }
+
+        state.searchTimer = window.setTimeout(() => {
+            searchTmdb(query, 1);
+        }, 450);
+    });
+
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const query = input.value.trim();
+
+            if (query.length >= 3) {
+                window.clearTimeout(state.searchTimer);
+                searchTmdb(query, 1);
+            }
+        }
+    });
+
+    button.addEventListener("click", () => {
+        const query = input.value.trim();
+
+        if (query.length < 3) {
+            setSearchStatus("Typ minimaal drie letters.", "error");
+            return;
+        }
+
+        window.clearTimeout(state.searchTimer);
+        searchTmdb(query, 1);
+    });
+}
+
+async function searchTmdb(query, page = 1) {
+    if (!MOVIEMIND_API_KEY) {
+        setSearchStatus(
+            "TMDB_API_KEY ontbreekt. Controleer of config.js vóór script.js wordt geladen.",
+            "error"
         );
-    }
-
-    if (!maintenancePanel || !maintenanceToggle) {
         return;
     }
 
-    maintenanceToggle.addEventListener("click", function () {
-        var isCollapsed = maintenancePanel.classList.toggle("is-collapsed");
-        var isExpanded = !isCollapsed;
+    const requestId = ++state.searchRequestId;
+    const endpoint = state.type === "person"
+        ? "person"
+        : state.type;
 
-        maintenanceToggle.setAttribute(
-            "aria-expanded",
-            String(isExpanded)
+    state.searchQuery = query;
+    state.searchPage = page;
+
+    setSearchStatus("TMDB wordt doorzocht...");
+    renderLoadingState();
+
+    try {
+        const url =
+            "https://api.themoviedb.org/3/search/" + endpoint +
+            "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+            "&language=nl-NL&include_adult=false&page=" +
+            encodeURIComponent(page) +
+            "&query=" + encodeURIComponent(query);
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("TMDB gaf foutcode " + response.status + ".");
+        }
+
+        const payload = await response.json();
+
+        if (requestId !== state.searchRequestId) {
+            return;
+        }
+
+        const results = (payload.results || []).slice(0, 12);
+        state.searchPage = Number(payload.page || page);
+        state.searchTotalPages = Math.max(
+            1,
+            Math.min(Number(payload.total_pages || 1), 20)
         );
 
-        maintenanceToggle.title = isExpanded
-            ? "Onderhoudsmenu sluiten"
-            : "Onderhoudsmenu openen";
+        renderSearchResults(results);
+        updateSearchPagination();
 
-        if (maintenanceLabel) {
-            maintenanceLabel.textContent = isExpanded
-                ? "Sluiten"
-                : "Openen";
+        setSearchStatus(
+            results.length
+                ? results.length + " resultaten op deze pagina."
+                : "Geen resultaten gevonden.",
+            results.length ? "success" : ""
+        );
+    } catch (error) {
+        console.error(error);
+        setSearchStatus(
+            "Zoeken is mislukt: " + (error.message || "onbekende fout"),
+            "error"
+        );
+        resetSearchResults("Zoeken is mislukt.");
+        resetSearchPagination();
+    }
+}
+
+function initialiseSearchPagination() {
+    const previousButton = document.getElementById("search-prev-page");
+    const nextButton = document.getElementById("search-next-page");
+
+    if (!previousButton || !nextButton) {
+        return;
+    }
+
+    previousButton.addEventListener("click", () => {
+        if (state.searchPage > 1 && state.searchQuery) {
+            searchTmdb(state.searchQuery, state.searchPage - 1);
         }
+    });
+
+    nextButton.addEventListener("click", () => {
+        if (
+            state.searchPage < state.searchTotalPages &&
+            state.searchQuery
+        ) {
+            searchTmdb(state.searchQuery, state.searchPage + 1);
+        }
+    });
+}
+
+function updateSearchPagination() {
+    const pagination = document.getElementById("search-pagination");
+    const previousButton = document.getElementById("search-prev-page");
+    const nextButton = document.getElementById("search-next-page");
+    const pageInfo = document.getElementById("search-page-info");
+
+    if (!pagination || !previousButton || !nextButton || !pageInfo) {
+        return;
+    }
+
+    pagination.hidden = state.searchTotalPages <= 1;
+    previousButton.disabled = state.searchPage <= 1;
+    nextButton.disabled =
+        state.searchPage >= state.searchTotalPages;
+
+    pageInfo.textContent =
+        "Pagina " + state.searchPage +
+        " van " + state.searchTotalPages;
+}
+
+function resetSearchPagination() {
+    state.searchQuery = "";
+    state.searchPage = 1;
+    state.searchTotalPages = 1;
+
+    const pagination = document.getElementById("search-pagination");
+
+    if (pagination) {
+        pagination.hidden = true;
+    }
+}
+
+function renderSearchResults(results) {
+    const container = document.getElementById("search-results");
+    container.innerHTML = "";
+
+    if (!results.length) {
+        resetSearchResults("Geen resultaten gevonden.");
+        return;
+    }
+
+    results.forEach((item) => {
+        const card = document.createElement("article");
+        const image = createResultImage(item);
+        const copy = document.createElement("div");
+        const title = document.createElement("h3");
+        const meta = document.createElement("p");
+        const selectButton = document.createElement("button");
+
+        card.className = "result-card";
+        copy.className = "result-copy";
+        selectButton.className = "result-select";
+        selectButton.type = "button";
+        selectButton.textContent = "Selecteren";
+
+        title.textContent = getResultTitle(item);
+        meta.textContent = getResultMeta(item);
+
+        copy.appendChild(title);
+        copy.appendChild(meta);
+        card.appendChild(image);
+        card.appendChild(copy);
+        card.appendChild(selectButton);
+
+        selectButton.addEventListener("click", () => {
+            document.querySelectorAll(".result-card").forEach((resultCard) => {
+                resultCard.classList.remove("is-selected");
+            });
+            card.classList.add("is-selected");
+            selectTmdbResult(item);
+        });
+
+        container.appendChild(card);
+    });
+}
+
+function createResultImage(item) {
+    const path = state.type === "person"
+        ? item.profile_path
+        : item.poster_path;
+
+    if (path) {
+        const image = document.createElement("img");
+        image.className = "result-image";
+        image.src = "https://image.tmdb.org/t/p/w185" + path;
+        image.alt = "";
+        image.loading = "lazy";
+        return image;
+    }
+
+    const placeholder = document.createElement("div");
+    placeholder.className = "result-placeholder";
+    placeholder.textContent = state.type === "person" ? "👤" : "🎬";
+    return placeholder;
+}
+
+function getResultTitle(item) {
+    if (state.type === "person") {
+        return item.name || "Onbekende acteur";
+    }
+
+    return item.title || item.name || "Titel onbekend";
+}
+
+function getResultMeta(item) {
+    if (state.type === "person") {
+        return item.known_for_department || "Acteur";
+    }
+
+    const date = item.release_date || item.first_air_date || "";
+    return (date ? date.slice(0, 4) : "Jaar onbekend") + " · TMDB " + item.id;
+}
+
+
+/* =========================================================
+   STAP 3 - PREVIEW
+========================================================= */
+
+async function selectTmdbResult(item) {
+    state.selectedResult = item;
+    state.selectedDetails = null;
+    state.selectedPersonProfilePath = null;
+
+    setPreviewLoading(item);
+
+    try {
+        if (state.type === "person") {
+            const details = await fetchTmdbPersonDetails(item.id);
+            state.selectedDetails = details;
+            renderPersonPreview(details);
+        } else {
+            const details = await fetchTmdbTitleDetails(state.type, item.id);
+            state.selectedDetails = details;
+            renderTitlePreview(details);
+        }
+
+        document.getElementById("add-selected-button").disabled =
+            !state.databaseHandle || !state.database;
+    } catch (error) {
+        console.error(error);
+        showToast(
+            "Details ophalen is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+        resetPreview();
+    }
+}
+
+async function fetchTmdbTitleDetails(type, id) {
+    const response = await fetch(
+        "https://api.themoviedb.org/3/" + type + "/" + encodeURIComponent(id) +
+        "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+        "&language=nl-NL&append_to_response=credits"
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status + ".");
+    }
+
+    return response.json();
+}
+
+async function fetchTmdbPersonDetails(id) {
+    const response = await fetch(
+        "https://api.themoviedb.org/3/person/" + encodeURIComponent(id) +
+        "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+        "&language=nl-NL&append_to_response=images,movie_credits,tv_credits"
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status + ".");
+    }
+
+    return response.json();
+}
+
+function setPreviewLoading(item) {
+    document.getElementById("preview-title").textContent = getResultTitle(item);
+    document.getElementById("preview-meta").textContent = "Details worden opgehaald...";
+    document.getElementById("preview-overview").textContent = "";
+    document.getElementById("people-grid").innerHTML =
+        '<div class="people-empty">Afbeeldingen worden geladen...</div>';
+    document.getElementById("add-selected-button").disabled = true;
+}
+
+function renderTitlePreview(details) {
+    const title = state.type === "tv"
+        ? details.name || details.original_name
+        : details.title || details.original_title;
+    const date = state.type === "tv"
+        ? details.first_air_date
+        : details.release_date;
+    const cast = details.credits && Array.isArray(details.credits.cast)
+        ? details.credits.cast.slice(0, 8)
+        : [];
+
+    setPoster(details.poster_path, title);
+    document.getElementById("preview-title").textContent = title || "Titel onbekend";
+    document.getElementById("preview-meta").textContent =
+        (date ? date.slice(0, 4) : "Jaar onbekend") +
+        " · " +
+        (state.type === "tv" ? "Serie" : "Film") +
+        " · TMDB " + details.id;
+    const overview = document.getElementById("preview-overview");
+    overview.hidden = false;
+    overview.textContent =
+        details.overview || "Geen omschrijving beschikbaar.";
+    document.getElementById("people-count").textContent =
+        cast.length + " geselecteerd";
+
+    renderPeople(cast);
+}
+
+function renderPersonPreview(details) {
+    const profiles = details.images && Array.isArray(details.images.profiles)
+        ? details.images.profiles
+            .filter((profile) => profile && profile.file_path)
+            .slice(0, 8)
+        : [];
+
+    state.selectedPersonProfilePath =
+        details.profile_path ||
+        (profiles[0] ? profiles[0].file_path : null);
+
+    setPoster(state.selectedPersonProfilePath, details.name);
+    document.getElementById("preview-title").textContent =
+        details.name || "Acteur onbekend";
+    document.getElementById("preview-meta").textContent =
+        (details.known_for_department || "Acting") +
+        " · TMDB " + details.id;
+    const overview = document.getElementById("preview-overview");
+    overview.textContent = "";
+    overview.hidden = true;
+    document.getElementById("people-count").textContent =
+        profiles.length
+            ? "Kies 1 van " + profiles.length + " foto's"
+            : "Geen extra foto's gevonden";
+
+    renderPersonProfiles(profiles, details.name);
+}
+
+function setPoster(path, title) {
+    const image = document.getElementById("preview-poster");
+    const placeholder = document.getElementById("poster-placeholder");
+
+    if (!path) {
+        image.hidden = true;
+        image.removeAttribute("src");
+        placeholder.hidden = false;
+        return;
+    }
+
+    image.src = "https://image.tmdb.org/t/p/w500" + path;
+    image.alt = "Afbeelding van " + (title || "de geselecteerde titel");
+    image.hidden = false;
+    placeholder.hidden = true;
+}
+
+function renderPeople(cast) {
+    const container = document.getElementById("people-grid");
+    container.innerHTML = "";
+
+    if (!cast.length) {
+        container.innerHTML =
+            '<div class="people-empty">Geen acteurs gevonden.</div>';
+        return;
+    }
+
+    cast.forEach((person) => {
+        const card = document.createElement("article");
+        const image = person.profile_path
+            ? document.createElement("img")
+            : document.createElement("div");
+        const name = document.createElement("p");
+
+        card.className = "person-card";
+
+        if (person.profile_path) {
+            image.src = "https://image.tmdb.org/t/p/w185" + person.profile_path;
+            image.alt = "";
+            image.loading = "lazy";
+        } else {
+            image.className = "person-placeholder";
+            image.textContent = "👤";
+        }
+
+        name.textContent = person.name || "Onbekend";
+        card.appendChild(image);
+        card.appendChild(name);
+        container.appendChild(card);
+    });
+}
+
+function renderPersonProfiles(profiles, personName) {
+    const container = document.getElementById("people-grid");
+    container.innerHTML = "";
+
+    if (!profiles.length) {
+        container.innerHTML =
+            '<div class="people-empty">Geen extra acteursfoto\'s gevonden.</div>';
+        return;
+    }
+
+    profiles.forEach((profile, index) => {
+        const card = document.createElement("button");
+        const image = document.createElement("img");
+        const label = document.createElement("p");
+
+        card.className = "person-card";
+        card.type = "button";
+        card.setAttribute(
+            "aria-label",
+            "Kies foto " + (index + 1) + " van " + (personName || "de acteur")
+        );
+
+        image.src =
+            "https://image.tmdb.org/t/p/w342" + profile.file_path;
+        image.alt =
+            "Foto " + (index + 1) + " van " + (personName || "de acteur");
+        image.loading = "lazy";
+
+        label.textContent = "Foto " + (index + 1);
+
+        if (profile.file_path === state.selectedPersonProfilePath) {
+            card.classList.add("is-selected");
+            card.setAttribute("aria-pressed", "true");
+            card.style.outline = "2px solid var(--gold)";
+            card.style.outlineOffset = "1px";
+        } else {
+            card.setAttribute("aria-pressed", "false");
+        }
+
+        card.addEventListener("click", () => {
+            state.selectedPersonProfilePath = profile.file_path;
+
+            container.querySelectorAll(".person-card").forEach((item) => {
+                item.classList.remove("is-selected");
+                item.setAttribute("aria-pressed", "false");
+                item.style.outline = "";
+                item.style.outlineOffset = "";
+            });
+
+            card.classList.add("is-selected");
+            card.setAttribute("aria-pressed", "true");
+            card.style.outline = "2px solid var(--gold)";
+            card.style.outlineOffset = "1px";
+
+            setPoster(profile.file_path, personName);
+            document.getElementById("people-count").textContent =
+                "Foto " + (index + 1) + " geselecteerd";
+        });
+
+        card.appendChild(image);
+        card.appendChild(label);
+        container.appendChild(card);
     });
 }
 
 
 /* =========================================================
-   VASTE KOPPELINGEN - VERSIE 0.15
+   ACTEURSMAP KOPPELEN
 ========================================================= */
 
-var STUDIO_SETTINGS_DB = "MovieMindStudioSettings";
-var STUDIO_SETTINGS_STORE = "handles";
+function initialiseActorsFolderButtons() {
+    const connectButton =
+        document.getElementById("connect-actors-folder-button");
+    const reconnectButton =
+        document.getElementById("reconnect-actors-folder-button");
 
-function openStudioSettingsDatabase() {
-    return new Promise(function (resolve, reject) {
-        var request = indexedDB.open(STUDIO_SETTINGS_DB, 1);
+    if (connectButton) {
+        connectButton.addEventListener(
+            "click",
+            connectActorsFolder
+        );
+    }
 
-        request.onupgradeneeded = function () {
-            if (!request.result.objectStoreNames.contains(STUDIO_SETTINGS_STORE)) {
-                request.result.createObjectStore(STUDIO_SETTINGS_STORE);
+    if (reconnectButton) {
+        reconnectButton.addEventListener(
+            "click",
+            requestSavedActorsFolderPermission
+        );
+    }
+}
+
+async function connectActorsFolder() {
+    if (!("showDirectoryPicker" in window)) {
+        showToast(
+            "Gebruik Chrome of Edge. Deze browser ondersteunt rechtstreeks opslaan in een map niet.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        const handle = await window.showDirectoryPicker({
+            mode: "readwrite"
+        });
+
+        if (!handle) {
+            return;
+        }
+
+        const permission = await ensurePermission(handle, true);
+
+        if (!permission) {
+            throw new Error(
+                "Geen lees- en schrijftoestemming gekregen."
+            );
+        }
+
+        state.actorsFolderHandle = handle;
+        await saveStoredHandle(
+            ACTORS_FOLDER_HANDLE_KEY,
+            handle
+        );
+
+        updateActorsFolderUi("online");
+
+        showToast(
+            "Acteursmap gekoppeld en onthouden.",
+            "success"
+        );
+    } catch (error) {
+        if (error && error.name === "AbortError") {
+            return;
+        }
+
+        console.error(error);
+        showToast(
+            "Acteursmap koppelen is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+async function restoreActorsFolderConnection() {
+    try {
+        const handle = await getStoredHandle(
+            ACTORS_FOLDER_HANDLE_KEY
+        );
+
+        if (!handle) {
+            updateActorsFolderUi("offline");
+            return;
+        }
+
+        state.actorsFolderHandle = handle;
+
+        const permission = await ensurePermission(
+            handle,
+            false
+        );
+
+        if (!permission) {
+            updateActorsFolderUi("permission");
+            return;
+        }
+
+        updateActorsFolderUi("online");
+    } catch (error) {
+        console.warn(
+            "Acteursmap automatisch herstellen mislukt:",
+            error
+        );
+        updateActorsFolderUi("permission");
+    }
+}
+
+async function requestSavedActorsFolderPermission() {
+    if (!state.actorsFolderHandle) {
+        connectActorsFolder();
+        return;
+    }
+
+    try {
+        const permission = await ensurePermission(
+            state.actorsFolderHandle,
+            true
+        );
+
+        if (!permission) {
+            throw new Error("Toestemming is niet verleend.");
+        }
+
+        updateActorsFolderUi("online");
+        showToast(
+            "Acteursmap opnieuw verbonden.",
+            "success"
+        );
+    } catch (error) {
+        showToast(
+            "Opnieuw verbinden is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+function updateActorsFolderUi(stateName) {
+    const connectButton =
+        document.getElementById("connect-actors-folder-button");
+    const reconnectButton =
+        document.getElementById("reconnect-actors-folder-button");
+    const status =
+        document.getElementById("actors-folder-status");
+
+    if (stateName === "online") {
+        if (connectButton) {
+            connectButton.textContent =
+                "📁 Andere acteursmap kiezen";
+        }
+
+        if (reconnectButton) {
+            reconnectButton.hidden = true;
+        }
+
+        if (status) {
+            status.textContent =
+                (state.actorsFolderHandle
+                    ? state.actorsFolderHandle.name
+                    : "Acteursmap") +
+                " is gekoppeld.";
+        }
+    } else if (stateName === "permission") {
+        if (connectButton) {
+            connectButton.textContent =
+                "📁 Andere acteursmap kiezen";
+        }
+
+        if (reconnectButton) {
+            reconnectButton.hidden = false;
+        }
+
+        if (status) {
+            status.textContent =
+                "De acteursmap is onthouden, maar toestemming is opnieuw nodig.";
+        }
+    } else {
+        if (connectButton) {
+            connectButton.textContent =
+                "📁 Acteursmap koppelen";
+        }
+
+        if (reconnectButton) {
+            reconnectButton.hidden = true;
+        }
+
+        if (status) {
+            status.textContent =
+                "Nog geen acteursmap gekoppeld.";
+        }
+    }
+}
+
+async function saveActorPhotoToConnectedFolder(
+    details
+) {
+    if (!state.actorsFolderHandle) {
+        throw new Error(
+            "koppel eerst de map game/images/actors in Stap 4"
+        );
+    }
+
+    const permission = await ensurePermission(
+        state.actorsFolderHandle,
+        true
+    );
+
+    if (!permission) {
+        throw new Error(
+            "geen toestemming om in de acteursmap te schrijven"
+        );
+    }
+
+    const profilePath =
+        state.selectedPersonProfilePath ||
+        details.profile_path ||
+        null;
+
+    if (!profilePath) {
+        throw new Error(
+            "voor deze acteur is geen foto geselecteerd"
+        );
+    }
+
+    const filename =
+        createActorPhotoBaseName(
+            details.name || "onbekende_acteur"
+        ) + ".jpg";
+
+    const response = await fetch(
+        "https://image.tmdb.org/t/p/original" +
+            profilePath
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "TMDB gaf foutcode " + response.status
+        );
+    }
+
+    const imageBlob = await response.blob();
+    const fileHandle =
+        await state.actorsFolderHandle.getFileHandle(
+            filename,
+            { create: true }
+        );
+    const writable = await fileHandle.createWritable();
+
+    try {
+        await writable.write(imageBlob);
+        await writable.close();
+    } catch (error) {
+        try {
+            await writable.abort();
+        } catch (_) {
+            // Geen aanvullende actie nodig.
+        }
+
+        throw error;
+    }
+
+    return filename;
+}
+
+
+/* =========================================================
+   STAP 4 - DATABASEKOPPELING
+========================================================= */
+
+function initialiseMaintenance() {
+    const card = document.getElementById("maintenance-card");
+    const toggle = document.getElementById("maintenance-toggle");
+
+    toggle.addEventListener("click", () => {
+        const collapsed = card.classList.toggle("is-collapsed");
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+    });
+}
+
+function initialiseDatabaseButtons() {
+    const connectButton = document.getElementById("connect-database-button");
+    const reconnectButton = document.getElementById("reconnect-database-button");
+    const testSaveButton = document.getElementById("test-save-button");
+    const reloadButton = document.getElementById("reload-database-button");
+
+    if (connectButton) {
+        connectButton.addEventListener("click", connectDatabase);
+    }
+
+    if (reconnectButton) {
+        reconnectButton.addEventListener("click", requestSavedDatabasePermission);
+    }
+
+    if (testSaveButton) {
+        testSaveButton.addEventListener("click", testDatabaseWriteAccess);
+    }
+
+    if (reloadButton) {
+        reloadButton.addEventListener("click", reloadConnectedDatabase);
+    }
+}
+
+async function connectDatabase() {
+    if (!("showOpenFilePicker" in window)) {
+        showToast(
+            "Gebruik Chrome of Edge. Deze browser ondersteunt rechtstreeks opslaan niet.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        const [handle] = await window.showOpenFilePicker({
+            multiple: false,
+            types: [{
+                description: "MovieMind gecombineerde database",
+                accept: { "application/json": [".json"] }
+            }]
+        });
+
+        if (!handle) {
+            return;
+        }
+
+        const permission = await ensurePermission(handle, true);
+
+        if (!permission) {
+            throw new Error("Geen lees- en schrijftoestemming gekregen.");
+        }
+
+        await loadDatabaseFromHandle(handle);
+        state.databaseHandle = handle;
+        await saveHandle(handle);
+
+        updateDatabaseConnectionUi("online");
+        showToast(
+            "Database gekoppeld en automatisch onthouden.",
+            "success"
+        );
+    } catch (error) {
+        if (error && error.name === "AbortError") {
+            return;
+        }
+
+        console.error(error);
+        showToast(
+            "Database koppelen is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+async function restoreDatabaseConnection() {
+    try {
+        const handle = await getSavedHandle();
+
+        if (!handle) {
+            updateDatabaseConnectionUi("offline");
+            return;
+        }
+
+        state.databaseHandle = handle;
+        const permission = await ensurePermission(handle, false);
+
+        if (!permission) {
+            updateDatabaseConnectionUi("permission");
+            return;
+        }
+
+        await loadDatabaseFromHandle(handle);
+        updateDatabaseConnectionUi("online");
+    } catch (error) {
+        console.warn("Automatisch herstellen mislukt:", error);
+        updateDatabaseConnectionUi("permission");
+    }
+}
+
+async function requestSavedDatabasePermission() {
+    if (!state.databaseHandle) {
+        connectDatabase();
+        return;
+    }
+
+    try {
+        const permission = await ensurePermission(state.databaseHandle, true);
+
+        if (!permission) {
+            throw new Error("Toestemming is niet verleend.");
+        }
+
+        await loadDatabaseFromHandle(state.databaseHandle);
+        updateDatabaseConnectionUi("online");
+        showToast("Database opnieuw verbonden.", "success");
+    } catch (error) {
+        showToast(
+            "Opnieuw verbinden is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+
+async function reloadConnectedDatabase() {
+    if (!state.databaseHandle) {
+        showToast("Koppel eerst een database.", "error");
+        return;
+    }
+
+    try {
+        const permission = await ensurePermission(state.databaseHandle, true);
+
+        if (!permission) {
+            throw new Error("Geen toestemming om de database te lezen.");
+        }
+
+        await loadDatabaseFromHandle(state.databaseHandle);
+        updateDatabaseConnectionUi("online");
+        showToast("Database opnieuw geladen.", "success");
+    } catch (error) {
+        console.error(error);
+        showToast(
+            "Opnieuw laden is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+async function ensurePermission(handle, requestPermission) {
+    const options = { mode: "readwrite" };
+
+    if (!handle.queryPermission) {
+        return true;
+    }
+
+    let permission = await handle.queryPermission(options);
+
+    if (permission === "granted") {
+        return true;
+    }
+
+    if (requestPermission && handle.requestPermission) {
+        permission = await handle.requestPermission(options);
+        return permission === "granted";
+    }
+
+    return false;
+}
+
+function setTextIfPresent(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+async function loadDatabaseFromHandle(handle) {
+    const file = await handle.getFile();
+    const text = await file.text();
+    const database = JSON.parse(text);
+    const records = extractRecords(database);
+
+    if (!records.length) {
+        throw new Error("In deze database zijn geen films of series gevonden.");
+    }
+
+    state.database = database;
+    state.records = records;
+    state.databaseHandle = handle;
+
+    updateStatistics(file);
+    setTextIfPresent(
+        "database-status",
+        file.name + " is gekoppeld · " +
+            records.length.toLocaleString("nl-NL") + " titels"
+    );
+
+    const addButton = document.getElementById("add-selected-button");
+    if (addButton) {
+        addButton.disabled = !state.selectedDetails;
+    }
+}
+
+function extractRecords(database) {
+    if (Array.isArray(database)) {
+        return database;
+    }
+
+    if (database && Array.isArray(database.films)) {
+        return database.films;
+    }
+
+    if (database && Array.isArray(database.titles)) {
+        return database.titles;
+    }
+
+    return [];
+}
+
+function synchroniseDatabaseRecords() {
+    if (Array.isArray(state.database)) {
+        state.database = state.records;
+        return;
+    }
+
+    if (state.database && Array.isArray(state.database.films)) {
+        state.database.films = state.records;
+        return;
+    }
+
+    if (state.database && Array.isArray(state.database.titles)) {
+        state.database.titles = state.records;
+        return;
+    }
+
+    throw new Error("De databasestructuur wordt niet ondersteund.");
+}
+
+async function writeDatabase() {
+    if (!state.databaseHandle || !state.database) {
+        throw new Error("Koppel eerst de MovieMind-database in Stap 4.");
+    }
+
+    const permission = await ensurePermission(state.databaseHandle, true);
+
+    if (!permission) {
+        throw new Error("MovieMind heeft geen schrijftoestemming.");
+    }
+
+    synchroniseDatabaseRecords();
+
+    const writable = await state.databaseHandle.createWritable();
+
+    try {
+        await writable.write(JSON.stringify(state.database, null, 2));
+        await writable.close();
+    } catch (error) {
+        try {
+            await writable.abort();
+        } catch (_) {
+            // Geen aanvullende actie nodig.
+        }
+        throw error;
+    }
+}
+
+async function testDatabaseWriteAccess() {
+    try {
+        await writeDatabase();
+        showToast("Schrijftoegang werkt correct.", "success");
+    } catch (error) {
+        showToast(
+            "Schrijftest mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+function updateDatabaseConnectionUi(stateName) {
+    const chip = document.getElementById("database-chip");
+    const title = document.getElementById("database-chip-title");
+    const text = document.getElementById("database-chip-text");
+    const reconnect = document.getElementById("reconnect-database-button");
+    const test = document.getElementById("test-save-button");
+    const reload = document.getElementById("reload-database-button");
+
+    if (chip) {
+        chip.dataset.state = stateName;
+    }
+
+    if (stateName === "online") {
+        setTextIfPresent("database-chip-title", "Database actief");
+        setTextIfPresent(
+            "database-chip-text",
+            state.databaseHandle
+                ? state.databaseHandle.name
+                : "MovieMind-database"
+        );
+
+        if (reconnect) reconnect.hidden = true;
+        if (test) test.disabled = false;
+        if (reload) reload.disabled = false;
+    } else if (stateName === "permission") {
+        setTextIfPresent("database-chip-title", "Toestemming nodig");
+        setTextIfPresent(
+            "database-chip-text",
+            "Klik eenmaal om opnieuw te verbinden"
+        );
+
+        if (reconnect) reconnect.hidden = false;
+        if (test) test.disabled = true;
+        if (reload) reload.disabled = true;
+    } else {
+        setTextIfPresent("database-chip-title", "Geen database gekoppeld");
+        setTextIfPresent(
+            "database-chip-text",
+            "Open Stap 4 om te koppelen"
+        );
+
+        if (reconnect) reconnect.hidden = true;
+        if (test) test.disabled = true;
+        if (reload) reload.disabled = true;
+    }
+}
+
+function updateStatistics(file = null) {
+    let movies = 0;
+    let series = 0;
+    const actors = new Set();
+    const directors = new Set();
+
+    state.records.forEach((record) => {
+        const type = String(
+            record.media_type || record.type || record.mediaType || ""
+        ).toLowerCase();
+
+        if (["tv", "series", "serie", "show"].includes(type)) {
+            series += 1;
+        } else if (type !== "person" && type !== "actor") {
+            movies += 1;
+        }
+
+        collectUniqueNames(actors, record.actors);
+        collectUniqueNames(actors, record.cast);
+        collectUniqueNames(actors, record.cast_details);
+
+        collectUniqueNames(directors, record.director);
+        collectUniqueNames(directors, record.directors);
+        collectUniqueNames(directors, record.director_details);
+    });
+
+    setTextIfPresent("stat-total", state.records.length.toLocaleString("nl-NL"));
+    setTextIfPresent("stat-movies", movies.toLocaleString("nl-NL"));
+    setTextIfPresent("stat-series", series.toLocaleString("nl-NL"));
+    setTextIfPresent("stat-actors", actors.size.toLocaleString("nl-NL"));
+    setTextIfPresent("stat-directors", directors.size.toLocaleString("nl-NL"));
+
+    const modifiedText = file && Number.isFinite(file.lastModified)
+        ? new Intl.DateTimeFormat("nl-NL", {
+            dateStyle: "short",
+            timeStyle: "short"
+        }).format(new Date(file.lastModified))
+        : "—";
+
+    setTextIfPresent("stat-modified", modifiedText);
+}
+
+function collectUniqueNames(targetSet, values) {
+    if (values === null || values === undefined) {
+        return;
+    }
+
+    const list = Array.isArray(values) ? values : [values];
+
+    list.forEach((value) => {
+        const rawName = typeof value === "object" && value !== null
+            ? value.name || value.actor || value.title || ""
+            : value;
+        const normalised = String(rawName || "").trim().toLocaleLowerCase("nl-NL");
+
+        if (normalised) {
+            targetSet.add(normalised);
+        }
+    });
+}
+
+
+
+/* =========================================================
+   TOEVOEGEN EN DIRECT OPSLAAN
+========================================================= */
+
+function initialiseAddButton() {
+    document
+        .getElementById("add-selected-button")
+        .addEventListener("click", addSelectedResult);
+}
+
+async function addSelectedResult() {
+    const button = document.getElementById("add-selected-button");
+
+    if (!state.selectedDetails) {
+        showToast("Selecteer eerst een resultaat.", "error");
+        return;
+    }
+
+    if (!state.databaseHandle || !state.database) {
+        showToast("Koppel eerst de database in Stap 4.", "error");
+        return;
+    }
+
+    const record = state.type === "person"
+        ? createPersonRecord(state.selectedDetails)
+        : createTitleRecord(state.selectedDetails);
+
+    if (isDuplicateRecord(record)) {
+        if (state.type === "person") {
+            try {
+                const downloadedFilename =
+                    await saveActorPhotoToConnectedFolder(state.selectedDetails);
+
+                showToast(
+                    record.title +
+                        " staat al in de database. De foto is opgeslagen als " +
+                        downloadedFilename +
+                        ".",
+                    "success"
+                );
+            } catch (error) {
+                console.error(error);
+                showToast(
+                    record.title +
+                        " staat al in de database, maar de foto kon niet worden gedownload: " +
+                        (error.message || "onbekende fout"),
+                    "error"
+                );
+            }
+            return;
+        }
+
+        showToast(record.title + " staat al in de database.", "error");
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Opslaan...";
+
+    state.records.push(record);
+
+    try {
+        await writeDatabase();
+        const refreshedFile = await state.databaseHandle.getFile();
+        updateStatistics(refreshedFile);
+        if (state.type === "person") {
+            try {
+                const downloadedFilename =
+                    await saveActorPhotoToConnectedFolder(state.selectedDetails);
+
+                showToast(
+                    record.title +
+                        " is toegevoegd. De foto is opgeslagen als " +
+                        downloadedFilename +
+                        ".",
+                    "success"
+                );
+            } catch (photoError) {
+                console.error(photoError);
+                showToast(
+                    record.title +
+                        " is toegevoegd, maar de foto kon niet worden gedownload: " +
+                        (photoError.message || "onbekende fout"),
+                    "error"
+                );
+            }
+        } else {
+            showToast(
+                record.title + " is toegevoegd en opgeslagen.",
+                "success"
+            );
+        }
+
+        button.textContent = "✓ Toegevoegd";
+    } catch (error) {
+        state.records = state.records.filter((item) => item !== record);
+        console.error(error);
+        showToast(
+            "Toevoegen is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+        button.disabled = false;
+        button.textContent = "＋ Toevoegen aan MovieMind";
+    }
+}
+
+function createTitleRecord(details) {
+    const cast = details.credits && Array.isArray(details.credits.cast)
+        ? details.credits.cast.slice(0, 8)
+        : [];
+    const crew = details.credits && Array.isArray(details.credits.crew)
+        ? details.credits.crew
+        : [];
+    const directors = crew.filter((person) => person.job === "Director");
+    const isTv = state.type === "tv";
+
+    return {
+        id: details.id,
+        title: isTv
+            ? details.name || details.original_name
+            : details.title || details.original_title,
+        year: Number(
+            ((isTv ? details.first_air_date : details.release_date) || "")
+                .slice(0, 4)
+        ) || null,
+        genre: (details.genres || []).map((genre) => genre.name),
+        director: directors.map((person) => person.name),
+        actors: cast.map((person) => person.name).filter(Boolean),
+        characters: cast.map((person) => person.character || ""),
+        poster_path: details.poster_path || null,
+        backdrop_path: details.backdrop_path || null,
+        overview: details.overview || "",
+        rating: Number(details.vote_average || 0),
+        runtime: isTv
+            ? (details.episode_run_time || [])[0] || null
+            : details.runtime || null,
+        cast_details: cast.map((person) => ({
+            id: person.id,
+            name: person.name,
+            character: person.character || "",
+            profile_path: person.profile_path || null
+        })),
+        director_details: directors.map((person) => ({
+            id: person.id,
+            name: person.name,
+            profile_path: person.profile_path || null
+        })),
+        fullDetails: true,
+        media_type: isTv ? "tv" : "movie"
+    };
+}
+
+
+function createActorPhotoBaseName(personName) {
+    return String(personName || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/['’`]/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        .replace(/_+/g, "_");
+}
+
+async function downloadSelectedActorPhoto(details) {
+    const profilePath =
+        state.selectedPersonProfilePath ||
+        details.profile_path ||
+        null;
+
+    if (!profilePath) {
+        throw new Error("voor deze acteur is geen foto geselecteerd");
+    }
+
+    const filename =
+        createActorPhotoBaseName(details.name || "onbekende_acteur") +
+        ".jpg";
+
+    const response = await fetch(
+        "https://image.tmdb.org/t/p/original" + profilePath
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status);
+    }
+
+    const imageBlob = await response.blob();
+    const objectUrl = URL.createObjectURL(imageBlob);
+    const downloadLink = document.createElement("a");
+
+    downloadLink.href = objectUrl;
+    downloadLink.download = filename;
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+
+    window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+    }, 1000);
+
+    return filename;
+}
+
+function createPersonRecord(details) {
+    return {
+        id: "person-" + details.id,
+        title: details.name || "Onbekende acteur",
+        year: details.birthday
+            ? Number(details.birthday.slice(0, 4))
+            : null,
+        genre: ["Acteur"],
+        director: [],
+        actors: [details.name],
+        characters: [],
+        poster_path:
+            state.selectedPersonProfilePath ||
+            details.profile_path ||
+            null,
+        overview: details.biography || "",
+        rating: 0,
+        runtime: null,
+        cast_details: [{
+            id: details.id,
+            name: details.name,
+            character: "",
+            profile_path:
+                state.selectedPersonProfilePath ||
+                details.profile_path ||
+                null
+        }],
+        fullDetails: true,
+        media_type: "person"
+    };
+}
+
+function isDuplicateRecord(record) {
+    return state.records.some((existing) => {
+        return String(existing.id) === String(record.id) ||
+            (
+                String(existing.title || "").toLowerCase() ===
+                    String(record.title || "").toLowerCase() &&
+                String(existing.media_type || "") ===
+                    String(record.media_type || "")
+            );
+    });
+}
+
+
+/* =========================================================
+   INDEXEDDB - ALLEEN BESTANDSHANDLE ONTHOUDEN
+========================================================= */
+
+function openSettingsDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(HANDLE_STORE)) {
+                request.result.createObjectStore(HANDLE_STORE);
             }
         };
 
-        request.onsuccess = function () {
-            resolve(request.result);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function saveStoredHandle(key, handle) {
+    const database = await openSettingsDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction =
+            database.transaction(
+                HANDLE_STORE,
+                "readwrite"
+            );
+
+        transaction
+            .objectStore(HANDLE_STORE)
+            .put(handle, key);
+
+        transaction.oncomplete = () => {
+            database.close();
+            resolve();
         };
 
-        request.onerror = function () {
-            reject(request.error);
+        transaction.onerror = () => {
+            const error = transaction.error;
+            database.close();
+            reject(error);
         };
     });
 }
 
-async function saveStudioHandle(key, handle) {
-    var database = await openStudioSettingsDatabase();
+async function getStoredHandle(key) {
+    const database = await openSettingsDatabase();
 
-    return new Promise(function (resolve, reject) {
-        var transaction = database.transaction(STUDIO_SETTINGS_STORE, "readwrite");
-        transaction.objectStore(STUDIO_SETTINGS_STORE).put(handle, key);
-        transaction.oncomplete = function () {
+    return new Promise((resolve, reject) => {
+        const transaction =
+            database.transaction(
+                HANDLE_STORE,
+                "readonly"
+            );
+
+        const request =
+            transaction
+                .objectStore(HANDLE_STORE)
+                .get(key);
+
+        request.onsuccess = () => {
+            database.close();
+            resolve(request.result || null);
+        };
+
+        request.onerror = () => {
+            const error = request.error;
+            database.close();
+            reject(error);
+        };
+    });
+}
+
+async function saveHandle(handle) {
+    const database = await openSettingsDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = database.transaction(HANDLE_STORE, "readwrite");
+        transaction.objectStore(HANDLE_STORE).put(
+            handle,
+            DATABASE_HANDLE_KEY
+        );
+        transaction.oncomplete = () => {
             database.close();
             resolve();
         };
-        transaction.onerror = function () {
+        transaction.onerror = () => {
             database.close();
             reject(transaction.error);
         };
     });
 }
 
-async function getStudioHandle(key) {
-    var database = await openStudioSettingsDatabase();
+async function getSavedHandle() {
+    const database = await openSettingsDatabase();
 
-    return new Promise(function (resolve, reject) {
-        var transaction = database.transaction(STUDIO_SETTINGS_STORE, "readonly");
-        var request = transaction.objectStore(STUDIO_SETTINGS_STORE).get(key);
-        request.onsuccess = function () {
+    return new Promise((resolve, reject) => {
+        const transaction = database.transaction(HANDLE_STORE, "readonly");
+        const request = transaction
+            .objectStore(HANDLE_STORE)
+            .get(DATABASE_HANDLE_KEY);
+
+        request.onsuccess = () => {
             database.close();
             resolve(request.result || null);
         };
-        request.onerror = function () {
+        request.onerror = () => {
             database.close();
             reject(request.error);
         };
     });
 }
 
-async function queryStudioHandlePermission(handle, mode) {
-    if (!handle) {
-        return false;
-    }
-
-    if (!handle.queryPermission) {
-        return true;
-    }
-
-    return await handle.queryPermission({ mode: mode }) === "granted";
-}
-
-async function restoreStudioConnections() {
-    var databaseHandle = null;
-    var actorFolderHandle = null;
-    var databaseRestored = false;
-
-    try {
-        databaseHandle = await getStudioHandle("database");
-        actorFolderHandle = await getStudioHandle("actorsFolder");
-
-        if (databaseHandle && await queryStudioHandlePermission(databaseHandle, "read")) {
-            movieMindState.databaseFileHandle = databaseHandle;
-            await loadDatabaseFromHandle(databaseHandle, false);
-            databaseRestored = true;
-        }
-
-        if (actorFolderHandle && await queryStudioHandlePermission(actorFolderHandle, "readwrite")) {
-            studioPhotoState.directoryHandle = actorFolderHandle;
-            setStudioPhotoStatus(
-                "Acteursfotomap automatisch gekoppeld: " + actorFolderHandle.name,
-                "success"
-            );
-            updateStudioPhotoSaveButton();
-        }
-    } catch (error) {
-        console.warn("Vaste koppelingen herstellen mislukt:", error);
-    }
-
-    if (!databaseRestored) {
-        showEmptyState("Laad eenmalig de MovieMind-database. Daarna wordt deze onthouden.");
-    }
-}
-
-async function loadDatabaseFromHandle(handle, requestPermission) {
-    var permission = await queryStudioHandlePermission(handle, "read");
-
-    if (!permission && requestPermission && handle.requestPermission) {
-        permission = await handle.requestPermission({ mode: "read" }) === "granted";
-    }
-
-    if (!permission) {
-        showNotification(
-            "Klik eenmaal op Database laden om de opgeslagen database opnieuw toestemming te geven.",
-            "error"
-        );
-        return false;
-    }
-
-    loadDatabaseFile(await handle.getFile());
-    return true;
-}
-
 
 /* =========================================================
-   DATABASE LADEN
+   ALGEMENE HULPFUNCTIES
 ========================================================= */
 
-function initialiseDatabaseLoader() {
-    var loadButton = document.getElementById("load-database-button");
-    var fileInput = document.getElementById("database-file-input");
-
-    if (!loadButton || !fileInput) {
-        console.error(
-            "Databaseknop of bestandsveld ontbreekt in index.html."
-        );
-        return;
-    }
-
-    loadButton.addEventListener("click", async function () {
-        if ("showOpenFilePicker" in window) {
-            try {
-                var handles = await window.showOpenFilePicker({
-                    multiple: false,
-                    types: [{
-                        description: "MovieMind database",
-                        accept: { "application/json": [".json"] }
-                    }]
-                });
-
-                if (!handles || !handles[0]) {
-                    return;
-                }
-
-                movieMindState.databaseFileHandle = handles[0];
-                await saveStudioHandle("database", handles[0]);
-                await loadDatabaseFromHandle(handles[0], true);
-                return;
-            } catch (error) {
-                if (error && error.name === "AbortError") {
-                    return;
-                }
-                console.warn("Bestandskiezer via browser mislukt:", error);
-            }
-        }
-
-        fileInput.value = "";
-        fileInput.click();
-    });
-
-    fileInput.addEventListener("change", function () {
-        var file = fileInput.files[0];
-
-        if (!file) {
-            return;
-        }
-
-        movieMindState.databaseFileHandle = null;
-        loadDatabaseFile(file);
-    });
-}
-
-function loadDatabaseFile(file) {
-    var reader = new FileReader();
-    var loadButton = document.getElementById("load-database-button");
-
-    setLoadButtonState(loadButton, true);
-
-    if (!file.name.toLowerCase().endsWith(".json")) {
-        handleLoadError(
-            "Kies een databasebestand met de extensie .json.",
-            loadButton
-        );
-        return;
-    }
-
-    reader.onload = function (event) {
-        try {
-            var fileText = String(event.target.result || "");
-            var parsedDatabase;
-            var records;
-
-            if (!fileText.trim()) {
-                throw new Error("Het gekozen bestand is leeg.");
-            }
-
-            parsedDatabase = JSON.parse(fileText);
-            records = extractRecords(parsedDatabase);
-
-            if (records.length === 0) {
-                throw new Error(
-                    "In dit JSON-bestand zijn geen films of series gevonden."
-                );
-            }
-
-            window.movieMindDatabase = parsedDatabase;
-            window.movieMindDatabaseFileName = file.name;
-
-            movieMindState.records = records;
-            movieMindState.currentPage = 1;
-
-            updateLastLoaded(file.name);
-            updateDatabaseStatistics(records);
-            addLogEntry("Database geladen: " + file.name);
-
-            showNotification(
-                records.length.toLocaleString("nl-NL") +
-                    " titels succesvol geladen.",
-                "success"
-            );
-
-            applyCurrentView();
-        } catch (error) {
-            handleLoadError(
-                error.message || "De database kon niet worden geladen.",
-                loadButton
-            );
-            return;
-        }
-
-        setLoadButtonState(loadButton, false);
-    };
-
-    reader.onerror = function () {
-        handleLoadError(
-            "Het bestand kon niet worden gelezen.",
-            loadButton
-        );
-    };
-
-    reader.readAsText(file);
-}
-
-
-function extractRecords(database) {
-    var records = [];
-
-    if (Array.isArray(database)) {
-        records = database;
-    } else if (database && Array.isArray(database.films)) {
-        records = database.films;
-    } else if (database && Array.isArray(database.titles)) {
-        records = database.titles;
-    }
-
-    return records.filter(function (record) {
-        return record && typeof record === "object";
-    });
-}
-
-
-function handleLoadError(message, loadButton) {
-    console.error(message);
-    addLogEntry("Database laden mislukt");
-    showNotification(message, "error");
-    setLoadButtonState(loadButton, false);
-}
-
-
-function setLoadButtonState(button, isLoading) {
-    if (!button) {
-        return;
-    }
-
-    button.disabled = isLoading;
-    button.classList.toggle("is-loading", isLoading);
-
-    button.textContent = isLoading
-        ? "Database laden..."
-        : "Database laden";
-}
-
-
-/* =========================================================
-   FILM- EN TV-DATABASE SAMENVOEGEN - VERSIE 0.16
-========================================================= */
-
-function initialiseDatabaseMerger() {
-    var mergeButton = document.getElementById("merge-databases-button");
-
-    if (!mergeButton) {
-        return;
-    }
-
-    mergeButton.addEventListener("click", async function () {
-        var originalText = mergeButton.textContent;
-
-        try {
-            setMergeButtonState(mergeButton, true);
-
-            var filmFile = await chooseJsonFile(
-                "Kies eerst de bestaande filmdatabase"
-            );
-
-            if (!filmFile) {
-                return;
-            }
-
-            var tvFile = await chooseJsonFile(
-                "Kies nu de bestaande TV-database"
-            );
-
-            if (!tvFile) {
-                return;
-            }
-
-            var filmDatabase = await readJsonFile(filmFile);
-            var tvDatabase = await readJsonFile(tvFile);
-            var mergeResult = mergeMovieMindDatabases(
-                filmDatabase,
-                tvDatabase
-            );
-
-            var databaseText = JSON.stringify(
-                mergeResult.database,
-                null,
-                2
-            );
-
-            var savedHandle = await saveCombinedDatabase(databaseText);
-
-            window.movieMindDatabase = mergeResult.database;
-            window.movieMindDatabaseFileName = "moviemind_database.json";
-            movieMindState.records = mergeResult.database.films;
-            movieMindState.currentPage = 1;
-
-            if (savedHandle) {
-                movieMindState.databaseFileHandle = savedHandle;
-                window.movieMindDatabaseFileName = savedHandle.name;
-                await saveStudioHandle("database", savedHandle);
-            }
-
-            updateLastLoaded(window.movieMindDatabaseFileName);
-            updateDatabaseStatistics(movieMindState.records);
-            applyCurrentView();
-
-            addLogEntry(
-                "Databases samengevoegd: " +
-                mergeResult.movieCount.toLocaleString("nl-NL") +
-                " films en " +
-                mergeResult.tvCount.toLocaleString("nl-NL") +
-                " series"
-            );
-
-            showNotification(
-                "Klaar: " +
-                mergeResult.totalCount.toLocaleString("nl-NL") +
-                " titels opgeslagen in moviemind_database.json. " +
-                mergeResult.skippedDuplicates.toLocaleString("nl-NL") +
-                " dubbele serie(s) zijn overgeslagen.",
-                "success"
-            );
-        } catch (error) {
-            if (error && error.name === "AbortError") {
-                return;
-            }
-
-            console.error("Databases samenvoegen mislukt:", error);
-            showNotification(
-                error.message || "De databases konden niet worden samengevoegd.",
-                "error"
-            );
-        } finally {
-            setMergeButtonState(mergeButton, false, originalText);
-        }
-    });
-}
-
-async function chooseJsonFile(description) {
-    if ("showOpenFilePicker" in window) {
-        var handles = await window.showOpenFilePicker({
-            multiple: false,
-            types: [{
-                description: description,
-                accept: { "application/json": [".json"] }
-            }]
-        });
-
-        if (!handles || !handles[0]) {
-            return null;
-        }
-
-        return await handles[0].getFile();
-    }
-
-    return await chooseJsonFileWithInput();
-}
-
-function chooseJsonFileWithInput() {
-    return new Promise(function (resolve) {
-        var input = document.createElement("input");
-
-        input.type = "file";
-        input.accept = ".json,application/json";
-        input.className = "visually-hidden";
-        document.body.appendChild(input);
-
-        input.addEventListener("change", function () {
-            var file = input.files && input.files[0]
-                ? input.files[0]
-                : null;
-
-            input.remove();
-            resolve(file);
-        }, { once: true });
-
-        input.click();
-    });
-}
-
-async function readJsonFile(file) {
-    var text;
-
-    if (!file || !file.name.toLowerCase().endsWith(".json")) {
-        throw new Error("Kies een geldig JSON-databasebestand.");
-    }
-
-    text = await file.text();
-
-    if (!text.trim()) {
-        throw new Error(file.name + " is leeg.");
-    }
-
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        throw new Error(file.name + " bevat geen geldige JSON.");
-    }
-}
-
-function mergeMovieMindDatabases(filmDatabase, tvDatabase) {
-    var filmRecords = extractRecords(filmDatabase);
-    var tvRecords = extractTvRecords(tvDatabase);
-    var combinedRecords = [];
-    var existingTvKeys = new Set();
-    var skippedDuplicates = 0;
-
-    if (filmRecords.length === 0) {
-        throw new Error("In de gekozen filmdatabase zijn geen titels gevonden.");
-    }
-
-    if (tvRecords.length === 0) {
-        throw new Error("In de gekozen TV-database zijn geen series gevonden.");
-    }
-
-    filmRecords.forEach(function (record) {
-        var cleanRecord = Object.assign({}, record);
-
-        if (cleanRecord.media_type !== "tv") {
-            cleanRecord.media_type = "movie";
-        }
-
-        combinedRecords.push(cleanRecord);
-
-        if (cleanRecord.media_type === "tv") {
-            existingTvKeys.add(createRecordKey(cleanRecord));
-        }
-    });
-
-    tvRecords.forEach(function (record) {
-        var cleanRecord = Object.assign({}, record, {
-            media_type: "tv"
-        });
-        var key = createRecordKey(cleanRecord);
-
-        if (existingTvKeys.has(key)) {
-            skippedDuplicates += 1;
-            return;
-        }
-
-        existingTvKeys.add(key);
-        combinedRecords.push(cleanRecord);
-    });
-
-    var movieCount = combinedRecords.filter(function (record) {
-        return record.media_type !== "tv";
-    }).length;
-    var tvCount = combinedRecords.filter(function (record) {
-        return record.media_type === "tv";
-    }).length;
-
-    return {
-        database: {
-            database_type: "moviemind_combined",
-            version: 1,
-            films: combinedRecords
-        },
-        movieCount: movieCount,
-        tvCount: tvCount,
-        totalCount: combinedRecords.length,
-        skippedDuplicates: skippedDuplicates
-    };
-}
-
-function extractTvRecords(database) {
-    if (database && Array.isArray(database.series)) {
-        return database.series.filter(function (record) {
-            return record && typeof record === "object";
-        });
-    }
-
-    return extractRecords(database).filter(function (record) {
-        return record.media_type === "tv";
-    });
-}
-
-function createRecordKey(record) {
-    var idPart = record.id === null || record.id === undefined
-        ? ""
-        : String(record.id);
-    var titlePart = normaliseText(String(record.title || ""));
-
-    return idPart + "|" + titlePart;
-}
-
-async function saveCombinedDatabase(databaseText) {
-    if ("showSaveFilePicker" in window) {
-        var handle = await window.showSaveFilePicker({
-            suggestedName: "moviemind_database.json",
-            types: [{
-                description: "MovieMind gecombineerde database",
-                accept: { "application/json": [".json"] }
-            }]
-        });
-        var writable = await handle.createWritable();
-
-        await writable.write(databaseText);
-        await writable.close();
-        return handle;
-    }
-
-    var blob = new Blob([databaseText], { type: "application/json" });
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement("a");
-
-    link.href = url;
-    link.download = "moviemind_database.json";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    window.setTimeout(function () {
-        URL.revokeObjectURL(url);
-    }, 1000);
-
-    return null;
-}
-
-function setMergeButtonState(button, isLoading, originalText) {
-    if (!button) {
-        return;
-    }
-
-    button.disabled = isLoading;
-    button.classList.toggle("is-loading", isLoading);
-
-    if (isLoading) {
-        button.textContent = "Databases samenvoegen...";
-    } else if (originalText) {
-        button.textContent = originalText;
-    } else {
-        button.innerHTML = '<span aria-hidden="true">🔗</span> Film- en TV-database samenvoegen';
-    }
-}
-
-
-/* =========================================================
-   LINKERNAVIGATIE
-========================================================= */
-
-function initialiseNavigation() {
-    var navigationButtons = document.querySelectorAll(".nav-button");
-
-    navigationButtons.forEach(function (button) {
-        button.addEventListener("click", function () {
-            var requestedView = button.getAttribute("data-view");
-
-            if (
-                requestedView !== "films" &&
-                requestedView !== "series" &&
-                requestedView !== "actors"
-            ) {
-                return;
-            }
-
-            navigationButtons.forEach(function (navButton) {
-                navButton.classList.remove("is-active");
-            });
-
-            button.classList.add("is-active");
-            movieMindState.view = requestedView;
-            movieMindState.currentPage = 1;
-
-            synchroniseFiltersWithView();
-            updateViewHeadings();
-            applyCurrentView();
-        });
-    });
-}
-
-
-function synchroniseFiltersWithView() {
-    var searchScope = document.getElementById("search-scope");
-    var searchType = document.getElementById("search-type");
-
-    if (!searchScope || !searchType) {
-        return;
-    }
-
-    if (movieMindState.view === "films") {
-        searchScope.value = "movies";
-        searchType.value = "movie";
-        searchType.disabled = false;
-    } else if (movieMindState.view === "series") {
-        searchScope.value = "series";
-        searchType.value = "tv";
-        searchType.disabled = false;
-    } else {
-        searchScope.value = "actors";
-        searchType.value = "all";
-        searchType.disabled = true;
-    }
-}
-
-
-function updateViewHeadings() {
-    var workspaceTitle = document.querySelector(
-        ".studio-workspace .panel-heading h2"
-    );
-    var resultsTitle = document.querySelector(
-        ".section-heading-row h3"
-    );
-
-    if (workspaceTitle) {
-        if (movieMindState.view === "films") {
-            workspaceTitle.textContent = "Film zoeken";
-        } else if (movieMindState.view === "series") {
-            workspaceTitle.textContent = "TV-serie zoeken";
-        } else {
-            workspaceTitle.textContent = "Acteur zoeken";
-        }
-    }
-
-    if (resultsTitle) {
-        resultsTitle.innerHTML =
-            getViewListTitle() +
-            ' <span id="results-count">(0)</span>';
-    }
-
-    updateTableHeaders();
-}
-
-
-function getViewListTitle() {
-    if (movieMindState.view === "series") {
-        return "TV-serielijst";
-    }
-
-    if (movieMindState.view === "actors") {
-        return "Acteurlijst";
-    }
-
-    return "Filmlijst";
-}
-
-
-function updateTableHeaders() {
-    var headers = document.querySelectorAll(".results-table thead th");
-
-    if (headers.length < 4) {
-        return;
-    }
-
-    if (movieMindState.view === "actors") {
-        headers[0].textContent = "Acteur";
-        headers[1].textContent = "Films";
-        headers[2].textContent = "Series";
-        headers[3].textContent = "Totaal";
-    } else {
-        headers[0].textContent = "Titel";
-        headers[1].textContent = "Jaar";
-        headers[2].textContent = "Type";
-        headers[3].textContent = "Acteurs";
-    }
-}
-
-
-/* =========================================================
-   ZOEKEN EN FILTEREN
-========================================================= */
-
-function initialiseSearch() {
-    var searchInput = document.getElementById("main-search");
-    var searchButton = document.getElementById("search-button");
-    var searchScope = document.getElementById("search-scope");
-    var searchType = document.getElementById("search-type");
-
-    if (!searchInput || !searchButton || !searchScope || !searchType) {
-        console.error("Een of meer zoekonderdelen ontbreken.");
-        return;
-    }
-
-    searchInput.addEventListener("input", function () {
-        movieMindState.currentPage = 1;
-        applyCurrentView();
-    });
-
-    searchInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            movieMindState.currentPage = 1;
-            applyCurrentView();
-        }
-    });
-
-    searchButton.addEventListener("click", function () {
-        movieMindState.currentPage = 1;
-        applyCurrentView();
-    });
-
-    searchScope.addEventListener("change", function () {
-        var value = searchScope.value;
-
-        if (value === "movies") {
-            setActiveView("films");
-        } else if (value === "series") {
-            setActiveView("series");
-        } else if (value === "actors") {
-            setActiveView("actors");
-        } else {
-            movieMindState.currentPage = 1;
-            applyCurrentView();
-        }
-    });
-
-    searchType.addEventListener("change", function () {
-        movieMindState.currentPage = 1;
-        applyCurrentView();
-    });
-}
-
-
-function setActiveView(view) {
-    var buttons = document.querySelectorAll(".nav-button");
-
-    movieMindState.view = view;
-    movieMindState.currentPage = 1;
-
-    buttons.forEach(function (button) {
-        button.classList.toggle(
-            "is-active",
-            button.getAttribute("data-view") === view
-        );
-    });
-
-    synchroniseFiltersWithView();
-    updateViewHeadings();
-    applyCurrentView();
-}
-
-
-function applyCurrentView() {
-    var queryInput = document.getElementById("main-search");
-    var typeSelect = document.getElementById("search-type");
-    var query = queryInput
-        ? normaliseText(queryInput.value.trim())
-        : "";
-    var typeFilter = typeSelect
-        ? typeSelect.value
-        : "all";
-
-    if (movieMindState.records.length === 0) {
-        movieMindState.filteredItems = [];
-        showEmptyState("Laad eerst de MovieMind-database.");
-        return;
-    }
-
-    if (movieMindState.view === "actors") {
-        movieMindState.filteredItems = buildActorItems().filter(
-            function (actor) {
-                return (
-                    !query ||
-                    normaliseText(actor.name).indexOf(query) !== -1
-                );
-            }
-        );
-
-        movieMindState.filteredItems.sort(function (first, second) {
-            return first.name.localeCompare(
-                second.name,
-                "nl",
-                { sensitivity: "base" }
-            );
-        });
-    } else {
-        movieMindState.filteredItems = movieMindState.records.filter(
-            function (record) {
-                var recordType = getRecordType(record);
-
-                if (
-                    movieMindState.view === "films" &&
-                    recordType !== "movie"
-                ) {
-                    return false;
-                }
-
-                if (
-                    movieMindState.view === "series" &&
-                    recordType !== "tv"
-                ) {
-                    return false;
-                }
-
-                if (
-                    typeFilter !== "all" &&
-                    recordType !== typeFilter
-                ) {
-                    return false;
-                }
-
-                return recordMatchesQuery(record, query);
-            }
-        );
-
-        movieMindState.filteredItems.sort(function (first, second) {
-            return String(first.title || "").localeCompare(
-                String(second.title || ""),
-                "nl",
-                { sensitivity: "base" }
-            );
-        });
-    }
-
-    renderCurrentPage();
-}
-
-
-function recordMatchesQuery(record, query) {
-    if (!query) {
-        return true;
-    }
-
-    var searchableText = [
-        record.title,
-        record.year,
-        joinValues(record.actors),
-        joinValues(record.director),
-        joinValues(record.genre),
-        joinValues(record.characters)
-    ].join(" ");
-
-    return normaliseText(searchableText).indexOf(query) !== -1;
-}
-
-
-function buildActorItems() {
-    var actorsByName = {};
-
-    movieMindState.records.forEach(function (record) {
-        var actors = Array.isArray(record.actors)
-            ? record.actors
-            : [];
-        var recordType = getRecordType(record);
-
-        actors.forEach(function (actorName) {
-            var cleanName = String(actorName || "").trim();
-            var key;
-
-            if (!cleanName) {
-                return;
-            }
-
-            key = normaliseText(cleanName);
-
-            if (!actorsByName[key]) {
-                actorsByName[key] = {
-                    name: cleanName,
-                    movies: 0,
-                    series: 0,
-                    total: 0
-                };
-            }
-
-            if (recordType === "tv") {
-                actorsByName[key].series += 1;
-            } else {
-                actorsByName[key].movies += 1;
-            }
-
-            actorsByName[key].total += 1;
-        });
-    });
-
-    return Object.keys(actorsByName).map(function (key) {
-        return actorsByName[key];
-    });
-}
-
-
-/* =========================================================
-   RESULTATEN EN PAGINERING
-========================================================= */
-
-function renderCurrentPage() {
-    var totalResults = movieMindState.filteredItems.length;
-    var totalPages = Math.max(
-        1,
-        Math.ceil(totalResults / movieMindState.resultsPerPage)
-    );
-    var startIndex;
-    var endIndex;
-    var pageItems;
-
-    if (movieMindState.currentPage > totalPages) {
-        movieMindState.currentPage = totalPages;
-    }
-
-    startIndex =
-        (movieMindState.currentPage - 1) *
-        movieMindState.resultsPerPage;
-    endIndex = startIndex + movieMindState.resultsPerPage;
-    pageItems = movieMindState.filteredItems.slice(
-        startIndex,
-        endIndex
-    );
-
-    renderResults(pageItems);
-    renderPagination(totalPages);
-}
-
-
-function renderResults(items) {
-    var resultsBody = document.getElementById("results-body");
-    var resultsCount = document.getElementById("results-count");
-
-    if (!resultsBody) {
-        return;
-    }
-
-    resultsBody.innerHTML = "";
-
-    if (resultsCount) {
-        resultsCount.textContent =
-            "(" +
-            movieMindState.filteredItems.length.toLocaleString("nl-NL") +
-            ")";
-    }
-
-    if (items.length === 0) {
-        appendEmptyResultRow(
-            resultsBody,
-            "Geen resultaten gevonden."
-        );
-        return;
-    }
-
-    items.forEach(function (item) {
-        if (movieMindState.view === "actors") {
-            appendActorRow(resultsBody, item);
-        } else {
-            appendTitleRow(resultsBody, item);
-        }
-    });
-}
-
-
-function appendTitleRow(resultsBody, record) {
-    var row = document.createElement("tr");
-
-    appendCell(row, record.title || "Zonder titel");
-    appendCell(row, record.year || "-");
-    appendCell(
-        row,
-        getRecordType(record) === "tv" ? "Serie" : "Film"
-    );
-    appendCell(
-        row,
-        Array.isArray(record.actors)
-            ? String(record.actors.length)
-            : "0"
-    );
-
-    row.addEventListener("click", function () {
-        selectResultRow(row);
-        showTitleDetails(record);
-    });
-
-    resultsBody.appendChild(row);
-}
-
-
-function appendActorRow(resultsBody, actor) {
-    var row = document.createElement("tr");
-
-    appendCell(row, actor.name);
-    appendCell(row, actor.movies);
-    appendCell(row, actor.series);
-    appendCell(row, actor.total);
-
-    row.addEventListener("click", function () {
-        selectResultRow(row);
-        showActorDetails(actor);
-    });
-
-    resultsBody.appendChild(row);
-}
-
-
-function appendCell(row, value) {
-    var cell = document.createElement("td");
-
-    cell.textContent = String(value);
-    row.appendChild(cell);
-}
-
-
-function selectResultRow(selectedRow) {
-    var rows = document.querySelectorAll(
-        "#results-body tr"
-    );
-
-    rows.forEach(function (row) {
-        row.classList.remove("is-selected");
-    });
-
-    selectedRow.classList.add("is-selected");
-}
-
-
-function showEmptyState(message) {
-    var resultsBody = document.getElementById("results-body");
-    var resultsCount = document.getElementById("results-count");
-    var pagination = document.getElementById("results-pagination");
-
-    if (resultsBody) {
-        resultsBody.innerHTML = "";
-        appendEmptyResultRow(resultsBody, message);
-    }
-
-    if (resultsCount) {
-        resultsCount.textContent = "(0)";
-    }
-
-    if (pagination) {
-        pagination.innerHTML = "";
-        appendPageButton(pagination, "1", 1, true, true);
-    }
-}
-
-
-function appendEmptyResultRow(resultsBody, message) {
-    var row = document.createElement("tr");
-    var cell = document.createElement("td");
-
-    row.className = "results-empty-row";
-    cell.colSpan = 4;
-    cell.textContent = message;
-    cell.style.textAlign = "center";
-    cell.style.padding = "28px 14px";
-    cell.style.color = "#92877a";
-    cell.style.fontStyle = "italic";
-
-    row.appendChild(cell);
-    resultsBody.appendChild(row);
-}
-
-
-function renderPagination(totalPages) {
-    var pagination = document.getElementById("results-pagination");
-    var pages;
-
-    if (!pagination) {
-        return;
-    }
-
-    pagination.innerHTML = "";
-
-    if (movieMindState.filteredItems.length === 0) {
-        appendPageButton(pagination, "1", 1, true, true);
-        return;
-    }
-
-    appendPageButton(
-        pagination,
-        "<<",
-        1,
-        false,
-        movieMindState.currentPage === 1
-    );
-
-    appendPageButton(
-        pagination,
-        "<",
-        movieMindState.currentPage - 1,
-        false,
-        movieMindState.currentPage === 1
-    );
-
-    pages = getVisiblePageNumbers(
-        movieMindState.currentPage,
-        totalPages
-    );
-
-    pages.forEach(function (pageNumber) {
-        appendPageButton(
-            pagination,
-            String(pageNumber),
-            pageNumber,
-            pageNumber === movieMindState.currentPage,
-            false
-        );
-    });
-
-    appendPageButton(
-        pagination,
-        ">",
-        movieMindState.currentPage + 1,
-        false,
-        movieMindState.currentPage === totalPages
-    );
-
-    appendPageButton(
-        pagination,
-        ">>",
-        totalPages,
-        false,
-        movieMindState.currentPage === totalPages
-    );
-}
-
-
-function getVisiblePageNumbers(currentPage, totalPages) {
-    var pages = [];
-    var startPage = Math.max(1, currentPage - 2);
-    var endPage = Math.min(totalPages, currentPage + 2);
-    var pageNumber;
-
-    if (currentPage <= 3) {
-        endPage = Math.min(totalPages, 5);
-    }
-
-    if (currentPage >= totalPages - 2) {
-        startPage = Math.max(1, totalPages - 4);
-    }
-
-    for (
-        pageNumber = startPage;
-        pageNumber <= endPage;
-        pageNumber += 1
-    ) {
-        pages.push(pageNumber);
-    }
-
-    return pages;
-}
-
-
-function appendPageButton(
-    container,
-    label,
-    targetPage,
-    isActive,
-    isDisabled
-) {
-    var button = document.createElement("button");
-
-    button.type = "button";
-    button.textContent = label;
-    button.disabled = isDisabled;
-
-    if (isActive) {
-        button.classList.add("is-active");
-    }
-
-    button.addEventListener("click", function () {
-        movieMindState.currentPage = targetPage;
-        renderCurrentPage();
-    });
-
-    container.appendChild(button);
-}
-
-
-/* =========================================================
-   EERSTE DETAILWEERGAVE
-========================================================= */
-
-async function showTitleDetails(record) {
-    var title = document.querySelector(".selected-title h3");
-    var year = document.querySelector(".selected-title p");
-    var detailValues = document.querySelectorAll(".detail-list dd");
-    var peopleGrid = document.querySelector(".people-grid");
-    var directorRow = document.querySelector(".director-row");
-    var genreList = document.querySelector(".genre-list");
-
-    if (title) {
-        title.textContent = record.title || "Zonder titel";
-    }
-
-    if (year) {
-        year.textContent = record.year ? "(" + record.year + ")" : "";
-    }
-
-    renderTitlePoster(record);
-    renderPeopleGrid(peopleGrid, record.actors, record.cast_details);
-    renderDirectorRow(directorRow, record.director, record.director_details);
-    renderGenreList(genreList, record.genre);
-    updateTitleDetailValues(detailValues, record);
-
-    if (!record.poster_path || !Array.isArray(record.cast_details)) {
-        try {
-            await enrichTitleRecordFromTmdb(record);
-            renderTitlePoster(record);
-            renderPeopleGrid(peopleGrid, record.actors, record.cast_details);
-            renderDirectorRow(directorRow, record.director, record.director_details);
-            updateTitleDetailValues(detailValues, record);
-        } catch (error) {
-            console.warn("Extra titelgegevens ophalen mislukt:", error);
-        }
-    }
-}
-
-function updateTitleDetailValues(detailValues, record) {
-    if (detailValues.length < 6) {
-        return;
-    }
-
-    detailValues[0].textContent = record.title || "-";
-    detailValues[1].textContent = record.year || "-";
-    detailValues[2].textContent = getRecordType(record) === "tv" ? "Serie" : "Film";
-    detailValues[3].textContent = record.rating ? Number(record.rating).toFixed(1) : "-";
-    detailValues[4].textContent = record.runtime ? record.runtime + " min" : (record.duration || "-");
-    detailValues[5].textContent = record.id || "-";
-}
-
-function renderTitlePoster(record) {
-    var image = document.getElementById("studio-title-poster");
-    var placeholder = document.getElementById("studio-poster-placeholder");
-    var path = record.poster_path || record.poster || "";
-
-    if (!image || !placeholder) {
-        return;
-    }
-
-    if (path) {
-        image.src = path.indexOf("http") === 0 ? path : "https://image.tmdb.org/t/p/w500" + path;
-        image.alt = "Poster van " + (record.title || "deze titel");
-        image.hidden = false;
-        image.style.display = "block";
-        placeholder.hidden = true;
-        placeholder.style.display = "none";
-        image.onerror = function () {
-            image.hidden = true;
-            image.style.display = "none";
-            placeholder.hidden = false;
-            placeholder.style.display = "flex";
-        };
-    } else {
-        image.removeAttribute("src");
-        image.hidden = true;
-        image.style.display = "none";
-        placeholder.hidden = false;
-        placeholder.style.display = "flex";
-    }
-}
-
-
-async function showActorDetails(actor) {
-    var title = document.querySelector(".selected-title h3");
-    var year = document.querySelector(".selected-title p");
-    var photoManager = document.getElementById("actor-photo-manager");
-
-    if (title) {
-        title.textContent = actor.name;
-    }
-
-    if (year) {
-        year.textContent =
-            actor.total +
-            " titel" +
-            (actor.total === 1 ? "" : "s");
-    }
-
-    if (photoManager) {
-        photoManager.classList.add("is-visible");
-    }
-
-    await loadStudioActorPhotos(actor);
-}
-
-
-function renderPeopleGrid(container, actors, castDetails) {
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-    (Array.isArray(actors) ? actors.slice(0, 8) : []).forEach(function (actorName, index) {
-        var article = document.createElement("article");
-        var photo;
-        var name = document.createElement("p");
-        var detail = Array.isArray(castDetails) ? castDetails[index] : null;
-
-        article.className = "person-card";
-        name.textContent = actorName;
-
-        if (detail && detail.profile_path) {
-            photo = document.createElement("img");
-            photo.className = "person-photo-placeholder";
-            photo.src = "https://image.tmdb.org/t/p/w185" + detail.profile_path;
-            photo.alt = "Foto van " + actorName;
-            photo.loading = "lazy";
-        } else {
-            photo = document.createElement("div");
-            photo.className = "person-photo-placeholder";
-            photo.textContent = "Foto";
-        }
-
-        article.appendChild(photo);
-        article.appendChild(name);
-        container.appendChild(article);
-    });
-}
-
-function renderDirectorRow(container, directors, directorDetails) {
-    var names;
-    var firstDetail = Array.isArray(directorDetails) ? directorDetails[0] : null;
-    var photoHtml;
-
-    if (!container) {
-        return;
-    }
-
-    names = Array.isArray(directors) ? directors.join(", ") : directors || "-";
-    photoHtml = firstDetail && firstDetail.profile_path
-        ? '<img class="person-photo-placeholder person-photo-small" src="https://image.tmdb.org/t/p/w185' + firstDetail.profile_path + '" alt="Foto van ' + escapeHtml(names) + '">'
-        : '<div class="person-photo-placeholder person-photo-small">Foto</div>';
-
-    container.innerHTML = photoHtml + "<p></p>";
-    container.querySelector("p").textContent = names;
-}
-
-function escapeHtml(value) {
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-
-function renderGenreList(container, genres) {
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-    (Array.isArray(genres) ? genres : []).forEach(
-        function (genre) {
-            var item = document.createElement("span");
-
-            item.textContent = genre;
-            container.appendChild(item);
-        }
-    );
-}
-
-
-/* =========================================================
-   HULPFUNCTIES
-========================================================= */
-
-function getRecordType(record) {
-    var type = normaliseText(
-        record.media_type ||
-        record.type ||
-        record.mediaType
-    );
-
-    if (
-        type === "tv" ||
-        type === "serie" ||
-        type === "series" ||
-        type === "television"
-    ) {
-        return "tv";
-    }
-
-    return "movie";
-}
-
-
-function joinValues(value) {
-    if (Array.isArray(value)) {
-        return value.join(" ");
-    }
-
-    return value || "";
-}
-
-
-function normaliseText(value) {
-    return String(value || "")
-        .toLocaleLowerCase("nl-NL")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-}
-
-
-function updateLastLoaded(fileName) {
-    var lastLoadedText = document.getElementById("last-loaded-text");
-    var now;
-    var time;
-
-    if (!lastLoadedText) {
-        return;
-    }
-
-    now = new Date();
-    time = now.toLocaleTimeString("nl-NL", {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-
-    lastLoadedText.textContent =
-        "Laatst geladen: " + fileName + " om " + time;
-}
-
-
-function updateDatabaseStatistics(records) {
-    var rows = document.querySelectorAll(
-        ".statistics-list .statistic-row"
-    );
-    var movies = 0;
-    var series = 0;
-    var actorNames = {};
-    var directorNames = {};
-    var genreNames = {};
-
-    records.forEach(function (record) {
-        if (getRecordType(record) === "tv") {
-            series += 1;
-        } else {
-            movies += 1;
-        }
-
-        addNamesToSet(actorNames, record.actors);
-        addNamesToSet(directorNames, record.director);
-        addNamesToSet(genreNames, record.genre);
-    });
-
-    setStatisticValue(rows, 0, records.length);
-    setStatisticValue(rows, 1, movies);
-    setStatisticValue(rows, 2, series);
-    setStatisticValue(rows, 3, Object.keys(actorNames).length);
-    setStatisticValue(rows, 4, Object.keys(directorNames).length);
-    setStatisticValue(rows, 5, Object.keys(genreNames).length);
-}
-
-
-function addNamesToSet(target, values) {
-    (Array.isArray(values) ? values : []).forEach(
-        function (value) {
-            var key = normaliseText(value);
-
-            if (key) {
-                target[key] = true;
-            }
-        }
-    );
-}
-
-
-function setStatisticValue(rows, index, value) {
-    var valueElement;
-
-    if (!rows[index]) {
-        return;
-    }
-
-    valueElement = rows[index].querySelector("dd");
-
-    if (valueElement) {
-        valueElement.textContent =
-            Number(value).toLocaleString("nl-NL");
-    }
-}
-
-
-function addLogEntry(message) {
-    var activityLog = document.getElementById("activity-log");
-    var item;
-    var messageElement;
-    var timeElement;
-
-    if (!activityLog) {
-        return;
-    }
-
-    item = document.createElement("li");
-    messageElement = document.createElement("span");
-    timeElement = document.createElement("time");
-
-    messageElement.textContent = message;
-    timeElement.textContent = new Date().toLocaleTimeString(
-        "nl-NL",
-        {
-            hour: "2-digit",
-            minute: "2-digit"
-        }
-    );
-
-    item.appendChild(messageElement);
-    item.appendChild(timeElement);
-    activityLog.insertBefore(item, activityLog.firstChild);
-
-    while (activityLog.children.length > 5) {
-        activityLog.removeChild(activityLog.lastElementChild);
-    }
-}
-
-
-var notificationTimer = null;
-
-function showNotification(message, type) {
-    var notification = document.getElementById("studio-notification");
-
-    if (!notification) {
-        return;
-    }
-
-    window.clearTimeout(notificationTimer);
-
-    notification.textContent = message;
-    notification.className =
-        "studio-notification is-" + type;
-    notification.hidden = false;
-
-    notificationTimer = window.setTimeout(function () {
-        notification.hidden = true;
-    }, 4500);
-}
-
-
-/* =========================================================
-   ACTEURSFOTO'S - VERSIE 0.14
-========================================================= */
-
-function initialiseStudioPhotoManager() {
-    var chooseFolderButton =
-        document.getElementById("studio-choose-photo-folder");
-    var saveButton =
-        document.getElementById("studio-save-actor-photo");
-
-    if (chooseFolderButton) {
-        chooseFolderButton.addEventListener(
-            "click",
-            chooseStudioActorPhotoFolder
-        );
-    }
-
-    if (saveButton) {
-        saveButton.addEventListener(
-            "click",
-            saveStudioSelectedActorPhoto
-        );
-    }
-}
-
-
-async function loadStudioActorPhotos(actorSummary) {
-    var requestId = studioPhotoState.requestId + 1;
-    var actor;
-    var profiles;
-
-    studioPhotoState.requestId = requestId;
-    studioPhotoState.selectedActor = null;
-    studioPhotoState.selectedCandidate = null;
-
-    clearStudioPhotoChoices();
-    setStudioPhotoStatus(
-        "TMDB zoekt beschikbare portretten voor " +
-        actorSummary.name +
-        "..."
-    );
-    setStudioPhotoPreview("", actorSummary.name);
-    updateStudioPhotoSaveButton();
-
-    try {
-        actor = await findStudioTmdbActor(actorSummary.name);
-
-        if (requestId !== studioPhotoState.requestId) {
-            return;
-        }
-
-        if (!actor) {
-            throw new Error(
-                "Deze acteur kon niet betrouwbaar bij TMDB worden gevonden."
-            );
-        }
-
-        studioPhotoState.selectedActor = actor;
-
-        await showExistingStudioActorPhoto(actor.name);
-
-        profiles = await fetchStudioActorProfiles(actor);
-
-        if (requestId !== studioPhotoState.requestId) {
-            return;
-        }
-
-        if (profiles.length === 0) {
-            throw new Error(
-                "TMDB heeft geen bruikbare portretfoto's voor deze acteur."
-            );
-        }
-
-        renderStudioActorPhotoChoices(actor, profiles);
-        setStudioPhotoStatus(
-            "Kies een van de zes foto's. De eerste is automatisch aanbevolen."
-        );
-    } catch (error) {
-        console.error("Acteursfoto's laden mislukt:", error);
-        setStudioPhotoStatus(
-            error.message || "De foto's konden niet worden geladen.",
-            "error"
-        );
-    }
-}
-
-
-async function findStudioTmdbActor(actorName) {
-    var url =
-        "https://api.themoviedb.org/3/search/person" +
-        "?api_key=" + encodeURIComponent(TMDB_API_KEY) +
-        "&language=en-US" +
-        "&include_adult=false" +
-        "&query=" + encodeURIComponent(actorName);
-    var response = await fetch(url);
-    var data;
-    var requestedName;
-    var candidates;
-
-    if (!response.ok) {
-        throw new Error(
-            "Acteur zoeken bij TMDB mislukt (HTTP " +
-            response.status +
-            ")."
-        );
-    }
-
-    data = await response.json();
-    requestedName = normaliseText(actorName);
-
-    candidates = (data.results || [])
-        .filter(function (person) {
-            return (
-                person &&
-                person.id &&
-                person.name &&
-                (
-                    person.known_for_department === "Acting" ||
-                    !person.known_for_department
-                )
-            );
-        })
-        .sort(function (first, second) {
-            var firstExact =
-                normaliseText(first.name) === requestedName;
-            var secondExact =
-                normaliseText(second.name) === requestedName;
-
-            if (firstExact !== secondExact) {
-                return firstExact ? -1 : 1;
-            }
-
-            return (
-                Number(second.popularity || 0) -
-                Number(first.popularity || 0)
-            );
-        });
-
-    if (candidates.length === 0) {
-        return null;
-    }
-
-    return {
-        id: candidates[0].id,
-        name: candidates[0].name,
-        requestedName: actorName,
-        profile_path: candidates[0].profile_path || null
-    };
-}
-
-
-async function fetchStudioActorProfiles(actor) {
-    var url =
-        "https://api.themoviedb.org/3/person/" +
-        actor.id +
-        "/images" +
-        "?api_key=" + encodeURIComponent(TMDB_API_KEY);
-    var response = await fetch(url);
-    var data;
-    var unique = {};
-
-    if (!response.ok) {
-        throw new Error(
-            "Portretten ophalen mislukt (HTTP " +
-            response.status +
-            ")."
-        );
-    }
-
-    data = await response.json();
-
-    if (actor.profile_path) {
-        unique[actor.profile_path] = {
-            file_path: actor.profile_path,
-            width: 0,
-            height: 0,
-            vote_average: 0,
-            vote_count: 0,
-            isDefault: true
-        };
-    }
-
-    (data.profiles || []).forEach(function (profile) {
-        if (profile && profile.file_path) {
-            unique[profile.file_path] = profile;
-        }
-    });
-
-    return Object.keys(unique)
-        .map(function (key) {
-            return unique[key];
-        })
-        .sort(function (first, second) {
-            return (
-                calculateStudioProfileScore(second) -
-                calculateStudioProfileScore(first)
-            );
-        })
-        .slice(0, 6);
-}
-
-
-function calculateStudioProfileScore(profile) {
-    var width = Number(profile.width) || 0;
-    var height = Number(profile.height) || 0;
-    var ratio = height > 0 ? width / height : 0.8;
-    var portraitFit =
-        Math.max(0, 1 - Math.abs(ratio - 0.8));
-    var resolution =
-        Math.min(4, (width * height) / 1000000);
-    var voteCount =
-        Math.min(3, Number(profile.vote_count || 0) / 10);
-    var voteAverage =
-        Math.min(2, Number(profile.vote_average || 0) / 5);
-    var defaultBonus = profile.isDefault ? 0.35 : 0;
-
-    return (
-        portraitFit * 5 +
-        resolution +
-        voteCount +
-        voteAverage +
-        defaultBonus
-    );
-}
-
-
-function renderStudioActorPhotoChoices(actor, profiles) {
-    var container =
-        document.getElementById("studio-actor-photo-choices");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-    profiles.forEach(function (profile, index) {
-        var button = document.createElement("button");
-        var image = document.createElement("img");
-        var candidate = {
-            id: actor.id,
-            name: actor.requestedName || actor.name,
-            profile_path: profile.file_path
-        };
-
-        button.type = "button";
-        button.className = "studio-photo-choice";
-        button.setAttribute(
-            "aria-label",
-            "Kies foto " +
-            (index + 1) +
-            " van " +
-            actor.name
-        );
-
-        image.loading = "lazy";
-        image.alt =
-            "Foto-optie " +
-            (index + 1) +
-            " van " +
-            actor.name;
-        image.src =
-            "https://image.tmdb.org/t/p/w185" +
-            profile.file_path;
-
-        button.appendChild(image);
-
-        if (index === 0) {
-            var badge = document.createElement("span");
-
-            badge.className = "studio-photo-choice-badge";
-            badge.textContent = "Aanbevolen";
-            button.appendChild(badge);
-        }
-
-        button.addEventListener("click", function () {
-            var choices =
-                container.querySelectorAll(".studio-photo-choice");
-
-            choices.forEach(function (choice) {
-                choice.classList.remove("is-selected");
-            });
-
-            button.classList.add("is-selected");
-            studioPhotoState.selectedCandidate = candidate;
-
-            setStudioPhotoPreview(
-                "https://image.tmdb.org/t/p/w500" +
-                profile.file_path,
-                actor.name
-            );
-
-            setStudioPhotoStatus(
-                "Foto " +
-                (index + 1) +
-                " geselecteerd. Kies de fotomap en sla hem daarna op."
-            );
-
-            updateStudioPhotoSaveButton();
-        });
-
-        container.appendChild(button);
-
-        if (index === 0) {
-            button.click();
-        }
-    });
-}
-
-
-async function chooseStudioActorPhotoFolder() {
-    if (!("showDirectoryPicker" in window)) {
-        setStudioPhotoStatus(
-            "Gebruik Chrome of Edge om rechtstreeks in de acteursmap op te slaan.",
-            "error"
-        );
-        return;
-    }
-
-    try {
-        studioPhotoState.directoryHandle =
-            await window.showDirectoryPicker({
-                mode: "readwrite"
-            });
-
-        await saveStudioHandle(
-            "actorsFolder",
-            studioPhotoState.directoryHandle
-        );
-
-        if (
-            !await requestStudioDirectoryPermission(
-                studioPhotoState.directoryHandle
-            )
-        ) {
-            throw new Error(
-                "Geen schrijftoestemming voor de gekozen map."
-            );
-        }
-
-        setStudioPhotoStatus(
-            "Acteursfotomap actief: " +
-            studioPhotoState.directoryHandle.name,
-            "success"
-        );
-
-        if (studioPhotoState.selectedActor) {
-            await showExistingStudioActorPhoto(
-                studioPhotoState.selectedActor.requestedName ||
-                studioPhotoState.selectedActor.name
-            );
-        }
-
-        updateStudioPhotoSaveButton();
-    } catch (error) {
-        if (error && error.name === "AbortError") {
-            return;
-        }
-
-        console.error("Fotomap kiezen mislukt:", error);
-        setStudioPhotoStatus(
-            error.message || "De fotomap kon niet worden geopend.",
-            "error"
-        );
-    }
-}
-
-
-async function requestStudioDirectoryPermission(handle) {
-    var options = { mode: "readwrite" };
-    var currentPermission;
-
-    if (!handle) {
-        return false;
-    }
-
-    if (handle.queryPermission) {
-        currentPermission =
-            await handle.queryPermission(options);
-
-        if (currentPermission === "granted") {
-            return true;
-        }
-    }
-
-    if (handle.requestPermission) {
-        currentPermission =
-            await handle.requestPermission(options);
-
-        return currentPermission === "granted";
-    }
-
-    return true;
-}
-
-
-async function saveStudioSelectedActorPhoto() {
-    var candidate = studioPhotoState.selectedCandidate;
-    var directoryHandle = studioPhotoState.directoryHandle;
-    var filename;
-    var response;
-    var blob;
-    var fileHandle;
-    var writable;
-
-    if (!candidate) {
-        setStudioPhotoStatus(
-            "Kies eerst een foto.",
-            "error"
-        );
-        return;
-    }
-
-    if (!directoryHandle) {
-        setStudioPhotoStatus(
-            "Kies eerst de map game/images/actors.",
-            "error"
-        );
-        return;
-    }
-
-    try {
-        if (
-            !await requestStudioDirectoryPermission(directoryHandle)
-        ) {
-            throw new Error(
-                "Geen schrijftoestemming voor de acteursmap."
-            );
-        }
-
-        filename =
-            createStudioActorPhotoFilename(candidate.name);
-
-        response = await fetch(
-            "https://image.tmdb.org/t/p/w500" +
-            candidate.profile_path,
-            {
-                mode: "cors",
-                cache: "no-store"
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(
-                "De foto kon niet worden gedownload (HTTP " +
-                response.status +
-                ")."
-            );
-        }
-
-        blob = await response.blob();
-
-        if (!blob || blob.size === 0) {
-            throw new Error(
-                "TMDB stuurde een leeg afbeeldingsbestand."
-            );
-        }
-
-        fileHandle =
-            await directoryHandle.getFileHandle(
-                filename,
-                { create: true }
-            );
-        writable = await fileHandle.createWritable();
-
-        await writable.write(blob);
-        await writable.close();
-
-        setStudioPhotoStatus(
-            "Foto opgeslagen als " + filename + ".",
-            "success"
-        );
-
-        await showExistingStudioActorPhoto(candidate.name);
-    } catch (error) {
-        console.error("Acteursfoto opslaan mislukt:", error);
-        setStudioPhotoStatus(
-            error.message || "De foto kon niet worden opgeslagen.",
-            "error"
-        );
-    }
-}
-
-
-async function showExistingStudioActorPhoto(actorName) {
-    var file;
-
-    if (!studioPhotoState.directoryHandle) {
-        return;
-    }
-
-    try {
-        file = await findStudioActorPhotoFile(actorName);
-
-        if (!file) {
-            return;
-        }
-
-        if (studioPhotoState.previewObjectUrl) {
-            URL.revokeObjectURL(
-                studioPhotoState.previewObjectUrl
-            );
-        }
-
-        studioPhotoState.previewObjectUrl =
-            URL.createObjectURL(file);
-
-        setStudioPhotoPreview(
-            studioPhotoState.previewObjectUrl,
-            actorName
-        );
-
-        setStudioPhotoStatus(
-            "Bestaande lokale foto gevonden. Een nieuwe keuze vervangt deze.",
-            "success"
-        );
-    } catch (error) {
-        console.warn(
-            "Lokale acteursfoto bekijken mislukt:",
-            error
-        );
-    }
-}
-
-
-async function findStudioActorPhotoFile(actorName) {
-    var expectedFilename = createStudioActorPhotoFilename(actorName);
-    var fileHandle;
-
-    try {
-        fileHandle = await studioPhotoState.directoryHandle.getFileHandle(
-            expectedFilename,
-            { create: false }
-        );
-        return await fileHandle.getFile();
-    } catch (error) {
-        if (error && error.name === "NotFoundError") {
-            return null;
-        }
-        throw error;
-    }
-}
-
-function createStudioActorPhotoFilename(name) {
-    var safeName = String(name || "")
-        .trim()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/&/g, " and ")
-        .replace(/['\u2019]/g, "")
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "");
-
-    return (safeName || "acteur") + ".jpg";
-}
-
-
-function createStudioActorPhotoIdentity(value) {
-    return String(value || "")
-        .trim()
-        .toLowerCase()
-        .replace(/\.(jpe?g|png|webp)$/i, "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/&/g, " and ")
-        .replace(/['\u2019]/g, "")
-        .replace(/[^a-z0-9]+/g, "");
-}
-
-
-function clearStudioPhotoChoices() {
-    var container =
-        document.getElementById("studio-actor-photo-choices");
-
-    if (container) {
-        container.innerHTML = "";
-    }
-}
-
-
-function setStudioPhotoPreview(source, actorName) {
-    var image =
-        document.getElementById("studio-actor-photo-preview");
-    var placeholder =
-        document.getElementById("studio-actor-photo-placeholder");
-
-    if (!image || !placeholder) {
-        return;
-    }
-
-    if (source) {
-        image.src = source;
-        image.alt = "Foto van " + actorName;
-        image.hidden = false;
-        placeholder.hidden = true;
-    } else {
-        image.removeAttribute("src");
-        image.alt = "";
-        image.hidden = true;
-        placeholder.hidden = false;
-    }
-}
-
-
-function setStudioPhotoStatus(message, state) {
-    var status =
-        document.getElementById("studio-actor-photo-status");
-
-    if (!status) {
-        return;
-    }
-
+function setSearchStatus(message, type = "") {
+    const status = document.getElementById("search-status");
     status.textContent = message;
-    status.className =
-        "studio-photo-status" +
-        (state ? " is-" + state : "");
+    status.className = "search-status" + (type ? " is-" + type : "");
 }
 
-
-function updateStudioPhotoSaveButton() {
-    var saveButton =
-        document.getElementById("studio-save-actor-photo");
-
-    if (!saveButton) {
-        return;
-    }
-
-    saveButton.disabled = !(
-        studioPhotoState.selectedCandidate &&
-        studioPhotoState.directoryHandle
-    );
+function renderLoadingState() {
+    document.getElementById("search-results").innerHTML =
+        '<div class="empty-state"><span>⏳</span><strong>Even zoeken...</strong></div>';
 }
 
-/* =========================================================
-   TV-SERIE IMPORTER - VERSIE 0.15.1
-========================================================= */
-
-/* =========================================================
-   FILMIMPORTER + TMDB-VERRIJKING - VERSIE 0.17.1
-========================================================= */
-
-var movieImporterState = { searchRequestId: 0 };
-
-function initialiseMovieImporter() {
-    var openButton = document.getElementById("import-movie-button");
-    var closeButton = document.getElementById("movie-import-close");
-    var modal = document.getElementById("movie-import-modal");
-    var form = document.getElementById("movie-import-search-form");
-    var backdrop = modal ? modal.querySelector("[data-close-movie-importer]") : null;
-
-    if (!openButton || !closeButton || !modal || !form) {
-        console.error("Filmimporter kan niet starten: vereiste HTML-onderdelen ontbreken.");
-        return;
-    }
-
-    /* Voorkomt dubbele koppelingen wanneer het script opnieuw geladen wordt. */
-    if (openButton.dataset.movieImporterReady !== "true") {
-        openButton.addEventListener("click", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            openMovieImporter();
-        });
-        openButton.dataset.movieImporterReady = "true";
-    }
-
-    if (closeButton.dataset.movieImporterReady !== "true") {
-        closeButton.addEventListener("click", closeMovieImporter);
-        closeButton.dataset.movieImporterReady = "true";
-    }
-
-    if (backdrop && backdrop.dataset.movieImporterReady !== "true") {
-        backdrop.addEventListener("click", closeMovieImporter);
-        backdrop.dataset.movieImporterReady = "true";
-    }
-
-    if (form.dataset.movieImporterReady !== "true") {
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
-            searchMoviesAtTmdb();
-        });
-        form.dataset.movieImporterReady = "true";
-    }
+function resetSearchResults(message = "") {
+    document.getElementById("search-results").innerHTML =
+        '<div class="empty-state">' +
+            '<span>🔎</span>' +
+            '<strong>' + (message || "Nog geen zoekresultaten") + '</strong>' +
+            '<p>Zoek hierboven naar een film, serie of acteur.</p>' +
+        '</div>';
 }
 
-function openMovieImporter() {
-    var modal = document.getElementById("movie-import-modal");
-    var input = document.getElementById("movie-import-search-input");
+function resetPreview() {
+    state.selectedResult = null;
+    state.selectedDetails = null;
+    state.selectedPersonProfilePath = null;
 
-    if (!modal) {
-        showNotification("Filmimporter kon niet worden geopend: venster ontbreekt.", "error");
-        console.error("Element #movie-import-modal ontbreekt.");
-        return;
-    }
+    const image = document.getElementById("preview-poster");
+    image.hidden = true;
+    image.removeAttribute("src");
 
-    /* Het venster opent altijd. Zo lijkt de knop nooit meer 'dood'. */
-    modal.hidden = false;
-    modal.removeAttribute("hidden");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    document.getElementById("poster-placeholder").hidden = false;
+    document.getElementById("preview-title").textContent =
+        "Nog geen titel geselecteerd";
+    document.getElementById("preview-meta").textContent =
+        "Kies een resultaat uit Stap 2.";
+    document.getElementById("preview-overview").textContent = "";
+    document.getElementById("people-count").textContent = "0 geselecteerd";
+    document.getElementById("people-grid").innerHTML =
+        '<div class="people-empty">Acteursfoto\'s verschijnen hier.</div>';
 
-    if (movieMindState.records.length === 0) {
-        setMovieImportStatus(
-            "Je kunt al zoeken. Laad vóór Toevoegen eerst moviemind_database.json.",
-            "error"
-        );
-    } else {
-        setMovieImportStatus("Zoek een film en kies daarna Toevoegen.", "");
-    }
-
-    window.setTimeout(function () {
-        if (input) {
-            input.focus();
-            input.select();
-        }
-    }, 30);
-}
-
-/* Ook beschikbaar voor handmatige of inline aanroepen. */
-window.openMovieImporter = openMovieImporter;
-
-function closeMovieImporter() {
-    var modal = document.getElementById("movie-import-modal");
-    if (modal) { modal.hidden = true; }
-    document.body.style.overflow = "";
-}
-
-async function searchMoviesAtTmdb() {
-    var input = document.getElementById("movie-import-search-input");
-    var results = document.getElementById("movie-import-results");
-    var query = input ? input.value.trim() : "";
-    var requestId;
-    if (!query) { setMovieImportStatus("Vul eerst de naam van een film in.", "error"); return; }
-    requestId = ++movieImporterState.searchRequestId;
-    results.innerHTML = "";
-    setMovieImporterBusy(true);
-    setMovieImportStatus("TMDB wordt doorzocht...", "");
-    try {
-        var response = await fetch("https://api.themoviedb.org/3/search/movie?api_key=" + encodeURIComponent(TMDB_API_KEY) + "&language=nl-NL&include_adult=false&query=" + encodeURIComponent(query));
-        if (!response.ok) { throw new Error("TMDB gaf foutcode " + response.status + "."); }
-        var payload = await response.json();
-        if (requestId !== movieImporterState.searchRequestId) { return; }
-        renderMovieImportResults((payload.results || []).slice(0, 12));
-    } catch (error) {
-        setMovieImportStatus("Zoeken bij TMDB is mislukt: " + (error.message || "onbekende fout"), "error");
-    } finally { setMovieImporterBusy(false); }
-}
-
-function renderMovieImportResults(movies) {
-    var container = document.getElementById("movie-import-results");
-    container.innerHTML = "";
-    if (!movies.length) { setMovieImportStatus("Geen films gevonden.", "error"); return; }
-    setMovieImportStatus(movies.length + " resultaten gevonden.", "");
-    movies.forEach(function (item) { container.appendChild(createMovieImportResult(item)); });
-}
-
-function createMovieImportResult(item) {
-    var article = document.createElement("article");
-    var poster = item.poster_path ? document.createElement("img") : document.createElement("div");
-    var text = document.createElement("div");
-    var title = document.createElement("h3");
-    var metadata = document.createElement("p");
-    var overview = document.createElement("p");
-    var button = document.createElement("button");
-    article.className = "tv-import-result";
-    if (item.poster_path) { poster.src = "https://image.tmdb.org/t/p/w154" + item.poster_path; poster.alt = "Poster van " + item.title; }
-    else { poster.className = "tv-import-poster-placeholder"; poster.textContent = "🎬"; }
-    title.textContent = item.title || "Film zonder titel";
-    metadata.textContent = (item.release_date ? item.release_date.slice(0,4) : "jaar onbekend") + " · TMDB " + item.id;
-    overview.textContent = item.overview ? shortenTvOverview(item.overview,170) : "Geen omschrijving beschikbaar.";
-    button.type = "button";
-    if (isMovieAlreadyImported(item.id)) { button.textContent = "Al aanwezig"; button.disabled = true; }
-    else { button.textContent = "＋ Toevoegen"; button.addEventListener("click", function () { importMovie(item.id, button); }); }
-    text.appendChild(title); text.appendChild(metadata); text.appendChild(overview);
-    article.appendChild(poster); article.appendChild(text); article.appendChild(button);
-    return article;
-}
-
-function isMovieAlreadyImported(tmdbId) {
-    return movieMindState.records.some(function (record) { return getRecordType(record) === "movie" && Number(record.id) === Number(tmdbId); });
-}
-
-async function importMovie(tmdbId, button) {
-    var originalText = button.textContent;
-    var record;
-    button.disabled = true; button.textContent = "Ophalen...";
-    setMovieImportStatus("Filmgegevens en acteurs worden opgehaald...", "");
-    try {
-        var details = await fetchTmdbTitleDetails("movie", tmdbId);
-        record = createMovieDatabaseRecord(details);
-        if (isMovieAlreadyImported(record.id)) { button.textContent = "Al aanwezig"; return; }
-        movieMindState.records.push(record); synchroniseLoadedDatabaseRecords(); await saveUpdatedStudioDatabase();
-        updateDatabaseStatistics(movieMindState.records); addLogEntry("Film toegevoegd: " + record.title);
-        button.textContent = "✓ Toegevoegd"; setMovieImportStatus(record.title + " is toegevoegd en opgeslagen.", "success");
-        showNotification("Film toegevoegd: " + record.title, "success");
-        if (movieMindState.view === "films") { applyCurrentView(); }
-    } catch (error) {
-        if (record) { movieMindState.records = movieMindState.records.filter(function (r) { return r !== record; }); synchroniseLoadedDatabaseRecords(); }
-        button.disabled = false; button.textContent = originalText;
-        setMovieImportStatus("Toevoegen is mislukt: " + (error.message || "onbekende fout"), "error");
-    }
-}
-
-function createMovieDatabaseRecord(details) {
-    var credits = details.credits || {};
-    var cast = Array.isArray(credits.cast) ? credits.cast.slice(0, 8) : [];
-    var crew = Array.isArray(credits.crew) ? credits.crew : [];
-    var directors = crew.filter(function (p) { return p.job === "Director"; });
-    return {
-        id: details.id, title: details.title || details.original_title || "Film zonder titel",
-        year: details.release_date ? Number(details.release_date.slice(0,4)) : null,
-        genre: (details.genres || []).map(function (g) { return g.name; }),
-        director: directors.map(function (p) { return p.name; }),
-        actors: cast.map(function (p) { return p.name; }).filter(Boolean),
-        characters: cast.map(function (p) { return p.character || ""; }).filter(Boolean),
-        poster_path: details.poster_path || null, backdrop_path: details.backdrop_path || null,
-        overview: details.overview || "", rating: Number(details.vote_average || 0), runtime: details.runtime || null,
-        cast_details: cast.map(function (p) { return { id:p.id, name:p.name, character:p.character || "", profile_path:p.profile_path || null }; }),
-        director_details: directors.map(function (p) { return { id:p.id, name:p.name, profile_path:p.profile_path || null }; }),
-        fullDetails: true, media_type: "movie"
-    };
-}
-
-async function fetchTmdbTitleDetails(type, id) {
-    var response = await fetch("https://api.themoviedb.org/3/" + type + "/" + encodeURIComponent(id) + "?api_key=" + encodeURIComponent(TMDB_API_KEY) + "&language=nl-NL&append_to_response=credits");
-    if (!response.ok) { throw new Error("TMDB gaf foutcode " + response.status + "."); }
-    return await response.json();
-}
-
-async function enrichTitleRecordFromTmdb(record) {
-    if (!record || !record.id) { return; }
-    var type = getRecordType(record);
-    var details = await fetchTmdbTitleDetails(type, record.id);
-    var enriched = type === "tv" ? createTvDatabaseRecord(details) : createMovieDatabaseRecord(details);
-    Object.keys(enriched).forEach(function (key) { record[key] = enriched[key]; });
-    synchroniseLoadedDatabaseRecords();
-    await saveUpdatedStudioDatabase();
-    addLogEntry("Afbeeldingen aangevuld: " + record.title);
-}
-
-function setMovieImportStatus(message, type) {
-    var status = document.getElementById("movie-import-status");
-    if (!status) { return; }
-    status.textContent = message; status.classList.remove("is-error","is-success");
-    if (type === "error") { status.classList.add("is-error"); }
-    if (type === "success") { status.classList.add("is-success"); }
-}
-
-function setMovieImporterBusy(isBusy) {
-    var button = document.getElementById("movie-import-search-button");
-    var input = document.getElementById("movie-import-search-input");
-    if (button) { button.disabled = isBusy; button.textContent = isBusy ? "Zoeken..." : "🔍 Zoeken"; }
-    if (input) { input.disabled = isBusy; }
-}
-
-/* =========================================================
-   ONTBREKENDE ACTEURSFOTO'S AANVULLEN
-========================================================= */
-
-function initialiseMissingPhotosFiller() {
-    var button = document.getElementById("fill-missing-photos-button");
-    if (button) { button.addEventListener("click", fillMissingActorPhotos); }
-}
-
-async function fillMissingActorPhotos() {
-    var button = document.getElementById("fill-missing-photos-button");
-    if (!studioPhotoState.directoryHandle) {
-        showNotification("Kies eerst bij Acteursfoto beheren de map game/images/actors.", "error");
-        return;
-    }
-    if (!window.confirm("Alle ontbrekende acteursfoto's aanvullen? Dit kan bij duizenden acteurs geruime tijd duren.")) { return; }
-    var names = buildActorItems().map(function (a) { return a.name; });
-    var saved = 0, skipped = 0, failed = 0;
+    const button = document.getElementById("add-selected-button");
     button.disabled = true;
-    try {
-        for (var i=0; i<names.length; i+=1) {
-            button.textContent = "Foto's aanvullen " + (i+1) + "/" + names.length;
-            var existing = await findStudioActorPhotoFile(names[i]);
-            if (existing) { skipped += 1; continue; }
-            try {
-                var actor = await findStudioTmdbActor(names[i]);
-                if (!actor || !actor.profile_path) { failed += 1; continue; }
-                await saveActorPhotoDirectly(names[i], actor.profile_path);
-                saved += 1;
-            } catch (error) { failed += 1; console.warn("Foto overslaan:", names[i], error); }
-            await new Promise(function (resolve) { window.setTimeout(resolve, 120); });
-        }
-        addLogEntry("Foto-aanvulling klaar: " + saved + " opgeslagen");
-        showNotification("Klaar: " + saved + " foto's opgeslagen, " + skipped + " al aanwezig, " + failed + " niet gevonden.", "success");
-    } finally {
-        button.disabled = false; button.textContent = "🖼 Ontbrekende foto's aanvullen";
-    }
+    button.textContent = "＋ Toevoegen aan MovieMind";
 }
 
-async function saveActorPhotoDirectly(actorName, profilePath) {
-    var response = await fetch("https://image.tmdb.org/t/p/w500" + profilePath, { mode:"cors", cache:"no-store" });
-    if (!response.ok) { throw new Error("HTTP " + response.status); }
-    var blob = await response.blob();
-    var fileHandle = await studioPhotoState.directoryHandle.getFileHandle(createStudioActorPhotoFilename(actorName), { create:true });
-    var writable = await fileHandle.createWritable();
-    await writable.write(blob); await writable.close();
-}
-
-var tvImporterState = {
-    searchRequestId: 0,
-    isBusy: false
-};
-
-function initialiseTvSeriesImporter() {
-    var openButton = document.getElementById("import-tv-series-button");
-    var closeButton = document.getElementById("tv-import-close");
-    var modal = document.getElementById("tv-import-modal");
-    var form = document.getElementById("tv-import-search-form");
-    var backdrop = modal
-        ? modal.querySelector("[data-close-tv-importer]")
-        : null;
-
-    if (!openButton || !closeButton || !modal || !form) {
-        console.warn("De TV-serie importer ontbreekt gedeeltelijk in index.html.");
-        return;
-    }
-
-    openButton.addEventListener("click", function () {
-        openTvSeriesImporter();
-    });
-
-    closeButton.addEventListener("click", closeTvSeriesImporter);
-
-    if (backdrop) {
-        backdrop.addEventListener("click", closeTvSeriesImporter);
-    }
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        searchTvSeriesAtTmdb();
-    });
-
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && !modal.hidden) {
-            closeTvSeriesImporter();
-        }
-    });
-}
-
-function openTvSeriesImporter() {
-    var modal = document.getElementById("tv-import-modal");
-    var input = document.getElementById("tv-import-search-input");
-
-    if (!modal) {
-        return;
-    }
-
-    if (movieMindState.records.length === 0) {
-        showNotification(
-            "Laad eerst de MovieMind-database voordat je een serie toevoegt.",
-            "error"
-        );
-        return;
-    }
-
-    modal.hidden = false;
-    document.body.style.overflow = "hidden";
-    setTvImportStatus(
-        "Zoek een serie en kies daarna Toevoegen.",
-        ""
-    );
-
-    window.setTimeout(function () {
-        if (input) {
-            input.focus();
-            input.select();
-        }
-    }, 30);
-}
-
-function closeTvSeriesImporter() {
-    var modal = document.getElementById("tv-import-modal");
-
-    if (modal) {
-        modal.hidden = true;
-    }
-
-    document.body.style.overflow = "";
-}
-
-async function searchTvSeriesAtTmdb() {
-    var input = document.getElementById("tv-import-search-input");
-    var results = document.getElementById("tv-import-results");
-    var query = input ? input.value.trim() : "";
-    var requestId;
-    var response;
-    var payload;
-
-    if (!query) {
-        setTvImportStatus("Vul eerst de naam van een TV-serie in.", "error");
-        return;
-    }
-
-    if (typeof TMDB_API_KEY === "undefined" || !TMDB_API_KEY) {
-        setTvImportStatus("De TMDB API-key ontbreekt in config.js.", "error");
-        return;
-    }
-
-    requestId = tvImporterState.searchRequestId + 1;
-    tvImporterState.searchRequestId = requestId;
-    tvImporterState.isBusy = true;
-
-    if (results) {
-        results.innerHTML = "";
-    }
-
-    setTvImportStatus("TMDB wordt doorzocht...", "");
-    setTvImporterSearchBusy(true);
-
-    try {
-        response = await fetch(
-            "https://api.themoviedb.org/3/search/tv" +
-            "?api_key=" + encodeURIComponent(TMDB_API_KEY) +
-            "&language=nl-NL" +
-            "&include_adult=false" +
-            "&query=" + encodeURIComponent(query)
-        );
-
-        if (!response.ok) {
-            throw new Error("TMDB gaf foutcode " + response.status + ".");
-        }
-
-        payload = await response.json();
-
-        if (requestId !== tvImporterState.searchRequestId) {
-            return;
-        }
-
-        renderTvImportResults(
-            Array.isArray(payload.results)
-                ? payload.results.slice(0, 12)
-                : []
-        );
-    } catch (error) {
-        console.error("TV-serie zoeken mislukt:", error);
-        setTvImportStatus(
-            "Zoeken bij TMDB is mislukt: " +
-                (error.message || "onbekende fout"),
-            "error"
-        );
-    } finally {
-        tvImporterState.isBusy = false;
-        setTvImporterSearchBusy(false);
-    }
-}
-
-function renderTvImportResults(series) {
-    var container = document.getElementById("tv-import-results");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-    if (series.length === 0) {
-        setTvImportStatus("Geen TV-series gevonden.", "error");
-        return;
-    }
-
-    setTvImportStatus(
-        series.length +
-            " resultaat" +
-            (series.length === 1 ? "" : "en") +
-            " gevonden.",
-        ""
-    );
-
-    series.forEach(function (item) {
-        container.appendChild(createTvImportResult(item));
-    });
-}
-
-function createTvImportResult(item) {
-    var article = document.createElement("article");
-    var poster;
-    var text = document.createElement("div");
-    var title = document.createElement("h3");
-    var metadata = document.createElement("p");
-    var overview = document.createElement("p");
-    var button = document.createElement("button");
-    var year = item.first_air_date
-        ? item.first_air_date.slice(0, 4)
-        : "jaar onbekend";
-
-    article.className = "tv-import-result";
-
-    if (item.poster_path) {
-        poster = document.createElement("img");
-        poster.src = "https://image.tmdb.org/t/p/w154" + item.poster_path;
-        poster.alt = "Poster van " + (item.name || "TV-serie");
-    } else {
-        poster = document.createElement("div");
-        poster.className = "tv-import-poster-placeholder";
-        poster.textContent = "📺";
-    }
-
-    title.textContent = item.name || "Serie zonder titel";
-    metadata.textContent = year + " · TMDB " + item.id;
-    overview.textContent = item.overview
-        ? shortenTvOverview(item.overview, 170)
-        : "Geen omschrijving beschikbaar.";
-    overview.style.marginTop = "7px";
-
-    button.type = "button";
-
-    if (isTvSeriesAlreadyImported(item.id)) {
-        button.textContent = "Al aanwezig";
-        button.disabled = true;
-    } else {
-        button.textContent = "＋ Toevoegen";
-        button.addEventListener("click", function () {
-            importTvSeries(item.id, button);
-        });
-    }
-
-    text.appendChild(title);
-    text.appendChild(metadata);
-    text.appendChild(overview);
-    article.appendChild(poster);
-    article.appendChild(text);
-    article.appendChild(button);
-
-    return article;
-}
-
-function shortenTvOverview(value, maximumLength) {
-    var text = String(value || "").trim();
-
-    if (text.length <= maximumLength) {
-        return text;
-    }
-
-    return text.slice(0, maximumLength - 1).trim() + "…";
-}
-
-function isTvSeriesAlreadyImported(tmdbId) {
-    return movieMindState.records.some(function (record) {
-        return (
-            getRecordType(record) === "tv" &&
-            Number(record.id) === Number(tmdbId)
-        );
-    });
-}
-
-async function importTvSeries(tmdbId, button) {
-    var originalText = button.textContent;
-    var response;
-    var details;
-    var record;
-
-    button.disabled = true;
-    button.textContent = "Ophalen...";
-    setTvImportStatus("Seriegegevens en acteurs worden opgehaald...", "");
-
-    try {
-        response = await fetch(
-            "https://api.themoviedb.org/3/tv/" +
-            encodeURIComponent(tmdbId) +
-            "?api_key=" + encodeURIComponent(TMDB_API_KEY) +
-            "&language=nl-NL" +
-            "&append_to_response=credits"
-        );
-
-        if (!response.ok) {
-            throw new Error("TMDB gaf foutcode " + response.status + ".");
-        }
-
-        details = await response.json();
-        record = createTvDatabaseRecord(details);
-
-        if (isTvSeriesAlreadyImported(record.id)) {
-            button.textContent = "Al aanwezig";
-            setTvImportStatus("Deze serie staat al in de database.", "error");
-            return;
-        }
-
-        movieMindState.records.push(record);
-        synchroniseLoadedDatabaseRecords();
-        await saveUpdatedStudioDatabase();
-
-        updateDatabaseStatistics(movieMindState.records);
-        movieMindState.currentPage = 1;
-        addLogEntry("TV-serie toegevoegd: " + record.title);
-
-        button.textContent = "✓ Toegevoegd";
-        setTvImportStatus(
-            record.title + " is toegevoegd en opgeslagen.",
-            "success"
-        );
-        showNotification(
-            "TV-serie toegevoegd: " + record.title,
-            "success"
-        );
-
-        if (movieMindState.view === "series") {
-            applyCurrentView();
-        }
-    } catch (error) {
-        console.error("TV-serie importeren mislukt:", error);
-
-        if (record) {
-            movieMindState.records = movieMindState.records.filter(
-                function (existingRecord) {
-                    return existingRecord !== record;
-                }
-            );
-            synchroniseLoadedDatabaseRecords();
-        }
-
-        button.disabled = false;
-        button.textContent = originalText;
-        setTvImportStatus(
-            "Toevoegen is mislukt: " +
-                (error.message || "onbekende fout"),
-            "error"
-        );
-    }
-}
-
-function createTvDatabaseRecord(details) {
-    var credits = details.credits || {};
-    var cast = Array.isArray(credits.cast)
-        ? credits.cast.slice(0, 8)
-        : [];
-    var directors = [];
-
-    if (Array.isArray(details.created_by)) {
-        directors = details.created_by
-            .map(function (person) { return person.name; })
-            .filter(Boolean);
-    }
-
-    if (directors.length === 0 && Array.isArray(credits.crew)) {
-        directors = credits.crew
-            .filter(function (person) {
-                return person.job === "Director" || person.job === "Executive Producer";
-            })
-            .slice(0, 3)
-            .map(function (person) { return person.name; })
-            .filter(Boolean);
-    }
-
-    return {
-        id: details.id,
-        title: details.name || details.original_name || "Serie zonder titel",
-        year: details.first_air_date
-            ? Number(details.first_air_date.slice(0, 4))
-            : null,
-        genre: (details.genres || []).map(function (genre) {
-            return genre.name;
-        }),
-        director: directors,
-        actors: cast.map(function (person) {
-            return person.name;
-        }).filter(Boolean),
-        characters: cast.map(function (person) {
-            return person.character || person.roles && person.roles[0] && person.roles[0].character || "";
-        }).filter(Boolean),
-        poster_path: details.poster_path || null,
-        backdrop_path: details.backdrop_path || null,
-        overview: details.overview || "",
-        rating: Number(details.vote_average || 0),
-        runtime: Array.isArray(details.episode_run_time) && details.episode_run_time[0] ? details.episode_run_time[0] : null,
-        cast_details: cast.map(function (person) {
-            return { id: person.id, name: person.name, character: person.character || "", profile_path: person.profile_path || null };
-        }),
-        director_details: directors.map(function (name) { return { name: name, profile_path: null }; }),
-        fullDetails: true,
-        media_type: "tv"
-    };
-}
-
-function synchroniseLoadedDatabaseRecords() {
-    var database = window.movieMindDatabase;
-
-    if (Array.isArray(database)) {
-        window.movieMindDatabase = movieMindState.records;
-        return;
-    }
-
-    if (database && Array.isArray(database.films)) {
-        database.films = movieMindState.records;
-        return;
-    }
-
-    if (database && Array.isArray(database.titles)) {
-        database.titles = movieMindState.records;
-        return;
-    }
-
-    window.movieMindDatabase = { films: movieMindState.records };
-}
-
-async function saveUpdatedStudioDatabase() {
-    var databaseText;
-    var writable;
-    var handles;
-
-    synchroniseLoadedDatabaseRecords();
-    databaseText = JSON.stringify(window.movieMindDatabase, null, 2);
-
-    /*
-     * Is de database nog niet met een schrijfbare bestandshandle geopend,
-     * laat de gebruiker dan het bestaande MovieMind-databasebestand kiezen.
-     * Er wordt bewust geen los JSON-bestand meer gedownload.
-     */
-    if (!movieMindState.databaseFileHandle) {
-        if (!("showOpenFilePicker" in window)) {
-            throw new Error(
-                "De browser kan de database niet rechtstreeks opslaan. " +
-                "Open MovieMind Studio in Chrome of Edge en klik opnieuw op Database laden."
-            );
-        }
-
-        handles = await window.showOpenFilePicker({
-            multiple: false,
-            types: [{
-                description: "MovieMind database",
-                accept: {
-                    "application/json": [".json"]
-                }
-            }]
-        });
-
-        if (!handles || !handles[0]) {
-            throw new Error(
-                "Er is geen databasebestand gekozen."
-            );
-        }
-
-        movieMindState.databaseFileHandle = handles[0];
-        window.movieMindDatabaseFileName = handles[0].name;
-        await saveStudioHandle("database", handles[0]);
-    }
-
-    if (!await ensureStudioFilePermission(movieMindState.databaseFileHandle)) {
-        throw new Error(
-            "Geen schrijftoestemming voor de database. " +
-            "Klik opnieuw op Database laden."
-        );
-    }
-
-    writable = await movieMindState.databaseFileHandle.createWritable();
-
-    try {
-        await writable.write(databaseText);
-        await writable.close();
-    } catch (error) {
-        try {
-            await writable.abort();
-        } catch (abortError) {
-            console.warn(
-                "Opslaan afbreken is mislukt:",
-                abortError
-            );
-        }
-
-        throw error;
-    }
-}
-
-async function ensureStudioFilePermission(handle) {
-    var permission;
-
-    if (!handle) {
-        return false;
-    }
-
-    if (!handle.queryPermission) {
-        return true;
-    }
-
-    permission = await handle.queryPermission({ mode: "readwrite" });
-
-    if (permission === "granted") {
-        return true;
-    }
-
-    if (handle.requestPermission) {
-        permission = await handle.requestPermission({ mode: "readwrite" });
-    }
-
-    return permission === "granted";
-}
-
-
-function setTvImportStatus(message, type) {
-    var status = document.getElementById("tv-import-status");
-
-    if (!status) {
-        return;
-    }
-
-    status.textContent = message;
-    status.classList.remove("is-error", "is-success");
-
-    if (type === "error") {
-        status.classList.add("is-error");
-    } else if (type === "success") {
-        status.classList.add("is-success");
-    }
-}
-
-function setTvImporterSearchBusy(isBusy) {
-    var button = document.getElementById("tv-import-search-button");
-    var input = document.getElementById("tv-import-search-input");
-
-    if (button) {
-        button.disabled = isBusy;
-        button.textContent = isBusy ? "Zoeken..." : "🔍 Zoeken";
-    }
-
-    if (input) {
-        input.disabled = isBusy;
-    }
+let toastTimer = null;
+
+function showToast(message, type = "") {
+    const toast = document.getElementById("toast");
+    window.clearTimeout(toastTimer);
+
+    toast.textContent = message;
+    toast.className = "toast" + (type ? " is-" + type : "");
+    toast.hidden = false;
+
+    toastTimer = window.setTimeout(() => {
+        toast.hidden = true;
+    }, 5000);
 }
