@@ -32,6 +32,28 @@ let eligibleActorsCache = [];
 let allGenresCache = [];
 let allCategoriesCache = [];
 
+/*
+Bekendheid + variatie.
+De game berekent dezelfde databasescore als de Analyzer zoveel mogelijk
+rechtstreeks uit de MovieMind-database. Als de Analyzer op hetzelfde domein
+al TMDb-populariteit heeft opgehaald, wordt die bonus ook meegenomen.
+*/
+let actorFameScoreIndex = new Map();
+let actorTitleCountIndex = new Map();
+
+const ACTOR_HISTORY_STORAGE_KEY = "moviemindRecentGridActorsV1";
+const ACTOR_HISTORY_LIMIT = 45;
+let recentActorHistory = loadRecentActorHistory();
+
+/*
+Fotovoorkeur:
+de browser onthoudt welke acteursfoto's eerder wel of niet gevonden zijn.
+Op Makkelijk en Gemiddeld krijgen bekende ontbrekende foto's een flinke
+selectiestraf. Moeilijk blijft toleranter.
+*/
+const ACTOR_PHOTO_STATUS_STORAGE_KEY = "moviemindActorPhotoStatusV1";
+let actorPhotoStatus = loadActorPhotoStatus();
+
 const PLAYED_TOGETHER_CATEGORY = "Speelde samen met...";
 
 const DIFFICULTY_PROFILES = {
@@ -47,7 +69,11 @@ const DIFFICULTY_PROFILES = {
             maximum: Infinity,
             target: 35
         },
-        candidatePool: 35
+        candidatePool: 35,
+        fame: {
+            minimum: 54,
+            maximum: 100
+        }
     },
 
     blockbuster: {
@@ -62,7 +88,11 @@ const DIFFICULTY_PROFILES = {
             maximum: 60,
             target: 24
         },
-        candidatePool: 30
+        candidatePool: 30,
+        fame: {
+            minimum: 50,
+            maximum: 70
+        }
     },
 
     oscarnight: {
@@ -77,7 +107,11 @@ const DIFFICULTY_PROFILES = {
             maximum: 25,
             target: 10
         },
-        candidatePool: 25
+        candidatePool: 25,
+        fame: {
+            minimum: 0,
+            maximum: 53
+        }
     }
 };
 
@@ -831,6 +865,8 @@ function buildLookupCaches() {
     actorDisplayNamesIndex = new Map();
 
     const actorTitleCounts = new Map();
+    const actorGenreSets = new Map();
+    const actorAnswerTotals = new Map();
     const activeGenres = new Set();
 
     const allowedGenres = new Set([
@@ -865,6 +901,25 @@ function buildLookupCaches() {
             actorTitleCounts.set(
                 normalizedActor,
                 (actorTitleCounts.get(normalizedActor) || 0) + 1
+            );
+
+            if (!actorGenreSets.has(normalizedActor)) {
+                actorGenreSets.set(normalizedActor, new Set());
+            }
+
+            item.genre.forEach(function (genre) {
+                if (genre) {
+                    actorGenreSets.get(normalizedActor).add(genre);
+                }
+            });
+
+        });
+
+        uniqueActors.forEach(function (_actorName, normalizedActor) {
+            actorAnswerTotals.set(
+                normalizedActor,
+                (actorAnswerTotals.get(normalizedActor) || 0) +
+                Math.max(0, uniqueActors.size - 1)
             );
         });
 
@@ -942,11 +997,35 @@ function buildLookupCaches() {
         actorAnswerCountIndex.set(key, items.length);
     });
 
+    actorTitleCountIndex = new Map(actorTitleCounts);
+
+    buildActorFameScoreIndex(
+        actorTitleCounts,
+        actorGenreSets,
+        actorAnswerTotals
+    );
+
+    /*
+    Voorheen kwamen alleen acteurs met minimaal 5 titels in aanmerking.
+    Dat beperkte de variatie sterk. Vanaf nu is 2+ titels de basis,
+    precies zoals in de Analyzer bij "speelbare acteurs".
+    De bestaande antwoordlimieten blijven daarna bewaken dat een grid
+    daadwerkelijk voldoende antwoorden heeft.
+    */
     eligibleActorsCache = Array.from(actorTitleCounts.entries())
         .filter(function (entry) {
-            return entry[1] >= 5;
+            return entry[1] >= 2;
         })
         .sort(function (first, second) {
+            const firstScore =
+                actorFameScoreIndex.get(first[0]) || 0;
+            const secondScore =
+                actorFameScoreIndex.get(second[0]) || 0;
+
+            if (secondScore !== firstScore) {
+                return secondScore - firstScore;
+            }
+
             return second[1] - first[1];
         })
         .map(function (entry) {
@@ -974,8 +1053,391 @@ function buildLookupCaches() {
         actorGenreMediaIndex.size,
         "acteur/genre-combinaties en",
         actorCoStarsIndex.size,
-        "acteurs"
+        "acteurs |",
+        eligibleActorsCache.length,
+        "speelbare acteurs (2+ titels)"
     );
+
+    console.log(
+        "Bekendheidspools:",
+        "Makkelijk",
+        eligibleActorsCache.filter(function (actor) {
+            const score = getActorFameScore(actor);
+            return score >= 54;
+        }).length,
+        "| Gemiddeld",
+        eligibleActorsCache.filter(function (actor) {
+            const score = getActorFameScore(actor);
+            return score >= 50 && score <= 70;
+        }).length,
+        "| Moeilijk",
+        eligibleActorsCache.filter(function (actor) {
+            return getActorFameScore(actor) <= 53;
+        }).length
+    );
+}
+
+
+/* =========================================
+   BEKENDHEIDSSCORES
+========================================= */
+
+function buildActorFameScoreIndex(
+    actorTitleCounts,
+    actorGenreSets,
+    actorAnswerTotals
+) {
+    actorFameScoreIndex = new Map();
+
+    const actorRows = [];
+
+    actorTitleCounts.forEach(function (titleCount, normalizedActor) {
+        const genreCount =
+            actorGenreSets.has(normalizedActor)
+                ? actorGenreSets.get(normalizedActor).size
+                : 0;
+
+        const coStars =
+            actorCoStarsIndex.get(normalizedActor) || [];
+
+        const coActorCount = Array.isArray(coStars)
+            ? coStars.length
+            : 0;
+
+        const answerCount =
+            actorAnswerTotals.get(normalizedActor) || 0;
+
+        const rawScore =
+            (titleCount * 5) +
+            (genreCount * 2) +
+            (Math.sqrt(coActorCount) * 3) +
+            Math.sqrt(answerCount);
+
+        actorRows.push({
+            key: normalizedActor,
+            titleCount: titleCount,
+            coActorCount: coActorCount,
+            rawScore: rawScore
+        });
+    });
+
+    const maxRawScore = Math.max(
+        1,
+        ...actorRows.map(function (actor) {
+            return actor.rawScore;
+        })
+    );
+
+    const maxTitles = Math.max(
+        1,
+        ...actorRows.map(function (actor) {
+            return actor.titleCount;
+        })
+    );
+
+    const maxCoActors = Math.max(
+        1,
+        ...actorRows.map(function (actor) {
+            return actor.coActorCount;
+        })
+    );
+
+    const analyzerPopularityByName =
+        loadAnalyzerPopularityByName();
+
+    actorRows.forEach(function (actor) {
+        const databaseComponent = clampNumber(
+            Math.log1p(actor.rawScore) /
+            Math.log1p(maxRawScore) * 50,
+            0,
+            50
+        );
+
+        const titleComponent = clampNumber(
+            Math.log1p(actor.titleCount) /
+            Math.log1p(maxTitles) * 25,
+            0,
+            25
+        );
+
+        const networkComponent = clampNumber(
+            Math.log1p(actor.coActorCount) /
+            Math.log1p(maxCoActors) * 15,
+            0,
+            15
+        );
+
+        const popularity =
+            analyzerPopularityByName.get(actor.key) || 0;
+
+        const popularityComponent =
+            popularity > 0
+                ? clampNumber(
+                    Math.log1p(popularity) /
+                    Math.log1p(250) * 10,
+                    0,
+                    10
+                )
+                : 0;
+
+        const fameScore = Math.round(
+            databaseComponent +
+            titleComponent +
+            networkComponent +
+            popularityComponent
+        );
+
+        actorFameScoreIndex.set(
+            actor.key,
+            clampNumber(fameScore, 0, 100)
+        );
+    });
+
+    console.log(
+        "Bekendheidsscores opgebouwd voor",
+        actorFameScoreIndex.size,
+        "acteurs."
+    );
+}
+
+function loadAnalyzerPopularityByName() {
+    const result = new Map();
+
+    try {
+        const raw = localStorage.getItem(
+            "moviemindAnalyzerActorPopularity"
+        );
+
+        const cache = raw ? JSON.parse(raw) : {};
+
+        Object.values(cache || {}).forEach(function (entry) {
+            if (
+                !entry ||
+                !entry.name ||
+                !Number.isFinite(Number(entry.popularity))
+            ) {
+                return;
+            }
+
+            result.set(
+                normalizeText(entry.name),
+                Number(entry.popularity)
+            );
+        });
+    } catch (error) {
+        console.warn(
+            "Analyzer-populariteit kon niet worden gelezen:",
+            error
+        );
+    }
+
+    return result;
+}
+
+function clampNumber(value, minimum, maximum) {
+    return Math.min(
+        maximum,
+        Math.max(minimum, value)
+    );
+}
+
+function getActorFameScore(actor) {
+    return (
+        actorFameScoreIndex.get(normalizeText(actor)) ||
+        0
+    );
+}
+
+function isActorInDifficultyFameRange(
+    actor,
+    profile = getDifficultyProfile()
+) {
+    const score = getActorFameScore(actor);
+    const range = profile.fame;
+
+    if (!range) {
+        return true;
+    }
+
+    return (
+        score >= range.minimum &&
+        score <= range.maximum
+    );
+}
+
+function getEligibleActorsForDifficulty(
+    profile = getDifficultyProfile()
+) {
+    return eligibleActorsCache.filter(function (actor) {
+        return isActorInDifficultyFameRange(
+            actor,
+            profile
+        );
+    });
+}
+
+
+/* =========================================
+   ACTEURSFOTO-VOORKEUR
+========================================= */
+
+function loadActorPhotoStatus() {
+    try {
+        const raw =
+            localStorage.getItem(ACTOR_PHOTO_STATUS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+
+        return parsed && typeof parsed === "object"
+            ? parsed
+            : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function saveActorPhotoStatus() {
+    try {
+        localStorage.setItem(
+            ACTOR_PHOTO_STATUS_STORAGE_KEY,
+            JSON.stringify(actorPhotoStatus)
+        );
+    } catch (_) {
+        /* Fotogeheugen mag de game nooit blokkeren. */
+    }
+}
+
+function rememberActorPhotoStatus(actor, hasPhoto) {
+    const key = normalizeText(actor);
+
+    if (!key) {
+        return;
+    }
+
+    actorPhotoStatus[key] = hasPhoto ? "yes" : "no";
+    saveActorPhotoStatus();
+}
+
+function getActorPhotoPenalty(actor) {
+    const status =
+        actorPhotoStatus[normalizeText(actor)];
+
+    if (status !== "no") {
+        return 0;
+    }
+
+    /*
+    Een ontbrekende foto maakt herkennen vooral op Makkelijk en
+    Gemiddeld onnodig lastig. Op Moeilijk is de straf bewust kleiner.
+    */
+    if (difficulty === "moviehouse") {
+        return 7000;
+    }
+
+    if (difficulty === "blockbuster") {
+        return 4500;
+    }
+
+    return 500;
+}
+
+
+/* =========================================
+   ANTI-HERHALING / ACTEURSVARIATIE
+========================================= */
+
+function loadRecentActorHistory() {
+    try {
+        const raw =
+            localStorage.getItem(ACTOR_HISTORY_STORAGE_KEY);
+
+        const parsed = raw ? JSON.parse(raw) : [];
+
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed
+            .map(function (name) {
+                return normalizeText(name);
+            })
+            .filter(Boolean)
+            .slice(0, ACTOR_HISTORY_LIMIT);
+    } catch (_) {
+        return [];
+    }
+}
+
+function saveRecentActorHistory() {
+    try {
+        localStorage.setItem(
+            ACTOR_HISTORY_STORAGE_KEY,
+            JSON.stringify(
+                recentActorHistory.slice(
+                    0,
+                    ACTOR_HISTORY_LIMIT
+                )
+            )
+        );
+    } catch (_) {
+        /* Variatiegeheugen mag de game nooit blokkeren. */
+    }
+}
+
+function rememberGridActors(actors) {
+    const normalizedActors = actors
+        .map(normalizeText)
+        .filter(Boolean);
+
+    recentActorHistory = [
+        ...normalizedActors,
+        ...recentActorHistory
+    ].slice(0, ACTOR_HISTORY_LIMIT);
+
+    saveRecentActorHistory();
+}
+
+function getActorRepeatPenalty(actor) {
+    const key = normalizeText(actor);
+
+    if (!key) {
+        return 0;
+    }
+
+    const firstIndex =
+        recentActorHistory.indexOf(key);
+
+    const appearances =
+        recentActorHistory.filter(function (name) {
+            return name === key;
+        }).length;
+
+    let recencyPenalty = 0;
+
+    /*
+    3 namen per grid:
+    0–2   = vorige grid
+    3–8   = ongeveer laatste 3 grids
+    9–17  = ongeveer laatste 6 grids
+    18+   = oudere historie
+    */
+    if (firstIndex >= 0 && firstIndex < 3) {
+        recencyPenalty = 10000;
+    } else if (firstIndex >= 0 && firstIndex < 9) {
+        recencyPenalty = 3500;
+    } else if (firstIndex >= 0 && firstIndex < 18) {
+        recencyPenalty = 900;
+    } else if (firstIndex >= 0) {
+        recencyPenalty = 180;
+    }
+
+    return (
+        recencyPenalty +
+        (appearances * 70)
+    );
+}
+
+function getActorVarietyTieBreaker() {
+    return Math.random();
 }
 
 
@@ -1364,7 +1826,21 @@ function createSmartGrid() {
     columns = smartGrid.actors;
     rows = smartGrid.genres;
 
-    console.log("Nieuw speelbaar bord:", smartGrid);
+    /*
+    Alleen een werkelijk gestart spel wordt aan de historie toegevoegd.
+    Developer-tests roepen findSmartGrid() rechtstreeks aan en vervuilen
+    dit geheugen dus niet.
+    */
+    rememberGridActors(columns);
+
+    console.log(
+        "Nieuw speelbaar bord:",
+        smartGrid,
+        "| bekendheid:",
+        columns.map(function (actor) {
+            return actor + " (" + getActorFameScore(actor) + ")";
+        })
+    );
 
     const corner = document.createElement("div");
     corner.className = "corner";
@@ -1401,15 +1877,67 @@ function createSmartGrid() {
 
 function findSmartGrid() {
     const categories = shuffleArray(getAllCategories());
-    const actors = getEligibleActors();
     const profile = getDifficultyProfile();
 
     /*
-    Tijdens de portrettest maken we eerst gericht een bord
-    waarop de gekozen testacteur voorkomt. Zodra
-    FORCED_TEST_ACTOR op null staat, werkt de generator weer
-    volledig willekeurig zoals voorheen.
+    Eerst zoeken we uitsluitend binnen de bekendheidsgroep die bij
+    de gekozen moeilijkheid hoort:
+    Makkelijk   54–100
+    Gemiddeld   50–70
+    Moeilijk     0–53
+
+    Alleen wanneer zo geen speelbaar bord kan worden gemaakt,
+    valt de generator terug op alle speelbare acteurs. Zo blijft
+    de game robuust wanneer een zeldzame genrecombinatie weinig
+    kandidaten heeft.
     */
+    const difficultyActors =
+        getEligibleActorsForDifficulty(profile);
+
+    const primaryGrid = findSmartGridFromPool(
+        difficultyActors,
+        categories,
+        profile,
+        1000
+    );
+
+    if (primaryGrid) {
+        primaryGrid.usedFameFallback = false;
+        return primaryGrid;
+    }
+
+    console.warn(
+        "Geen grid gevonden binnen de primaire bekendheidsgroep.",
+        profile.label,
+        "Kandidaten:",
+        difficultyActors.length,
+        "— bredere fallback wordt geprobeerd."
+    );
+
+    const fallbackGrid = findSmartGridFromPool(
+        getEligibleActors(),
+        categories,
+        profile,
+        500
+    );
+
+    if (fallbackGrid) {
+        fallbackGrid.usedFameFallback = true;
+    }
+
+    return fallbackGrid;
+}
+
+function findSmartGridFromPool(
+    actors,
+    categories,
+    profile,
+    maximumAttempts
+) {
+    if (!Array.isArray(actors) || actors.length < 3) {
+        return null;
+    }
+
     if (FORCED_TEST_ACTOR) {
         const forcedGrid = findGridWithForcedActor(
             FORCED_TEST_ACTOR,
@@ -1421,16 +1949,13 @@ function findSmartGrid() {
         if (forcedGrid) {
             return forcedGrid;
         }
-
-        console.warn(
-            "Testacteur kon niet worden geforceerd:",
-            FORCED_TEST_ACTOR
-        );
     }
 
-    const maximumAttempts = 1200;
-
-    for (let attempt = 0; attempt < maximumAttempts; attempt++) {
+    for (
+        let attempt = 0;
+        attempt < maximumAttempts;
+        attempt++
+    ) {
         const chosenGenres =
             shuffleArray(categories).slice(0, 3);
 
@@ -1470,13 +1995,9 @@ function findSmartGrid() {
         }
     }
 
-    console.warn(
-        "Geen bord gevonden binnen de gekozen moeilijkheid:",
-        profile.label
-    );
-
     return null;
 }
+
 function findGridWithForcedActor(forcedActor, actors, genres, profile) {
     const actualActor = actors.find(function (actor) {
         return normalizeText(actor) === normalizeText(forcedActor);
@@ -1584,12 +2105,41 @@ function pickBalancedActors(
         return {
             name: actor,
             difficultyDistance: difficultyDistance,
-            totalAnswers: totalAnswers
+            totalAnswers: totalAnswers,
+            repeatPenalty: getActorRepeatPenalty(actor),
+            photoPenalty: getActorPhotoPenalty(actor),
+            varietyTieBreaker: getActorVarietyTieBreaker()
         };
     });
 
     const bestCandidates = scoredActors
         .sort(function (first, second) {
+            /*
+            Variatie krijgt voorrang zolang beide acteurs al aan de
+            inhoudelijke antwoordlimieten voldoen. Daardoor verdwijnt
+            een acteur uit beeld na recent gebruik, zonder dat we
+            ongeldige grids creëren.
+            */
+            if (
+                first.repeatPenalty !==
+                second.repeatPenalty
+            ) {
+                return (
+                    first.repeatPenalty -
+                    second.repeatPenalty
+                );
+            }
+
+            if (
+                first.photoPenalty !==
+                second.photoPenalty
+            ) {
+                return (
+                    first.photoPenalty -
+                    second.photoPenalty
+                );
+            }
+
             if (
                 first.difficultyDistance !==
                 second.difficultyDistance
@@ -1614,7 +2164,10 @@ function pickBalancedActors(
                 );
             }
 
-            return 0;
+            return (
+                first.varietyTieBreaker -
+                second.varietyTieBreaker
+            );
         })
         .slice(0, profile.candidatePool)
         .map(function (item) {
@@ -3406,6 +3959,15 @@ function createActorHeader(actor) {
     portrait.addEventListener("load", function () {
         header.classList.add("actor-header-has-photo");
 
+        /*
+        De placeholder telt niet als echte acteursfoto.
+        */
+        if (
+            !portrait.src.endsWith(ACTOR_PLACEHOLDER_IMAGE)
+        ) {
+            rememberActorPhotoStatus(actor, true);
+        }
+
         const loadedPhoto =
             portrait.currentSrc || portrait.src;
 
@@ -3424,6 +3986,12 @@ function createActorHeader(actor) {
         }
 
         portrait.removeEventListener("error", handleImageError);
+
+        /*
+        Alle echte bestandsvarianten zijn geprobeerd en ontbreken.
+        Dit onthouden we voor volgende grids.
+        */
+        rememberActorPhotoStatus(actor, false);
         portrait.src = ACTOR_PLACEHOLDER_IMAGE;
 
         portrait.addEventListener(

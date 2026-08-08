@@ -21,7 +21,9 @@ const state = {
     searchRequestId: 0,
     searchQuery: "",
     searchPage: 1,
-    searchTotalPages: 1
+    searchTotalPages: 1,
+    selectedFilmographyCredits: new Map(),
+    showOnlyMissingFilmography: false
 };
 
 const DB_NAME = "MovieMindStudio2";
@@ -30,6 +32,14 @@ const HANDLE_STORE = "handles";
 const DATABASE_HANDLE_KEY = "mainDatabase";
 const ACTORS_FOLDER_HANDLE_KEY = "actorsFolder";
 const SELECTED_TYPE_KEY = "moviemindStudioSelectedType";
+const ACTIVITY_LOG_KEY = "moviemindStudioActivityLog";
+const RECENT_ITEMS_KEY = "moviemindStudioRecentItems";
+const MAX_LOG_ITEMS = 10;
+const BULK_PHOTO_MIN_SCORE = 50;
+const BULK_PHOTO_MAX_SCORE = 69;
+const ANALYZER_POPULARITY_CACHE_KEY = "moviemindAnalyzerActorPopularity";
+const BULK_PHOTO_PROGRESS_STORAGE_KEY = "moviemindStudioBulkPhotoProgress50_69V2";
+let bulkScorePhotoRunActive = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     restoreSelectedType();
@@ -40,7 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initialiseMaintenance();
     initialiseDatabaseButtons();
     initialiseActorsFolderButtons();
+    initialiseBulkScorePhotoButton();
     initialiseAddButton();
+    initialiseActivityLog();
     restoreDatabaseConnection();
     restoreActorsFolderConnection();
 });
@@ -449,6 +461,8 @@ function setPreviewLoading(item) {
 }
 
 function renderTitlePreview(details) {
+    setFilmographyVisibility(false);
+
     const title = state.type === "tv"
         ? details.name || details.original_name
         : details.title || details.original_title;
@@ -502,6 +516,642 @@ function renderPersonPreview(details) {
             : "Geen extra foto's gevonden";
 
     renderPersonProfiles(profiles, details.name);
+    renderPersonFilmography(details);
+}
+
+function setFilmographyVisibility(visible) {
+    const section = document.getElementById("filmography-section");
+
+    if (section) {
+        section.hidden = !visible;
+    }
+}
+
+function renderPersonFilmography(details) {
+    const movieCredits = details.movie_credits &&
+        Array.isArray(details.movie_credits.cast)
+        ? details.movie_credits.cast.map((credit) => ({
+            ...credit,
+            media_type: "movie"
+        }))
+        : [];
+    const tvCredits = details.tv_credits &&
+        Array.isArray(details.tv_credits.cast)
+        ? details.tv_credits.cast.map((credit) => ({
+            ...credit,
+            media_type: "tv"
+        }))
+        : [];
+
+    const seen = new Set();
+    const credits = [...movieCredits, ...tvCredits]
+        .filter(isRelevantMovieMindTitle)
+        .filter((credit) => {
+            if (!credit || !credit.id) {
+                return false;
+            }
+
+            const key = credit.media_type + ":" + credit.id;
+
+            if (seen.has(key)) {
+                return false;
+            }
+
+            seen.add(key);
+            return true;
+        })
+        .sort((a, b) => {
+            const dateA =
+                Date.parse(a.release_date || a.first_air_date || "") || 0;
+            const dateB =
+                Date.parse(b.release_date || b.first_air_date || "") || 0;
+
+            if (dateB !== dateA) {
+                return dateB - dateA;
+            }
+
+            const popularityDifference =
+                Number(b.popularity || 0) -
+                Number(a.popularity || 0);
+
+            if (popularityDifference !== 0) {
+                return popularityDifference;
+            }
+
+            return String(
+                a.title ||
+                a.name ||
+                a.original_title ||
+                a.original_name ||
+                ""
+            ).localeCompare(
+                String(
+                    b.title ||
+                    b.name ||
+                    b.original_title ||
+                    b.original_name ||
+                    ""
+                ),
+                "nl"
+            );
+        })
+        .slice(0, 100);
+
+    const container = document.getElementById("filmography-list");
+    const count = document.getElementById("filmography-count");
+    const visibleCredits = state.showOnlyMissingFilmography
+        ? credits.filter((credit) => !isFilmographyCreditInDatabase(credit))
+        : credits;
+
+    state.selectedFilmographyCredits.clear();
+    setFilmographyVisibility(true);
+    ensureFilmographyBulkControls();
+    updateFilmographyMissingFilter();
+
+    if (!container || !count) {
+        return;
+    }
+
+    container.innerHTML = "";
+
+    if (state.showOnlyMissingFilmography) {
+        count.textContent = visibleCredits.length === 1
+            ? "1 ontbrekende titel"
+            : visibleCredits.length + " ontbrekende titels";
+    } else {
+        count.textContent = credits.length === 1
+            ? "1 titel"
+            : credits.length + " titels";
+    }
+
+    if (!visibleCredits.length) {
+        container.innerHTML = state.showOnlyMissingFilmography
+            ? '<div class="filmography-empty">Alle gevonden films en series staan al in MovieMind.</div>'
+            : '<div class="filmography-empty">Geen films of series gevonden.</div>';
+        updateFilmographyBulkButton();
+        return;
+    }
+
+    visibleCredits.forEach((credit) => {
+        const item = document.createElement("article");
+        const checkbox = document.createElement("input");
+        const image = credit.poster_path
+            ? document.createElement("img")
+            : document.createElement("div");
+        const copy = document.createElement("div");
+        const title = document.createElement("strong");
+        const meta = document.createElement("span");
+        const badge = document.createElement("span");
+        const name =
+            credit.title ||
+            credit.name ||
+            credit.original_title ||
+            credit.original_name ||
+            "Titel onbekend";
+        const year = getFilmographyYear(credit);
+        const mediaLabel =
+            credit.media_type === "tv" ? "Serie" : "Film";
+        const key =
+            credit.media_type + ":" + credit.id;
+        const alreadyInDatabase =
+            isFilmographyCreditInDatabase(credit);
+
+        item.className = "filmography-item";
+        item.style.gridTemplateColumns =
+            "24px 48px minmax(0, 1fr) auto";
+
+        checkbox.type = "checkbox";
+        checkbox.className = "filmography-checkbox";
+        checkbox.value = key;
+        checkbox.setAttribute(
+            "aria-label",
+            name + " selecteren"
+        );
+        checkbox.style.width = "18px";
+        checkbox.style.height = "18px";
+        checkbox.style.accentColor = "var(--gold)";
+        checkbox.style.cursor =
+            alreadyInDatabase ? "not-allowed" : "pointer";
+        checkbox.disabled = alreadyInDatabase;
+
+        copy.className = "filmography-copy";
+        badge.className = "filmography-badge";
+        badge.textContent = alreadyInDatabase
+            ? "✓ Al toegevoegd"
+            : credit.media_type === "tv"
+                ? "📺 Serie"
+                : "🎬 Film";
+
+        if (alreadyInDatabase) {
+            item.style.opacity = "0.62";
+        }
+
+        if (credit.poster_path) {
+            image.className = "filmography-poster";
+            image.src =
+                "https://image.tmdb.org/t/p/w92" +
+                credit.poster_path;
+            image.alt = "Poster van " + name;
+            image.loading = "lazy";
+        } else {
+            image.className =
+                "filmography-poster filmography-poster-placeholder";
+            image.textContent =
+                credit.media_type === "tv" ? "📺" : "🎬";
+        }
+
+        title.textContent = name;
+        meta.textContent =
+            (year || "Jaar onbekend") +
+            " · " + mediaLabel +
+            (credit.character
+                ? " · " + credit.character
+                : "");
+
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                state.selectedFilmographyCredits.set(
+                    key,
+                    credit
+                );
+                item.style.background =
+                    "rgba(74, 18, 24, .48)";
+            } else {
+                state.selectedFilmographyCredits.delete(key);
+                item.style.background = "";
+            }
+
+            updateFilmographyBulkButton();
+        });
+
+        item.appendChild(checkbox);
+        item.appendChild(image);
+        copy.appendChild(title);
+        copy.appendChild(meta);
+        item.appendChild(copy);
+        item.appendChild(badge);
+        container.appendChild(item);
+    });
+
+    updateFilmographyBulkButton();
+}
+
+function ensureFilmographyBulkControls() {
+    const section =
+        document.getElementById("filmography-section");
+
+    if (!section) {
+        return;
+    }
+
+    let filterControls =
+        document.getElementById("filmography-filter-controls");
+
+    if (!filterControls) {
+        filterControls = document.createElement("label");
+        filterControls.id = "filmography-filter-controls";
+        filterControls.style.display = "inline-flex";
+        filterControls.style.alignItems = "center";
+        filterControls.style.gap = "8px";
+        filterControls.style.marginTop = "12px";
+        filterControls.style.cursor = "pointer";
+        filterControls.style.color = "var(--text-muted)";
+        filterControls.style.fontSize = "14px";
+
+        const missingCheckbox = document.createElement("input");
+        missingCheckbox.id = "show-only-missing-filmography";
+        missingCheckbox.type = "checkbox";
+        missingCheckbox.style.width = "18px";
+        missingCheckbox.style.height = "18px";
+        missingCheckbox.style.accentColor = "var(--gold)";
+
+        const missingText = document.createElement("span");
+        missingText.textContent = "Toon alleen ontbrekende films en series";
+
+        missingCheckbox.addEventListener("change", () => {
+            state.showOnlyMissingFilmography = missingCheckbox.checked;
+
+            if (state.selectedDetails && state.type === "person") {
+                renderPersonFilmography(state.selectedDetails);
+            }
+        });
+
+        filterControls.appendChild(missingCheckbox);
+        filterControls.appendChild(missingText);
+
+        const list = document.getElementById("filmography-list");
+
+        if (list) {
+            section.insertBefore(filterControls, list);
+        } else {
+            section.appendChild(filterControls);
+        }
+    }
+
+    let controls =
+        document.getElementById("filmography-bulk-controls");
+
+    if (!controls) {
+        controls = document.createElement("div");
+        controls.id = "filmography-bulk-controls";
+        controls.style.display = "flex";
+        controls.style.alignItems = "center";
+        controls.style.justifyContent = "space-between";
+        controls.style.gap = "12px";
+        controls.style.marginTop = "12px";
+
+        const selectedText =
+            document.createElement("span");
+        selectedText.id =
+            "filmography-selected-count";
+        selectedText.style.color = "var(--text-muted)";
+        selectedText.style.fontSize = "13px";
+
+        const button =
+            document.createElement("button");
+        button.id =
+            "add-filmography-selected-button";
+        button.type = "button";
+        button.className = "primary-button";
+        button.disabled = true;
+        button.textContent =
+            "＋ Geselecteerde titels toevoegen";
+
+        button.addEventListener(
+            "click",
+            addSelectedFilmographyTitles
+        );
+
+        controls.appendChild(selectedText);
+        controls.appendChild(button);
+        section.appendChild(controls);
+    }
+}
+
+function updateFilmographyMissingFilter() {
+    const checkbox = document.getElementById(
+        "show-only-missing-filmography"
+    );
+
+    if (checkbox) {
+        checkbox.checked = state.showOnlyMissingFilmography;
+        checkbox.disabled = !state.database;
+    }
+}
+
+function updateFilmographyBulkButton() {
+    const button =
+        document.getElementById(
+            "add-filmography-selected-button"
+        );
+    const count =
+        document.getElementById(
+            "filmography-selected-count"
+        );
+    const selectedCount =
+        state.selectedFilmographyCredits.size;
+    const databaseReady =
+        Boolean(state.databaseHandle && state.database);
+
+    if (count) {
+        count.textContent = selectedCount === 1
+            ? "1 titel geselecteerd"
+            : selectedCount + " titels geselecteerd";
+    }
+
+    if (button) {
+        button.disabled =
+            selectedCount === 0 || !databaseReady;
+        button.textContent = selectedCount
+            ? "＋ " + selectedCount +
+                (selectedCount === 1
+                    ? " titel toevoegen"
+                    : " titels toevoegen")
+            : "＋ Geselecteerde titels toevoegen";
+    }
+}
+
+function isFilmographyCreditInDatabase(credit) {
+    const mediaType =
+        credit.media_type === "tv" ? "tv" : "movie";
+
+    return state.records.some((record) => {
+        return String(record.id) === String(credit.id) &&
+            normaliseMediaType(record.media_type) === mediaType;
+    });
+}
+
+function normaliseMediaType(value) {
+    const type = String(value || "").toLowerCase();
+
+    if (["tv", "series", "serie", "show"].includes(type)) {
+        return "tv";
+    }
+
+    return "movie";
+}
+
+async function addSelectedFilmographyTitles() {
+    const button =
+        document.getElementById(
+            "add-filmography-selected-button"
+        );
+    const selectedCredits =
+        Array.from(state.selectedFilmographyCredits.values());
+
+    if (!selectedCredits.length) {
+        showToast(
+            "Selecteer eerst één of meer titels.",
+            "error"
+        );
+        return;
+    }
+
+    if (!state.databaseHandle || !state.database) {
+        showToast(
+            "Koppel eerst de database in Stap 4.",
+            "error"
+        );
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Titels ophalen en toevoegen...";
+
+    const addedRecords = [];
+    let skipped = 0;
+    let failed = 0;
+
+    for (const credit of selectedCredits) {
+        try {
+            if (isFilmographyCreditInDatabase(credit)) {
+                skipped += 1;
+                continue;
+            }
+
+            const details = await fetchTmdbTitleDetails(
+                credit.media_type,
+                credit.id
+            );
+            const record = createTitleRecordForType(
+                details,
+                credit.media_type
+            );
+
+            if (isDuplicateRecord(record)) {
+                skipped += 1;
+                continue;
+            }
+
+            state.records.push(record);
+            addedRecords.push(record);
+        } catch (error) {
+            console.error(
+                "Filmografietitel toevoegen mislukt:",
+                credit,
+                error
+            );
+            failed += 1;
+        }
+    }
+
+    if (!addedRecords.length) {
+        updateFilmographyBulkButton();
+
+        showToast(
+            skipped
+                ? "De geselecteerde titels staan al in de database."
+                : "Geen titels konden worden toegevoegd.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        await writeDatabase();
+        const refreshedFile =
+            await state.databaseHandle.getFile();
+        updateStatistics(refreshedFile);
+
+        addedRecords.forEach(addRecentItem);
+        state.selectedFilmographyCredits.clear();
+
+        if (state.selectedDetails && state.type === "person") {
+            renderPersonFilmography(state.selectedDetails);
+        }
+
+        let message =
+            addedRecords.length === 1
+                ? "1 titel is toegevoegd en opgeslagen."
+                : addedRecords.length +
+                    " titels zijn toegevoegd en opgeslagen.";
+
+        if (skipped) {
+            message += " " + skipped +
+                (skipped === 1
+                    ? " titel stond al in de database."
+                    : " titels stonden al in de database.");
+        }
+
+        if (failed) {
+            message += " " + failed +
+                (failed === 1
+                    ? " titel kon niet worden opgehaald."
+                    : " titels konden niet worden opgehaald.");
+        }
+
+        showToast(message, "success");
+    } catch (error) {
+        addedRecords.forEach((record) => {
+            state.records =
+                state.records.filter(
+                    (item) => item !== record
+                );
+        });
+
+        console.error(error);
+        showToast(
+            "Opslaan is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+        updateFilmographyBulkButton();
+    }
+}
+
+
+function isRelevantMovieMindTitle(credit) {
+    if (!credit || !credit.id) {
+        return false;
+    }
+
+    const title = String(
+        credit.title ||
+        credit.name ||
+        credit.original_title ||
+        credit.original_name ||
+        ""
+    ).toLocaleLowerCase("en-US");
+    const character = String(
+        credit.character || ""
+    ).toLocaleLowerCase("en-US");
+    const genreIds = Array.isArray(credit.genre_ids)
+        ? credit.genre_ids.map(Number)
+        : [];
+
+    const blockedCharacterParts = [
+        "self",
+        "himself",
+        "herself",
+        "narrator",
+        "host",
+        "presenter",
+        "interviewer",
+        "interviewee",
+        "archive footage",
+        "archive audio",
+        "voice of self",
+        "contestant",
+        "panelist",
+        "guest",
+        "judge"
+    ];
+
+    if (blockedCharacterParts.some((part) => character.includes(part))) {
+        return false;
+    }
+
+    const blockedTitleParts = [
+        "the tonight show",
+        "tonight show",
+        "jimmy kimmel live",
+        "late night with",
+        "late show with",
+        "the late late show",
+        "graham norton show",
+        "the daily show",
+        "good morning america",
+        "live with kelly",
+        "the view",
+
+        // WWE-programma's, evenementen en specials.
+        "wwe",
+        "world wrestling entertainment",
+        "world wrestling federation",
+        "wrestlemania",
+        "royal rumble",
+        "survivor series",
+        "summerslam",
+        "summer slam",
+        "money in the bank",
+        "elimination chamber",
+        "extreme rules",
+        "clash of champions",
+        "night of champions",
+        "crown jewel",
+        "tribute to the troops",
+        "greatest royal rumble",
+        "king of the ring",
+        "hell in a cell",
+        "tables ladders & chairs",
+        "tables, ladders & chairs",
+        "tlc: tables",
+        "fastlane",
+        "wrestling backlash",
+        "wrestling payback",
+        "wrestling no mercy",
+        "wrestling armageddon",
+        "wrestling judgment day",
+        "wrestling vengeance",
+        "wrestling unforgiven",
+        "wrestling over the limit",
+        "wrestling breaking point",
+        "wrestling bragging rights",
+        "wrestling fatal 4-way",
+        "wrestling capitol punishment",
+        "wrestling roadblock",
+        "wrestling battleground",
+
+        "academy awards",
+        "the oscars",
+        "golden globe awards",
+        "emmy awards",
+        "grammy awards",
+        "mtv movie",
+        "mtv video music awards",
+        "red carpet",
+        "behind the scenes",
+        "making of"
+    ];
+
+    if (blockedTitleParts.some((part) => title.includes(part))) {
+        return false;
+    }
+
+    const blockedTvGenreIds = new Set([
+        10763, // News
+        10764, // Reality
+        10767  // Talk
+    ]);
+
+    if (
+        credit.media_type === "tv" &&
+        genreIds.some((genreId) => blockedTvGenreIds.has(genreId))
+    ) {
+        return false;
+    }
+
+    if (Number(credit.vote_count || 0) < 5) {
+        return false;
+    }
+
+    return true;
+}
+
+function getFilmographyYear(credit) {
+    const date = credit.release_date || credit.first_air_date || "";
+    const year = Number(String(date).slice(0, 4));
+    return Number.isFinite(year) ? year : 0;
 }
 
 function setPoster(path, title) {
@@ -622,6 +1272,581 @@ function renderPersonProfiles(profiles, personName) {
 }
 
 
+
+/* =========================================================
+   EENMALIGE BULKFOTO'S SCORE 50–69
+========================================================= */
+
+function initialiseBulkScorePhotoButton() {
+    const button = document.getElementById("bulk-score-photos-button");
+
+    if (!button) return;
+
+    button.addEventListener("click", downloadMissingScoreBandActorPhotos);
+    updateBulkScorePhotoUi();
+}
+
+function updateBulkScorePhotoUi(message = "") {
+    const button = document.getElementById("bulk-score-photos-button");
+    const status = document.getElementById("bulk-score-photos-status");
+
+    if (!button || !status) return;
+
+    const ready = Boolean(
+        state.database &&
+        state.records.length &&
+        state.actorsFolderHandle &&
+        MOVIEMIND_API_KEY
+    );
+
+    button.disabled = !ready || bulkScorePhotoRunActive;
+
+    if (message) {
+        status.textContent = message;
+    } else if (bulkScorePhotoRunActive) {
+        status.textContent = "Bulkactie is bezig. Laat dit tabblad open tot de eindmelding verschijnt.";
+    } else if (!state.database || !state.records.length) {
+        status.textContent = "Koppel eerst de MovieMind-database.";
+    } else if (!state.actorsFolderHandle) {
+        status.textContent = "Koppel eerst game/images/actors.";
+    } else if (!MOVIEMIND_API_KEY) {
+        status.textContent = "TMDB_API_KEY ontbreekt.";
+    } else {
+        const saved = loadBulkPhotoProgress();
+        if (saved && saved.completed === false && saved.nextIndex > 0) {
+            status.textContent =
+                "Vorige bulkactie stopte bij " +
+                saved.nextIndex + "/" + saved.total +
+                ". Klik om veilig te hervatten; reeds aanwezige foto's worden overgeslagen.";
+        } else {
+            status.textContent = "Klaar voor de eenmalige controle van score 50–69.";
+        }
+    }
+
+    restoreBulkPhotoProgressUi();
+}
+
+function loadBulkPhotoProgress() {
+    try {
+        const raw = localStorage.getItem(BULK_PHOTO_PROGRESS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+
+        return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function saveBulkPhotoProgress(progress) {
+    try {
+        localStorage.setItem(
+            BULK_PHOTO_PROGRESS_STORAGE_KEY,
+            JSON.stringify(progress)
+        );
+    } catch (_) {
+        /* Voortgang mag de bulkactie nooit blokkeren. */
+    }
+}
+
+function clearBulkPhotoProgress() {
+    try {
+        localStorage.removeItem(BULK_PHOTO_PROGRESS_STORAGE_KEY);
+    } catch (_) {}
+}
+
+function restoreBulkPhotoProgressUi() {
+    const progress = loadBulkPhotoProgress();
+
+    if (!progress) return;
+
+    renderBulkPhotoProgress(progress);
+}
+
+function renderBulkPhotoProgress(progress) {
+    const panel = document.getElementById("bulk-score-photos-progress");
+    const counter = document.getElementById("bulk-score-photos-counter");
+    const percent = document.getElementById("bulk-score-photos-percent");
+    const bar = document.getElementById("bulk-score-photos-bar");
+    const current = document.getElementById("bulk-score-photos-current");
+
+    if (!panel || !counter || !percent || !bar || !current) return;
+
+    panel.hidden = false;
+
+    const total = Math.max(0, Number(progress.total || 0));
+    const processed = Math.max(
+        0,
+        Math.min(total, Number(progress.nextIndex || 0))
+    );
+    const percentage = total
+        ? Math.round(processed / total * 100)
+        : 0;
+
+    counter.textContent =
+        processed.toLocaleString("nl-NL") +
+        " / " +
+        total.toLocaleString("nl-NL");
+
+    percent.textContent = percentage + "%";
+    bar.style.width = percentage + "%";
+
+    if (progress.completed) {
+        current.textContent = "Klaar.";
+    } else if (progress.currentActor) {
+        current.textContent =
+            "Nu: " + progress.currentActor +
+            (progress.currentScore !== undefined
+                ? " · score " + progress.currentScore
+                : "");
+    } else {
+        current.textContent = "Voorbereiden…";
+    }
+
+    setBulkPhotoStat("bulk-stat-downloaded", progress.downloaded);
+    setBulkPhotoStat("bulk-stat-existing", progress.existing);
+    setBulkPhotoStat("bulk-stat-no-photo", progress.noPhoto);
+    setBulkPhotoStat("bulk-stat-failed", progress.failed);
+}
+
+function setBulkPhotoStat(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = Number(value || 0).toLocaleString("nl-NL");
+}
+
+function makeInitialBulkPhotoProgress(total) {
+    return {
+        total,
+        nextIndex: 0,
+        downloaded: 0,
+        existing: 0,
+        noPhoto: 0,
+        failed: 0,
+        currentActor: "",
+        currentScore: null,
+        completed: false,
+        startedAt: Date.now()
+    };
+}
+
+function buildStudioActorMetrics() {
+    const actors = new Map();
+
+    state.records.forEach((record) => {
+        const names = getRecordActorNames(record);
+        const uniqueNames = new Map();
+
+        names.forEach((name) => {
+            const key = normaliseStudioActorKey(name);
+            if (key && !uniqueNames.has(key)) uniqueNames.set(key, name);
+        });
+
+        uniqueNames.forEach((name, key) => {
+            if (!actors.has(key)) {
+                actors.set(key, {
+                    key,
+                    name,
+                    titleCount: 0,
+                    genres: new Set(),
+                    coActors: new Set(),
+                    answerTotal: 0
+                });
+            }
+
+            const actor = actors.get(key);
+            actor.titleCount += 1;
+
+            getRecordGenres(record).forEach((genre) => actor.genres.add(genre));
+
+            uniqueNames.forEach((_coName, coKey) => {
+                if (coKey !== key) actor.coActors.add(coKey);
+            });
+
+            actor.answerTotal += Math.max(0, uniqueNames.size - 1);
+        });
+    });
+
+    return actors;
+}
+
+function getRecordActorNames(record) {
+    const values = [];
+
+    [record.actors, record.cast, record.cast_details].forEach((source) => {
+        if (source === null || source === undefined) return;
+
+        const list = Array.isArray(source) ? source : [source];
+
+        list.forEach((value) => {
+            const name = typeof value === "object" && value !== null
+                ? value.name || value.actor || ""
+                : value;
+
+            if (String(name || "").trim()) values.push(String(name).trim());
+        });
+    });
+
+    return values;
+}
+
+function getRecordGenres(record) {
+    const source = record.genre || record.genres || [];
+    const list = Array.isArray(source) ? source : [source];
+
+    return list
+        .map((value) => typeof value === "object" && value !== null
+            ? value.name || ""
+            : value)
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+}
+
+function normaliseStudioActorKey(value) {
+    return String(value || "")
+        .trim()
+        .toLocaleLowerCase("nl-NL");
+}
+
+function loadAnalyzerPopularityByNameForStudio() {
+    const result = new Map();
+
+    try {
+        const cache = JSON.parse(
+            localStorage.getItem(ANALYZER_POPULARITY_CACHE_KEY) || "{}"
+        );
+
+        Object.values(cache || {}).forEach((entry) => {
+            if (!entry || !entry.name) return;
+
+            result.set(
+                normaliseStudioActorKey(entry.name),
+                {
+                    tmdbId: entry.tmdbId || null,
+                    popularity: Number(entry.popularity || 0)
+                }
+            );
+        });
+    } catch (error) {
+        console.warn("Analyzer-populariteit kon niet worden gelezen:", error);
+    }
+
+    return result;
+}
+
+function calculateStudioActorScores(actorMap) {
+    const actors = Array.from(actorMap.values()).filter((actor) => actor.titleCount >= 2);
+    const popularity = loadAnalyzerPopularityByNameForStudio();
+
+    const rawRows = actors.map((actor) => {
+        const rawScore =
+            (actor.titleCount * 5) +
+            (actor.genres.size * 2) +
+            (Math.sqrt(actor.coActors.size) * 3) +
+            Math.sqrt(actor.answerTotal);
+
+        return { actor, rawScore };
+    });
+
+    const maxRaw = Math.max(1, ...rawRows.map((row) => row.rawScore));
+    const maxTitles = Math.max(1, ...actors.map((actor) => actor.titleCount));
+    const maxCoActors = Math.max(1, ...actors.map((actor) => actor.coActors.size));
+
+    return rawRows.map(({ actor, rawScore }) => {
+        const cached = popularity.get(actor.key) || {};
+        const databaseComponent =
+            Math.log1p(rawScore) / Math.log1p(maxRaw) * 50;
+        const titleComponent =
+            Math.log1p(actor.titleCount) / Math.log1p(maxTitles) * 25;
+        const networkComponent =
+            Math.log1p(actor.coActors.size) / Math.log1p(maxCoActors) * 15;
+        const popularityComponent = cached.popularity > 0
+            ? Math.min(
+                10,
+                Math.log1p(cached.popularity) / Math.log1p(250) * 10
+            )
+            : 0;
+
+        return {
+            ...actor,
+            tmdbId: cached.tmdbId || null,
+            fameScore: Math.max(
+                0,
+                Math.min(
+                    100,
+                    Math.round(
+                        databaseComponent +
+                        titleComponent +
+                        networkComponent +
+                        popularityComponent
+                    )
+                )
+            )
+        };
+    });
+}
+
+async function actorPhotoExists(filename) {
+    try {
+        await state.actorsFolderHandle.getFileHandle(filename);
+        return true;
+    } catch (error) {
+        if (error && error.name === "NotFoundError") return false;
+        throw error;
+    }
+}
+
+async function findTmdbPersonForBulkPhoto(actor) {
+    if (actor.tmdbId) {
+        try {
+            const response = await fetch(
+                "https://api.themoviedb.org/3/person/" +
+                encodeURIComponent(actor.tmdbId) +
+                "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+                "&language=en-US"
+            );
+
+            if (response.ok) {
+                const details = await response.json();
+                if (details && details.profile_path) return details;
+            }
+        } catch (_) {
+            // Zoek op naam als directe lookup mislukt.
+        }
+    }
+
+    const response = await fetch(
+        "https://api.themoviedb.org/3/search/person" +
+        "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+        "&language=en-US&include_adult=false&query=" +
+        encodeURIComponent(actor.name)
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status);
+    }
+
+    const payload = await response.json();
+    const results = Array.isArray(payload.results) ? payload.results : [];
+
+    const exact = results.find((item) =>
+        normaliseStudioActorKey(item.name) === actor.key &&
+        item.profile_path
+    );
+
+    return exact || results.find((item) => item.profile_path) || null;
+}
+
+async function saveBulkActorPhoto(actor, tmdbPerson) {
+    const filename = createActorPhotoBaseName(actor.name) + ".jpg";
+
+    if (await actorPhotoExists(filename)) {
+        return { status: "existing", filename };
+    }
+
+    if (!tmdbPerson || !tmdbPerson.profile_path) {
+        return { status: "no-photo", filename };
+    }
+
+    const response = await fetch(
+        "https://image.tmdb.org/t/p/original" + tmdbPerson.profile_path
+    );
+
+    if (!response.ok) {
+        throw new Error("afbeelding gaf foutcode " + response.status);
+    }
+
+    const blob = await response.blob();
+    const fileHandle = await state.actorsFolderHandle.getFileHandle(
+        filename,
+        { create: true }
+    );
+    const writable = await fileHandle.createWritable();
+
+    try {
+        await writable.write(blob);
+        await writable.close();
+    } catch (error) {
+        try { await writable.abort(); } catch (_) {}
+        throw error;
+    }
+
+    return { status: "downloaded", filename };
+}
+
+async function downloadMissingScoreBandActorPhotos() {
+    const button = document.getElementById("bulk-score-photos-button");
+
+    if (bulkScorePhotoRunActive) return;
+
+    if (!state.database || !state.records.length) {
+        showToast("Koppel eerst de database.", "error");
+        return;
+    }
+
+    if (!state.actorsFolderHandle) {
+        showToast("Koppel eerst de acteursmap.", "error");
+        return;
+    }
+
+    const permission = await ensurePermission(state.actorsFolderHandle, true);
+
+    if (!permission) {
+        showToast("Geen toestemming om in de acteursmap te schrijven.", "error");
+        return;
+    }
+
+    const actors = calculateStudioActorScores(buildStudioActorMetrics())
+        .filter((actor) =>
+            actor.fameScore >= BULK_PHOTO_MIN_SCORE &&
+            actor.fameScore <= BULK_PHOTO_MAX_SCORE
+        )
+        .sort((a, b) => {
+            if (b.fameScore !== a.fameScore) return b.fameScore - a.fameScore;
+            return a.name.localeCompare(b.name, "nl");
+        });
+
+    if (!actors.length) {
+        showToast("Geen speelbare acteurs met score 50–69 gevonden.", "error");
+        return;
+    }
+
+    let progress = loadBulkPhotoProgress();
+
+    /*
+    Hervatten is veilig omdat de acteurslijst deterministisch wordt gesorteerd.
+    Is de oude voortgang niet meer passend bij de huidige lijst, dan beginnen
+    we opnieuw. Bestaande bestanden worden sowieso overgeslagen.
+    */
+    if (
+        !progress ||
+        progress.completed ||
+        Number(progress.total) !== actors.length ||
+        Number(progress.nextIndex) < 0 ||
+        Number(progress.nextIndex) > actors.length
+    ) {
+        progress = makeInitialBulkPhotoProgress(actors.length);
+    }
+
+    bulkScorePhotoRunActive = true;
+    button.disabled = true;
+    button.textContent = progress.nextIndex > 0
+        ? "⏳ Bulkfoto's hervatten..."
+        : "⏳ Foto's aanvullen...";
+
+    saveBulkPhotoProgress(progress);
+    renderBulkPhotoProgress(progress);
+
+    const isResume = progress.nextIndex > 0;
+
+    addActivityLog(
+        (isResume ? "Bulkfoto's 50–69 hervat bij " : "Bulkfoto's 50–69 gestart voor ") +
+        (isResume
+            ? (progress.nextIndex + "/" + actors.length + ".")
+            : (actors.length.toLocaleString("nl-NL") + " acteurs.")),
+        "info"
+    );
+
+    updateBulkScorePhotoUi(
+        isResume
+            ? "Bulkactie hervat. Laat dit tabblad open."
+            : "Bulkactie gestart. Laat dit tabblad open."
+    );
+
+    try {
+        for (
+            let index = Number(progress.nextIndex || 0);
+            index < actors.length;
+            index++
+        ) {
+            const actor = actors[index];
+
+            progress.currentActor = actor.name;
+            progress.currentScore = actor.fameScore;
+            renderBulkPhotoProgress(progress);
+
+            try {
+                const filename =
+                    createActorPhotoBaseName(actor.name) + ".jpg";
+
+                if (await actorPhotoExists(filename)) {
+                    progress.existing += 1;
+                } else {
+                    const tmdbPerson =
+                        await findTmdbPersonForBulkPhoto(actor);
+
+                    const result =
+                        await saveBulkActorPhoto(actor, tmdbPerson);
+
+                    if (result.status === "downloaded") {
+                        progress.downloaded += 1;
+                    } else if (result.status === "no-photo") {
+                        progress.noPhoto += 1;
+                    } else {
+                        progress.existing += 1;
+                    }
+                }
+            } catch (error) {
+                progress.failed += 1;
+                console.warn(
+                    "Bulkfoto mislukt voor " + actor.name + ":",
+                    error
+                );
+            }
+
+            /*
+            Cruciaal: pas NA iedere acteur schuiven we het hervatpunt op
+            en schrijven we het naar localStorage. Bij een refresh gaat
+            maximaal één acteur opnieuw, en die wordt dan als bestaand
+            bestand herkend als hij al was opgeslagen.
+            */
+            progress.nextIndex = index + 1;
+            saveBulkPhotoProgress(progress);
+            renderBulkPhotoProgress(progress);
+
+            await new Promise((resolve) =>
+                window.setTimeout(resolve, 120)
+            );
+        }
+
+        progress.completed = true;
+        progress.currentActor = "";
+        progress.currentScore = null;
+        progress.finishedAt = Date.now();
+
+        saveBulkPhotoProgress(progress);
+        renderBulkPhotoProgress(progress);
+
+        const summary =
+            "Klaar · " + progress.downloaded + " gedownload · " +
+            progress.existing + " bestonden al · " +
+            progress.noPhoto + " zonder TMDB-foto · " +
+            progress.failed + " mislukt.";
+
+        addActivityLog(
+            "Bulkfoto's 50–69: " + summary,
+            progress.failed ? "warning" : "success"
+        );
+
+        showToast(
+            summary,
+            progress.failed ? "error" : "success"
+        );
+
+        updateBulkScorePhotoUi(summary);
+
+        /*
+        De eindstand blijft zichtbaar in het voortgangsblok. Bij een
+        volgende klik start een volledig nieuwe controle, maar bestaande
+        foto's worden nog steeds overgeslagen.
+        */
+    } finally {
+        bulkScorePhotoRunActive = false;
+        button.disabled = false;
+        button.textContent =
+            "📸 Ontbrekende foto's 50–69 aanvullen";
+    }
+}
+
+
 /* =========================================================
    ACTEURSMAP KOPPELEN
 ========================================================= */
@@ -723,6 +1948,11 @@ async function restoreActorsFolderConnection() {
         }
 
         updateActorsFolderUi("online");
+        addActivityLog(
+            "Acteursmap automatisch geladen: " +
+                (handle.name || "acteursmap"),
+            "success"
+        );
     } catch (error) {
         console.warn(
             "Acteursmap automatisch herstellen mislukt:",
@@ -763,6 +1993,7 @@ async function requestSavedActorsFolderPermission() {
 }
 
 function updateActorsFolderUi(stateName) {
+    window.setTimeout(() => updateBulkScorePhotoUi(), 0);
     const connectButton =
         document.getElementById("connect-actors-folder-button");
     const reconnectButton =
@@ -997,6 +2228,11 @@ async function restoreDatabaseConnection() {
 
         await loadDatabaseFromHandle(handle);
         updateDatabaseConnectionUi("online");
+        addActivityLog(
+            "Database automatisch geladen: " +
+                (handle.name || "MovieMind-database"),
+            "success"
+        );
     } catch (error) {
         console.warn("Automatisch herstellen mislukt:", error);
         updateDatabaseConnectionUi("permission");
@@ -1108,6 +2344,13 @@ async function loadDatabaseFromHandle(handle) {
     if (addButton) {
         addButton.disabled = !state.selectedDetails;
     }
+
+    updateFilmographyBulkButton();
+    updateFilmographyMissingFilter();
+
+    if (state.selectedDetails && state.type === "person") {
+        renderPersonFilmography(state.selectedDetails);
+    }
 }
 
 function extractRecords(database) {
@@ -1187,6 +2430,7 @@ async function testDatabaseWriteAccess() {
 }
 
 function updateDatabaseConnectionUi(stateName) {
+    window.setTimeout(() => updateBulkScorePhotoUi(), 0);
     const chip = document.getElementById("database-chip");
     const title = document.getElementById("database-chip-title");
     const text = document.getElementById("database-chip-text");
@@ -1361,6 +2605,7 @@ async function addSelectedResult() {
         await writeDatabase();
         const refreshedFile = await state.databaseHandle.getFile();
         updateStatistics(refreshedFile);
+        addRecentItem(record);
         if (state.type === "person") {
             try {
                 const downloadedFilename =
@@ -1404,14 +2649,28 @@ async function addSelectedResult() {
 }
 
 function createTitleRecord(details) {
-    const cast = details.credits && Array.isArray(details.credits.cast)
-        ? details.credits.cast.slice(0, 8)
-        : [];
-    const crew = details.credits && Array.isArray(details.credits.crew)
-        ? details.credits.crew
-        : [];
-    const directors = crew.filter((person) => person.job === "Director");
-    const isTv = state.type === "tv";
+    return createTitleRecordForType(
+        details,
+        state.type
+    );
+}
+
+function createTitleRecordForType(details, mediaType) {
+    const cast =
+        details.credits &&
+        Array.isArray(details.credits.cast)
+            ? details.credits.cast.slice(0, 8)
+            : [];
+    const crew =
+        details.credits &&
+        Array.isArray(details.credits.crew)
+            ? details.credits.crew
+            : [];
+    const directors =
+        crew.filter(
+            (person) => person.job === "Director"
+        );
+    const isTv = mediaType === "tv";
 
     return {
         id: details.id,
@@ -1419,13 +2678,23 @@ function createTitleRecord(details) {
             ? details.name || details.original_name
             : details.title || details.original_title,
         year: Number(
-            ((isTv ? details.first_air_date : details.release_date) || "")
-                .slice(0, 4)
+            (
+                (
+                    isTv
+                        ? details.first_air_date
+                        : details.release_date
+                ) || ""
+            ).slice(0, 4)
         ) || null,
-        genre: (details.genres || []).map((genre) => genre.name),
-        director: directors.map((person) => person.name),
-        actors: cast.map((person) => person.name).filter(Boolean),
-        characters: cast.map((person) => person.character || ""),
+        genre: (details.genres || [])
+            .map((genre) => genre.name),
+        director: directors
+            .map((person) => person.name),
+        actors: cast
+            .map((person) => person.name)
+            .filter(Boolean),
+        characters: cast
+            .map((person) => person.character || ""),
         poster_path: details.poster_path || null,
         backdrop_path: details.backdrop_path || null,
         overview: details.overview || "",
@@ -1664,6 +2933,219 @@ async function getSavedHandle() {
 
 
 /* =========================================================
+   ACTIVITEITENLOG + RECENT TOEGEVOEGD
+========================================================= */
+
+function initialiseActivityLog() {
+    const clearButton =
+        document.getElementById("clear-activity-log-button");
+
+    if (clearButton) {
+        clearButton.addEventListener("click", clearActivityLog);
+    }
+
+    renderActivityLog();
+    renderRecentItems();
+}
+
+function addActivityLog(message, type = "info") {
+    const entries = getStoredActivityLog();
+
+    entries.unshift({
+        message: String(message || "Onbekende activiteit"),
+        type: ["success", "error", "warning", "info"].includes(type)
+            ? type
+            : "info",
+        createdAt: new Date().toISOString()
+    });
+
+    try {
+        localStorage.setItem(
+            ACTIVITY_LOG_KEY,
+            JSON.stringify(entries.slice(0, MAX_LOG_ITEMS))
+        );
+    } catch (error) {
+        console.warn("Activiteitenlog kon niet worden opgeslagen:", error);
+    }
+
+    renderActivityLog();
+}
+
+function getStoredActivityLog() {
+    try {
+        const stored = JSON.parse(
+            localStorage.getItem(ACTIVITY_LOG_KEY) || "[]"
+        );
+
+        return Array.isArray(stored) ? stored : [];
+    } catch (error) {
+        console.warn("Activiteitenlog kon niet worden gelezen:", error);
+        return [];
+    }
+}
+
+function renderActivityLog() {
+    const log = document.getElementById("activity-log");
+
+    if (!log) {
+        return;
+    }
+
+    const entries = getStoredActivityLog().slice(0, MAX_LOG_ITEMS);
+    log.innerHTML = "";
+
+    if (!entries.length) {
+        log.innerHTML =
+            '<div class="activity-log-empty" id="activity-log-empty">' +
+                "Nog geen activiteiten uitgevoerd." +
+            "</div>";
+        return;
+    }
+
+    entries.forEach((item) => {
+        const entry = document.createElement("div");
+        const icon = item.type === "success"
+            ? "✓"
+            : item.type === "error"
+                ? "✖"
+                : item.type === "warning"
+                    ? "⚠"
+                    : "•";
+
+        entry.className = "activity-log-entry " + item.type;
+        entry.textContent =
+            formatLogTime(new Date(item.createdAt)) +
+            " · " + icon + " " + item.message;
+        log.appendChild(entry);
+    });
+
+    log.scrollTop = 0;
+}
+
+function clearActivityLog() {
+    try {
+        localStorage.removeItem(ACTIVITY_LOG_KEY);
+    } catch (error) {
+        console.warn("Activiteitenlog kon niet worden gewist:", error);
+    }
+
+    renderActivityLog();
+}
+
+function addRecentItem(record) {
+    if (!record) {
+        return;
+    }
+
+    const recentItems = getStoredRecentItems();
+    const item = {
+        title: String(record.title || "Onbekende titel"),
+        year: record.year || null,
+        mediaType: String(record.media_type || "movie"),
+        addedAt: new Date().toISOString()
+    };
+
+    const deduplicated = recentItems.filter((existing) => {
+        return !(
+            existing.title === item.title &&
+            existing.mediaType === item.mediaType
+        );
+    });
+
+    deduplicated.unshift(item);
+
+    try {
+        localStorage.setItem(
+            RECENT_ITEMS_KEY,
+            JSON.stringify(deduplicated.slice(0, MAX_LOG_ITEMS))
+        );
+    } catch (error) {
+        console.warn("Recent toegevoegd kon niet worden opgeslagen:", error);
+    }
+
+    renderRecentItems();
+}
+
+function getStoredRecentItems() {
+    try {
+        const stored = JSON.parse(
+            localStorage.getItem(RECENT_ITEMS_KEY) || "[]"
+        );
+
+        return Array.isArray(stored) ? stored : [];
+    } catch (error) {
+        console.warn("Recent toegevoegd kon niet worden gelezen:", error);
+        return [];
+    }
+}
+
+function renderRecentItems() {
+    const container = document.getElementById("recent-items-list");
+
+    if (!container) {
+        return;
+    }
+
+    const recentItems = getStoredRecentItems().slice(0, MAX_LOG_ITEMS);
+    container.innerHTML = "";
+
+    if (!recentItems.length) {
+        container.innerHTML =
+            '<div class="activity-log-empty" id="recent-items-empty">' +
+                "Nog niets toegevoegd." +
+            "</div>";
+        return;
+    }
+
+    recentItems.forEach((item) => {
+        const row = document.createElement("div");
+        const time = document.createElement("span");
+        const icon = document.createElement("span");
+        const title = document.createElement("span");
+
+        row.className = "recent-item-entry";
+        time.className = "recent-item-time";
+        icon.className = "recent-item-icon";
+        title.className = "recent-item-title";
+
+        time.textContent = formatLogTime(new Date(item.addedAt));
+        icon.textContent = getRecentItemIcon(item.mediaType);
+        title.textContent =
+            item.title + (item.year ? " (" + item.year + ")" : "");
+
+        row.appendChild(time);
+        row.appendChild(icon);
+        row.appendChild(title);
+        container.appendChild(row);
+    });
+}
+
+function getRecentItemIcon(mediaType) {
+    if (mediaType === "tv") {
+        return "📺";
+    }
+
+    if (mediaType === "person") {
+        return "👤";
+    }
+
+    return "🎬";
+}
+
+function formatLogTime(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return "--:--:--";
+    }
+
+    return new Intl.DateTimeFormat("nl-NL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }).format(date);
+}
+
+
+/* =========================================================
    ALGEMENE HULPFUNCTIES
 ========================================================= */
 
@@ -1691,6 +3173,7 @@ function resetPreview() {
     state.selectedResult = null;
     state.selectedDetails = null;
     state.selectedPersonProfilePath = null;
+    state.selectedFilmographyCredits.clear();
 
     const image = document.getElementById("preview-poster");
     image.hidden = true;
@@ -1705,6 +3188,19 @@ function resetPreview() {
     document.getElementById("people-count").textContent = "0 geselecteerd";
     document.getElementById("people-grid").innerHTML =
         '<div class="people-empty">Acteursfoto\'s verschijnen hier.</div>';
+    setFilmographyVisibility(false);
+
+    const filmographyList = document.getElementById("filmography-list");
+    const filmographyCount = document.getElementById("filmography-count");
+
+    if (filmographyList) {
+        filmographyList.innerHTML =
+            '<div class="filmography-empty">Filmografie verschijnt hier.</div>';
+    }
+
+    if (filmographyCount) {
+        filmographyCount.textContent = "0 titels";
+    }
 
     const button = document.getElementById("add-selected-button");
     button.disabled = true;
@@ -1716,6 +3212,15 @@ let toastTimer = null;
 function showToast(message, type = "") {
     const toast = document.getElementById("toast");
     window.clearTimeout(toastTimer);
+
+    addActivityLog(
+        message,
+        type === "success"
+            ? "success"
+            : type === "error"
+                ? "error"
+                : "info"
+    );
 
     toast.textContent = message;
     toast.className = "toast" + (type ? " is-" + type : "");

@@ -108404,6 +108404,2076 @@
       ],
       "fullDetails": true,
       "media_type": "person"
+    },
+    {
+      "id": 10154,
+      "title": "Mickey Blue Eyes",
+      "year": 1999,
+      "genre": [
+        "Komedie",
+        "Misdaad",
+        "Romantiek"
+      ],
+      "director": [
+        "Kelly Makin"
+      ],
+      "actors": [
+        "Hugh Grant",
+        "James Caan",
+        "Jeanne Tripplehorn",
+        "Burt Young",
+        "James Fox",
+        "Joe Viterelli",
+        "Gerry Becker",
+        "Maddie Corman"
+      ],
+      "characters": [
+        "Michael Felgate",
+        "Frank Vitale",
+        "Gina Vitale",
+        "Vito Graziosi",
+        "Philip Cromwell",
+        "Vinnie D'Agostino",
+        "FBI Agent Bob Connell",
+        "Carol the Photographer"
+      ],
+      "poster_path": "/gEnKsStQ27P0KCCIGtkYwvFQ0RX.jpg",
+      "backdrop_path": "/7BUkUyHAijyZ8UpMxnn3TM5vHwg.jpg",
+      "overview": "Een Engelse veilingmeester krijgt steeds meer met de mafia te maken wanneer hij er achter komt dat de vader van zijn vriendin een mafiabaas is. Wanneer één van de peetvaders besluit om de schilderijen van zijn talentloze zoon via het veilinghuis te verkopen gaat de FBI zich ermee bemoeien.",
+      "rating": 5.693,
+      "runtime": 98,
+      "cast_details": [
+        {
+          "id": 3291,
+          "name": "Hugh Grant",
+          "character": "Michael Felgate",
+          "profile_path": "/dvV843fOuzsEPXHtFvdzsHpy1rC.jpg"
+        },
+        {
+          "id": 3085,
+          "name": "James Caan",
+          "character": "Frank Vitale",
+          "profile_path": "/z2Lz3rtxZ7aJjzBUkCnExvo8stn.jpg"
+        },
+        {
+          "id": 10478,
+          "name": "Jeanne Tripplehorn",
+          "character": "Gina Vitale",
+          "profile_path": "/q7D9MDnMVc5PAm99853gszHwJy7.jpg"
+        },
+        {
+          "id": 4521,
+          "name": "Burt Young",
+          "character": "Vito Graziosi",
+          "profile_path": "/6QWnsSbjYog0D6hkPhg7Frty54D.jpg"
+        },
+        {
+          "id": 1292,
+          "name": "James Fox",
+          "character": "Philip Cromwell",
+          "profile_path": "/fO11c8zUNNgNhYu4aLxgYiBoo6R.jpg"
+        },
+        {
+          "id": 60023,
+          "name": "Joe Viterelli",
+          "character": "Vinnie D'Agostino",
+          "profile_path": "/bWltEIjQhNxdjMEa4nglDLKCk8G.jpg"
+        },
+        {
+          "id": 19468,
+          "name": "Gerry Becker",
+          "character": "FBI Agent Bob Connell",
+          "profile_path": "/il1r1Iym5WFJyo8SQon60aqu4nC.jpg"
+        },
+        {
+          "id": 121757,
+          "name": "Maddie Corman",
+          "character": "Carol the Photographer",
+          "profile_path": "/mgQSZLjFbkN2TpAaZ268IudMEBg.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 64030,
+          "name": "Kelly Makin",
+          "profile_path": "/cQqQJtSi5FEOVH6zri1Sldw54qE.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 712,
+      "title": "Four Weddings and a Funeral",
+      "year": 1994,
+      "genre": [
+        "Komedie",
+        "Drama",
+        "Romantiek"
+      ],
+      "director": [
+        "Mike Newell"
+      ],
+      "actors": [
+        "Hugh Grant",
+        "Andie MacDowell",
+        "Kristin Scott Thomas",
+        "Simon Callow",
+        "James Fleet",
+        "John Hannah",
+        "Charlotte Coleman",
+        "David Bower"
+      ],
+      "characters": [
+        "Charles",
+        "Carrie",
+        "Fiona",
+        "Gareth",
+        "Tom",
+        "Matthew",
+        "Scarlett",
+        "David"
+      ],
+      "poster_path": "/qa72G2VS0bpxms6yo0tI9vsHm2e.jpg",
+      "backdrop_path": "/ejFaHWnDP29z7ePw2cJVOsWvOvH.jpg",
+      "overview": "Charles is een zelfverzekerde Britse vrijgezel die de vrouw van zijn dromen ontmoet op het huwelijk van een vriend. Hij moet zijn hoop op een langdurige en vruchtbare relatie echter snel weer opbergen: het meisje vertrekt de dag nadien weer naar de Verenigde Staten. Ze blijven elkaar tegen het lijf lopen op de trouwfeesten van hun vrienden, maar telkens is er wel iets wat een passionele relatie in de weg staat.",
+      "rating": 6.775,
+      "runtime": 117,
+      "cast_details": [
+        {
+          "id": 3291,
+          "name": "Hugh Grant",
+          "character": "Charles",
+          "profile_path": "/dvV843fOuzsEPXHtFvdzsHpy1rC.jpg"
+        },
+        {
+          "id": 1533,
+          "name": "Andie MacDowell",
+          "character": "Carrie",
+          "profile_path": "/akeheO4i3cR1HpSU8yu9HrLcsKm.jpg"
+        },
+        {
+          "id": 5470,
+          "name": "Kristin Scott Thomas",
+          "character": "Fiona",
+          "profile_path": "/axksw0vAjBPSW02ZqpcC0V8rPD7.jpg"
+        },
+        {
+          "id": 4001,
+          "name": "Simon Callow",
+          "character": "Gareth",
+          "profile_path": "/no6qlnMrWeUzSt1FjD2Vf9x992e.jpg"
+        },
+        {
+          "id": 10726,
+          "name": "James Fleet",
+          "character": "Tom",
+          "profile_path": "/wCXNHgrmOk57NIdLfY7ve1ghxjJ.jpg"
+        },
+        {
+          "id": 10727,
+          "name": "John Hannah",
+          "character": "Matthew",
+          "profile_path": "/8GzJhaZrChZpv84SU4vAsvsR3cl.jpg"
+        },
+        {
+          "id": 10729,
+          "name": "Charlotte Coleman",
+          "character": "Scarlett",
+          "profile_path": "/zAC3654KQPw1AXytQhjVNgf3tHT.jpg"
+        },
+        {
+          "id": 10728,
+          "name": "David Bower",
+          "character": "David",
+          "profile_path": null
+        }
+      ],
+      "director_details": [
+        {
+          "id": 10723,
+          "name": "Mike Newell",
+          "profile_path": "/zeLnvLZtyJaBP1wWceRM7HWkm0E.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 152601,
+      "title": "Her",
+      "year": 2013,
+      "genre": [
+        "Romantiek",
+        "Sciencefiction",
+        "Drama"
+      ],
+      "director": [
+        "Spike Jonze"
+      ],
+      "actors": [
+        "Joaquin Phoenix",
+        "Scarlett Johansson",
+        "Lynn Adrianna",
+        "Lisa Renee Pitts",
+        "Gabe Gomez",
+        "Chris Pratt",
+        "Artt Butler",
+        "May Lindstrom"
+      ],
+      "characters": [
+        "Theodore",
+        "Samantha (voice)",
+        "Letter Writer #1",
+        "Letter Writer #2",
+        "Letter Writer #3",
+        "Paul",
+        "Text Voice (voice)",
+        "Sexy Pregnant TV Star"
+      ],
+      "poster_path": "/eCOtqtfvn7mxGl6nfmq4b1exJRc.jpg",
+      "backdrop_path": "/sPPsR9f4K0movWVQ99u4uMqFzEL.jpg",
+      "overview": "Theodore is een eenzame schrijver. Hij schaft zich een nieuw ontwikkeld besturingssysteem aan dat bestemd is om in alle behoeften van diens gebruiker te voorzien.",
+      "rating": 7.8,
+      "runtime": 126,
+      "cast_details": [
+        {
+          "id": 73421,
+          "name": "Joaquin Phoenix",
+          "character": "Theodore",
+          "profile_path": "/u38k3hQBDwNX0VA22aQceDp9Iyv.jpg"
+        },
+        {
+          "id": 1245,
+          "name": "Scarlett Johansson",
+          "character": "Samantha (voice)",
+          "profile_path": "/druW5adKddizHNSoPbI0q7Mvn0K.jpg"
+        },
+        {
+          "id": 549831,
+          "name": "Lynn Adrianna",
+          "character": "Letter Writer #1",
+          "profile_path": "/bcdoLlSCP5qfTGDSpnyvDPO7sQL.jpg"
+        },
+        {
+          "id": 154798,
+          "name": "Lisa Renee Pitts",
+          "character": "Letter Writer #2",
+          "profile_path": "/9b0yReVIaTkZpYetW4XIQyYfnl6.jpg"
+        },
+        {
+          "id": 1509453,
+          "name": "Gabe Gomez",
+          "character": "Letter Writer #3",
+          "profile_path": "/aHw92lRjEIAr6yIwRnOaIlq0ze4.jpg"
+        },
+        {
+          "id": 73457,
+          "name": "Chris Pratt",
+          "character": "Paul",
+          "profile_path": "/cRH6HPAQ98PlOwwEvhYO4CM9lwu.jpg"
+        },
+        {
+          "id": 1509454,
+          "name": "Artt Butler",
+          "character": "Text Voice (voice)",
+          "profile_path": "/t2uZ5Nno4TcWdBCjM2AIfN3W7tu.jpg"
+        },
+        {
+          "id": 1509455,
+          "name": "May Lindstrom",
+          "character": "Sexy Pregnant TV Star",
+          "profile_path": "/cVulvqw88fDwYTmt02MIiWwWtuH.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 5953,
+          "name": "Spike Jonze",
+          "profile_path": "/x2QeqEXvi3QjgTybvZ4mmqUf4qO.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 12435,
+      "title": "The Nanny Diaries",
+      "year": 2007,
+      "genre": [
+        "Komedie",
+        "Drama",
+        "Romantiek"
+      ],
+      "director": [
+        "Shari Springer Berman",
+        "Robert Pulcini"
+      ],
+      "actors": [
+        "Scarlett Johansson",
+        "Laura Linney",
+        "Alicia Keys",
+        "Chris Evans",
+        "Donna Murphy",
+        "Nicholas Art",
+        "Judith Roberts",
+        "Julie White"
+      ],
+      "characters": [
+        "Annie Braddock",
+        "Mrs. X",
+        "Lynette",
+        "Hayden “Harvard Hottie”",
+        "Judy Braddock",
+        "Grayer",
+        "Milicent",
+        "Jane Gould"
+      ],
+      "poster_path": "/8hX6rcxnCidaqegPCyeFm9PODBn.jpg",
+      "backdrop_path": "/t5gmdPLPHSaEuGpSwxiH5wco0XS.jpg",
+      "overview": "Annie is net afgestuurd en krijgt de kans om bij een groot bedrijf te werken en succesvol te worden, maar voor ze er aan begint krijgt ze twijfels of ze dit wel wil. Tijdens een worsteling met zichzelf over wie ze wil worden krijgt ze, door een misverstand, het aanbod om als nanny te gaan werken bij een rijk gezin. Al snel ontdekt ze dat het zoontje geen aandacht krijgt van zijn ouders en daarom zijn woede op de buitenwereld afreageert. De moeder is te druk met haar rijke leventje om de problemen in haar leven onder ogen te zien en de vader is nooit thuis en zondert zich af van zijn gezin. Wanneer Annie, die door het misverstand alleen Nanny genoemd wordt, een band begint te krijgen met het jongetje, moet ze haar privé-leven opzij zetten om dat van hem op de rails te krijgen.",
+      "rating": 6.385,
+      "runtime": 106,
+      "cast_details": [
+        {
+          "id": 1245,
+          "name": "Scarlett Johansson",
+          "character": "Annie Braddock",
+          "profile_path": "/druW5adKddizHNSoPbI0q7Mvn0K.jpg"
+        },
+        {
+          "id": 350,
+          "name": "Laura Linney",
+          "character": "Mrs. X",
+          "profile_path": "/yIopIq7l7eIvjoQqnZJkpdQEvds.jpg"
+        },
+        {
+          "id": 72208,
+          "name": "Alicia Keys",
+          "character": "Lynette",
+          "profile_path": "/uMTAlXlQfgXHmyJrWqDv7LLnn0z.jpg"
+        },
+        {
+          "id": 16828,
+          "name": "Chris Evans",
+          "character": "Hayden “Harvard Hottie”",
+          "profile_path": "/3bOGNsHlrswhyW79uvIHH1V43JI.jpg"
+        },
+        {
+          "id": 2517,
+          "name": "Donna Murphy",
+          "character": "Judy Braddock",
+          "profile_path": "/tmre2oZkIHGqnLhWeldpX2Ujgl0.jpg"
+        },
+        {
+          "id": 2965,
+          "name": "Nicholas Art",
+          "character": "Grayer",
+          "profile_path": "/j2R4CWZAVrLi2iepdheifliG51O.jpg"
+        },
+        {
+          "id": 14797,
+          "name": "Judith Roberts",
+          "character": "Milicent",
+          "profile_path": "/buUgZfvycC3jzj4VeZdoBtuwbF8.jpg"
+        },
+        {
+          "id": 24305,
+          "name": "Julie White",
+          "character": "Jane Gould",
+          "profile_path": "/siiNmtZZldFSc2DwnfUJf0Teouh.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 72205,
+          "name": "Shari Springer Berman",
+          "profile_path": "/nv56m7ZDsFeCKdbmTTwzuNML3SC.jpg"
+        },
+        {
+          "id": 72206,
+          "name": "Robert Pulcini",
+          "profile_path": "/dHOF7ieq3mX7Od5wza30JOtsnjZ.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 9953,
+      "title": "A Love Song for Bobby Long",
+      "year": 2004,
+      "genre": [
+        "Drama"
+      ],
+      "director": [
+        "Shainee Gabel"
+      ],
+      "actors": [
+        "John Travolta",
+        "Scarlett Johansson",
+        "Gabriel Macht",
+        "Deborah Kara Unger",
+        "Dane Rhodes",
+        "David Jensen",
+        "Clayne Crawford",
+        "Sonny Shroyer"
+      ],
+      "characters": [
+        "Bobby Long",
+        "Pursy Will",
+        "Lawson Pines",
+        "Georgianna",
+        "Cecil",
+        "Junior",
+        "Lee",
+        "Earl"
+      ],
+      "poster_path": "/7HoqdnUpIcK1CnFDNNONPZ9PBoi.jpg",
+      "backdrop_path": "/8KOtoiqtNNMBR2STj9ZDWeEoTpx.jpg",
+      "overview": "Wanneer ze hoort dat haar moeder overleden is, gaat de eenzame tiener Pursy Will (Scarlett Johansson) naar New Orleans om haar ouderlijk huis op te eisen. Ze verwacht een verlaten woning, maar het blijkt bewoond te zijn door twee vrienden van haar moeder: Bobby Long (John Travolta), een voormalig docent literatuur, en de jongere Lawson Pines. Deze twee gebroken mannen wonen al jaren in het vervallen huis, en het enige wat ze op de been houdt is Lawsons ambitie om een biografie over Bobby Long te schrijven. Aangezien niemand van plan is te vertrekken, moeten Pursy, Bobby en Lawson voorlopig samenwonen. Begraven onder persoonlijke geheimen, blijken hun levens op een ingewikkelde manier met elkaar verbonden te zijn.",
+      "rating": 6.799,
+      "runtime": 119,
+      "cast_details": [
+        {
+          "id": 8891,
+          "name": "John Travolta",
+          "character": "Bobby Long",
+          "profile_path": "/ap8eEYfBKTLixmVVpRlq4NslDD5.jpg"
+        },
+        {
+          "id": 1245,
+          "name": "Scarlett Johansson",
+          "character": "Pursy Will",
+          "profile_path": "/druW5adKddizHNSoPbI0q7Mvn0K.jpg"
+        },
+        {
+          "id": 16856,
+          "name": "Gabriel Macht",
+          "character": "Lawson Pines",
+          "profile_path": "/lacMH4Ju1x9AsKXm7mDkklSsPyV.jpg"
+        },
+        {
+          "id": 13549,
+          "name": "Deborah Kara Unger",
+          "character": "Georgianna",
+          "profile_path": "/kPhYhisjduJ9ztFSwYQ6Ke6qeJy.jpg"
+        },
+        {
+          "id": 60874,
+          "name": "Dane Rhodes",
+          "character": "Cecil",
+          "profile_path": "/dJ1DLOEKcFmZyAV3bg4Q1lbhtgE.jpg"
+        },
+        {
+          "id": 60875,
+          "name": "David Jensen",
+          "character": "Junior",
+          "profile_path": "/eMKoRn7Xz7Z7JEfBLkZA5pV2k5t.jpg"
+        },
+        {
+          "id": 59671,
+          "name": "Clayne Crawford",
+          "character": "Lee",
+          "profile_path": "/r2ducg3w25bwuo0ywadIqLFmrRX.jpg"
+        },
+        {
+          "id": 37823,
+          "name": "Sonny Shroyer",
+          "character": "Earl",
+          "profile_path": "/f68GKDlKc2KVGfmDoGNTQdO45of.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 60860,
+          "name": "Shainee Gabel",
+          "profile_path": null
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 37567,
+      "title": "Fall",
+      "year": 1997,
+      "genre": [
+        "Drama",
+        "Romantiek"
+      ],
+      "director": [
+        "Eric Schaeffer"
+      ],
+      "actors": [
+        "Eric Schaeffer",
+        "Amanda de Cadenet",
+        "Rudolf Martin",
+        "Francie Swift",
+        "Lisa Vidal",
+        "Jose Yenque",
+        "Josip Kuchan",
+        "Roberta Maxwell"
+      ],
+      "characters": [
+        "Michael Shiver",
+        "Sarah Easton",
+        "Phillipe",
+        "Robin",
+        "Sally",
+        "Scasse",
+        "Zsarko",
+        "Joan Alterman"
+      ],
+      "poster_path": "/4nRzyiVckWoqE9Vpm35yZTrfkJM.jpg",
+      "backdrop_path": "/mjEc4llir1d3SGqaxVjTMXrbvKB.jpg",
+      "overview": "",
+      "rating": 6.317,
+      "runtime": 93,
+      "cast_details": [
+        {
+          "id": 68185,
+          "name": "Eric Schaeffer",
+          "character": "Michael Shiver",
+          "profile_path": "/rXuDlJrIaU7Sc01nCAe5faHfKGM.jpg"
+        },
+        {
+          "id": 3123,
+          "name": "Amanda de Cadenet",
+          "character": "Sarah Easton",
+          "profile_path": "/pLlI568voL7dkFbUDIq4hFI0o0v.jpg"
+        },
+        {
+          "id": 25848,
+          "name": "Rudolf Martin",
+          "character": "Phillipe",
+          "profile_path": "/hoAVxstMxMYr38EBvpc5eH3wR41.jpg"
+        },
+        {
+          "id": 118043,
+          "name": "Francie Swift",
+          "character": "Robin",
+          "profile_path": "/iEP2BCMely2ulBhxWeIYV1xIgqz.jpg"
+        },
+        {
+          "id": 92774,
+          "name": "Lisa Vidal",
+          "character": "Sally",
+          "profile_path": "/sfCwghBjHIVsE09pP9cBD52ee2.jpg"
+        },
+        {
+          "id": 118045,
+          "name": "Jose Yenque",
+          "character": "Scasse",
+          "profile_path": "/7AOtIGNIAXo3AgXpQyW1ST9dh7t.jpg"
+        },
+        {
+          "id": 118046,
+          "name": "Josip Kuchan",
+          "character": "Zsarko",
+          "profile_path": "/kNQkjQypvt4qQbewgmMzgs5HDjS.jpg"
+        },
+        {
+          "id": 10362,
+          "name": "Roberta Maxwell",
+          "character": "Joan Alterman",
+          "profile_path": "/ejMmpGmtr2FbLWdSZqhMzXKJ0bG.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 68185,
+          "name": "Eric Schaeffer",
+          "profile_path": "/rXuDlJrIaU7Sc01nCAe5faHfKGM.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 220102,
+      "title": "Spider-Noir",
+      "year": 2026,
+      "genre": [
+        "Drama",
+        "Mysterie",
+        "Misdaad"
+      ],
+      "director": [],
+      "actors": [
+        "Nicolas Cage",
+        "Lamorne Morris",
+        "Li Jun Li",
+        "Karen Rodriguez",
+        "Abraham Popoola",
+        "Jack Huston",
+        "Brendan Gleeson"
+      ],
+      "characters": [
+        "Ben Reilly / The Spider",
+        "Joe 'Robbie' Robertson",
+        "Cat Hardy",
+        "Janet Ruiz",
+        "Lonnie Lincoln / Tombstone",
+        "Flint Marko",
+        "Finn 'Silvermane' Byrne"
+      ],
+      "poster_path": "/oD8WSVqz84ZRfelkr7JPeJwR9Iv.jpg",
+      "backdrop_path": "/6t2FvBr9DS8MOq0m5FAwPBCdAW5.jpg",
+      "overview": "Privédetective Ben Reilly wordt ingehuurd voor een paar doorsnee zaken... tot gangsters, monsters en een geheimzinnige femme fatale een web weven dat hem oog in oog brengt met zijn voormalige leven als de enige superheld van New York: de Spider.",
+      "rating": 8.376,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Ben Reilly / The Spider",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 1181327,
+          "name": "Lamorne Morris",
+          "character": "Joe 'Robbie' Robertson",
+          "profile_path": "/9qPDnMsF7JbYSSn1K9yryFBmmXl.jpg"
+        },
+        {
+          "id": 1321015,
+          "name": "Li Jun Li",
+          "character": "Cat Hardy",
+          "profile_path": "/y8hAcbThfxkrSRWhuXl9TsYAggP.jpg"
+        },
+        {
+          "id": 3966106,
+          "name": "Karen Rodriguez",
+          "character": "Janet Ruiz",
+          "profile_path": "/3CxunqumXE9ZYofJ0rhF7nSSMqX.jpg"
+        },
+        {
+          "id": 1432064,
+          "name": "Abraham Popoola",
+          "character": "Lonnie Lincoln / Tombstone",
+          "profile_path": "/r5mojn6TjWgHefdMCJNiohvY82f.jpg"
+        },
+        {
+          "id": 54738,
+          "name": "Jack Huston",
+          "character": "Flint Marko",
+          "profile_path": "/qWGoZaUbeuaOLbDvyP5txYr9Hct.jpg"
+        },
+        {
+          "id": 2039,
+          "name": "Brendan Gleeson",
+          "character": "Finn 'Silvermane' Byrne",
+          "profile_path": "/ctPPJu5ZYDZr1IPmzoNpezczrm0.jpg"
+        }
+      ],
+      "director_details": [],
+      "fullDetails": true,
+      "media_type": "tv"
+    },
+    {
+      "id": 635731,
+      "title": "Pig",
+      "year": 2021,
+      "genre": [
+        "Drama",
+        "Thriller",
+        "Mysterie"
+      ],
+      "director": [
+        "Michael Sarnoski"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Alex Wolff",
+        "Adam Arkin",
+        "Nina Belforte",
+        "Gretchen Corbett",
+        "Dalene Young",
+        "Darius Pierce",
+        "Elijah Ungvary"
+      ],
+      "characters": [
+        "Rob Feld",
+        "Amir",
+        "Darius",
+        "Charlotte",
+        "Mac",
+        "Jezebel",
+        "Edgar",
+        "Scratch"
+      ],
+      "poster_path": "/1InMm4Mbjx8wCKvIy5gglo5i3HN.jpg",
+      "backdrop_path": "/uFvueAhlKsXQacjiKxGBgnBqarf.jpg",
+      "overview": "Rob is truffelzoeker die zich heeft afgezonderd in de wildernis in Oregon. Wanneer zijn geliefde varken en prijsbeest ontvoerd wordt, moet hij noodgedwongen naar zijn vroegere leefomgeving in Portland terugkeren. Daar moet hij afrekenen met zijn verleden.",
+      "rating": 6.616,
+      "runtime": 92,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Rob Feld",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 934281,
+          "name": "Alex Wolff",
+          "character": "Amir",
+          "profile_path": "/7PMu5zFOEH7PqFDzrKThgKD4Ndf.jpg"
+        },
+        {
+          "id": 55257,
+          "name": "Adam Arkin",
+          "character": "Darius",
+          "profile_path": "/66CugPTyelfdtYe0IV0U0LQP1sA.jpg"
+        },
+        {
+          "id": 3125984,
+          "name": "Nina Belforte",
+          "character": "Charlotte",
+          "profile_path": "/r26VEN0A85Muh0VjNukIgX8rOu7.jpg"
+        },
+        {
+          "id": 79734,
+          "name": "Gretchen Corbett",
+          "character": "Mac",
+          "profile_path": "/qGtjneRWJlK5opx4qSBWCW6rBFs.jpg"
+        },
+        {
+          "id": 942560,
+          "name": "Dalene Young",
+          "character": "Jezebel",
+          "profile_path": "/lhALex1MKifTHUCilMaIARu2Kfe.jpg"
+        },
+        {
+          "id": 2087317,
+          "name": "Darius Pierce",
+          "character": "Edgar",
+          "profile_path": "/txnz8TBulKWA3wryYtyQupVpmfn.jpg"
+        },
+        {
+          "id": 1700997,
+          "name": "Elijah Ungvary",
+          "character": "Scratch",
+          "profile_path": "/fpuW3g10qPuJHrhI4Eu6lC3WsxZ.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 2580328,
+          "name": "Michael Sarnoski",
+          "profile_path": "/s2bl2Ct2BNLZjXqxHt7SpYgYzLD.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 500916,
+      "title": "Primal",
+      "year": 2019,
+      "genre": [
+        "Actie",
+        "Avontuur",
+        "Thriller"
+      ],
+      "director": [
+        "Nick Powell"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Famke Janssen",
+        "Kevin Durand",
+        "Jeremy Jay Nazario",
+        "LaMonica Garrett",
+        "Michael Imperioli",
+        "Isaac Santiago",
+        "Braulio Castillo Jr."
+      ],
+      "characters": [
+        "Frank Walsh",
+        "Dr. Ellen Taylor",
+        "Richard Loffler",
+        "Rafael",
+        "John Ringer",
+        "Paul Freed",
+        "Vasquez",
+        "Morales"
+      ],
+      "poster_path": "/v0Air5GTsfgtjsnZyji2lH6r2b8.jpg",
+      "backdrop_path": "/lY3CHPKZV41z5rW2npA0UGeMAHI.jpg",
+      "overview": "Frank Walsh jaagt op exotische dieren die hij naar de VS verscheept. Wanneer hij een zeldzame witte jaguar vindt, denkt hij rijk te worden. Hij neemt het dier mee op het vrachtschip waarmee ook een moordenaar en andere dodelijke dieren reizen. Als de moordenaar weet uit te breken en de roofdieren bevrijdt, moet Frank vechten voor zijn leven.",
+      "rating": 5.6,
+      "runtime": 97,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Frank Walsh",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 10696,
+          "name": "Famke Janssen",
+          "character": "Dr. Ellen Taylor",
+          "profile_path": "/uvZGwNsLqe9NyA57Qlt46IkO8Bd.jpg"
+        },
+        {
+          "id": 79072,
+          "name": "Kevin Durand",
+          "character": "Richard Loffler",
+          "profile_path": "/hINvryvce5tpod6kTnUg9ZTH8wg.jpg"
+        },
+        {
+          "id": 1621218,
+          "name": "Jeremy Jay Nazario",
+          "character": "Rafael",
+          "profile_path": null
+        },
+        {
+          "id": 1094385,
+          "name": "LaMonica Garrett",
+          "character": "John Ringer",
+          "profile_path": "/yE5TBZ2qC5LAPDduBQAERo7EF3r.jpg"
+        },
+        {
+          "id": 11486,
+          "name": "Michael Imperioli",
+          "character": "Paul Freed",
+          "profile_path": "/bCDwQGrecRujCibI8rvsxEc91We.jpg"
+        },
+        {
+          "id": 1611777,
+          "name": "Isaac Santiago",
+          "character": "Vasquez",
+          "profile_path": null
+        },
+        {
+          "id": 1504016,
+          "name": "Braulio Castillo Jr.",
+          "character": "Morales",
+          "profile_path": "/kdqXMa2p5McMJ4q0BzS5wiz9vDm.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 1358976,
+          "name": "Nick Powell",
+          "profile_path": "/1mwtLOSNtBFB0tK6T9xKGgdRP7u.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 397415,
+      "title": "Vengeance: A Love Story",
+      "year": 2017,
+      "genre": [
+        "Actie",
+        "Drama",
+        "Thriller",
+        "TV Film"
+      ],
+      "director": [
+        "Johnny Martin"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Anna Hutchison",
+        "Talitha Eliana Bateman",
+        "Deborah Kara Unger",
+        "Don Johnson",
+        "Charlene Tilton",
+        "Joshua Mikel",
+        "Rocco Nugent"
+      ],
+      "characters": [
+        "Det. John Dromoor",
+        "Teena Maguire",
+        "Bethie Maguire",
+        "Agnes",
+        "Jay Kirkpatrick",
+        "Irma Fick",
+        "Marvin Fick",
+        "Lloyd Fick"
+      ],
+      "poster_path": "/kPUFcGPI9FChybFHIJJBZZLiIlg.jpg",
+      "backdrop_path": "/jSOomjSssNJdU7Hrf3CROkNSv6n.jpg",
+      "overview": "John Dromoor is een oorlogsveteraan uit de Golfoorlog die nu als politieagent werkt in Niagara Falls. Op Independence Day wordt hij tot stoppen gedwongen door de 12-jarige Bethie Maguire. Haar moeder, Teena Maguire, is op brute wijze verkracht en voor dood achtergelaten. John besluit wraak te nemen op de personen die de alleenstaande moeder zo hebben toegetakeld.",
+      "rating": 5.6,
+      "runtime": 99,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Det. John Dromoor",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 486603,
+          "name": "Anna Hutchison",
+          "character": "Teena Maguire",
+          "profile_path": "/i7o5JRt43W3qsPbFm8qhsQAws6t.jpg"
+        },
+        {
+          "id": 1379123,
+          "name": "Talitha Eliana Bateman",
+          "character": "Bethie Maguire",
+          "profile_path": "/nJ8usNkXlYwg6jUhtCWgcDwu3jw.jpg"
+        },
+        {
+          "id": 13549,
+          "name": "Deborah Kara Unger",
+          "character": "Agnes",
+          "profile_path": "/kPhYhisjduJ9ztFSwYQ6Ke6qeJy.jpg"
+        },
+        {
+          "id": 25129,
+          "name": "Don Johnson",
+          "character": "Jay Kirkpatrick",
+          "profile_path": "/6s6oav541p7xspCG6PvXut7knkP.jpg"
+        },
+        {
+          "id": 21862,
+          "name": "Charlene Tilton",
+          "character": "Irma Fick",
+          "profile_path": "/wFiE4xU1mmQ0EWcUoFdV10ZzaR8.jpg"
+        },
+        {
+          "id": 1046665,
+          "name": "Joshua Mikel",
+          "character": "Marvin Fick",
+          "profile_path": "/SwmoaKeiAhznYnSsEOg58NNu2w.jpg"
+        },
+        {
+          "id": 1278981,
+          "name": "Rocco Nugent",
+          "character": "Lloyd Fick",
+          "profile_path": "/6S5oI8okcQ49i5Sn8Hs5BrK2TcO.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 63423,
+          "name": "Johnny Martin",
+          "profile_path": "/mtNPfGwZKGnLE4MzauUcoGM7NHn.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 354979,
+      "title": "Dog Eat Dog",
+      "year": 2016,
+      "genre": [
+        "Drama",
+        "Misdaad",
+        "Thriller"
+      ],
+      "director": [
+        "Paul Schrader"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Willem Dafoe",
+        "Christopher Matthew Cook",
+        "Omar J. Dorsey",
+        "Louisa Krause",
+        "Melissa Bolona",
+        "Reynaldo Gallegos",
+        "Chelcie Lynn"
+      ],
+      "characters": [
+        "Troy",
+        "Mad Dog",
+        "Diesel",
+        "Moon Man",
+        "Zoe",
+        "Lina",
+        "Chepe",
+        "Sheila"
+      ],
+      "poster_path": "/ve6qJRjs2OUsXLIHLson3j4eVTB.jpg",
+      "backdrop_path": "/eRpVvbvvO7UCA2vTGant3kq1zSc.jpg",
+      "overview": "Wanneer drie wanhopige ex-gevangenen een klus krijgen aangeboden van een Mexicaanse maffiabaas, weten ze dat ze beter kunnen weigeren, maar de beloning is te groot om nee te zeggen.",
+      "rating": 5.129,
+      "runtime": 95,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Troy",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 5293,
+          "name": "Willem Dafoe",
+          "character": "Mad Dog",
+          "profile_path": "/ui8e4sgZAwMPi3hzEO53jyBJF9B.jpg"
+        },
+        {
+          "id": 1358061,
+          "name": "Christopher Matthew Cook",
+          "character": "Diesel",
+          "profile_path": "/vwBubfT4jCNH7TVt5dXjBzUJbKt.jpg"
+        },
+        {
+          "id": 59844,
+          "name": "Omar J. Dorsey",
+          "character": "Moon Man",
+          "profile_path": "/gEoIprGB2mZpHYGm12J8CYf8cYI.jpg"
+        },
+        {
+          "id": 131871,
+          "name": "Louisa Krause",
+          "character": "Zoe",
+          "profile_path": "/xkIx3PWJUumeUjOa2b3GPdMHp46.jpg"
+        },
+        {
+          "id": 1473959,
+          "name": "Melissa Bolona",
+          "character": "Lina",
+          "profile_path": "/gb5p2PsXAnn7aJR8qBuKcvpL3TH.jpg"
+        },
+        {
+          "id": 52946,
+          "name": "Reynaldo Gallegos",
+          "character": "Chepe",
+          "profile_path": "/x1JFYhTI4Pu1Dtj45YRf5mIHBtK.jpg"
+        },
+        {
+          "id": 1726660,
+          "name": "Chelcie Lynn",
+          "character": "Sheila",
+          "profile_path": "/3JP0HZRvLDQIWZdd0I6ix7McA01.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 1035,
+          "name": "Paul Schrader",
+          "profile_path": "/ctRxgCUSRFudwFaPG2AanL71Y3V.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 199373,
+      "title": "The Frozen Ground",
+      "year": 2013,
+      "genre": [
+        "Thriller",
+        "Misdaad"
+      ],
+      "director": [
+        "Scott Walker"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Vanessa Hudgens",
+        "John Cusack",
+        "Radha Mitchell",
+        "Jodi Lyn O'Keefe",
+        "Katherine LaNasa",
+        "Dean Norris",
+        "50 Cent"
+      ],
+      "characters": [
+        "Jack Halcombe",
+        "Cindy Paulson",
+        "Robert Hansen",
+        "Allie Halcombe",
+        "Chelle Ringell",
+        "Fran Hansen",
+        "Sgt. Lyle Haugsven",
+        "Pimp Clate Johnson"
+      ],
+      "poster_path": "/hHDj1h3lJvYd9Cervoswz9crhWg.jpg",
+      "backdrop_path": "/xLW4UQ4zYf7fHrei9pqx4fJsfKy.jpg",
+      "overview": "Glenn Flothe, een rechercheur uit Alaska, is vast van plan een einde te maken aan de moorden van Robert Hansen, een seriemoordenaar die dertien jaar lang onopgemerkt bleef. Naarmate de lichamen zich opstapelen in de straten van Anchorage slaat de angst toe onder de bevolking.",
+      "rating": 6.271,
+      "runtime": 105,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Jack Halcombe",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 67599,
+          "name": "Vanessa Hudgens",
+          "character": "Cindy Paulson",
+          "profile_path": "/8S8Nn5m5qkiIrEJ3dzPRjltzrkx.jpg"
+        },
+        {
+          "id": 3036,
+          "name": "John Cusack",
+          "character": "Robert Hansen",
+          "profile_path": "/aCwCx6JU7Jxbg6Q1ygcnLY750le.jpg"
+        },
+        {
+          "id": 8329,
+          "name": "Radha Mitchell",
+          "character": "Allie Halcombe",
+          "profile_path": "/8EVKyEkwPfIA6GxlIo0PJv0A5mm.jpg"
+        },
+        {
+          "id": 58006,
+          "name": "Jodi Lyn O'Keefe",
+          "character": "Chelle Ringell",
+          "profile_path": "/5F9ESeRIlPrUbUcSYRvmNv6uPFU.jpg"
+        },
+        {
+          "id": 169337,
+          "name": "Katherine LaNasa",
+          "character": "Fran Hansen",
+          "profile_path": "/7X3f4MG24XLG2fNPJt5H38d8YCV.jpg"
+        },
+        {
+          "id": 14329,
+          "name": "Dean Norris",
+          "character": "Sgt. Lyle Haugsven",
+          "profile_path": "/mKRrEbsxAX3ro700HsViFArRM7l.jpg"
+        },
+        {
+          "id": 62644,
+          "name": "50 Cent",
+          "character": "Pimp Clate Johnson",
+          "profile_path": "/7VfwFIwBxy7qBUErosWRDQOovl9.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 1179590,
+          "name": "Scott Walker",
+          "profile_path": "/pguXeblh3CdA2GOqadLLJK1E2Ol.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 13184,
+      "title": "Bangkok Dangerous",
+      "year": 2008,
+      "genre": [
+        "Actie",
+        "Misdaad",
+        "Thriller"
+      ],
+      "director": [
+        "彭發",
+        "彭順"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "ชาคริต แย้มนาม",
+        "楊采妮",
+        "ปานวาด เหมมณี",
+        "ดอม เหตระกูล",
+        "Tuck Napaskorn",
+        "Steve Baldocchi",
+        "Chris Heebink"
+      ],
+      "characters": [
+        "Joe",
+        "Kong",
+        "Fon",
+        "Aom",
+        "Aran",
+        "Kong's Brother",
+        "Michigan",
+        "USC"
+      ],
+      "poster_path": "/iTRftxHW8i4H7ONaOiCIwEXjNDJ.jpg",
+      "backdrop_path": "/ueXbXSehnVK62UqfLrdJdWZ7gla.jpg",
+      "overview": "Een professionele huurmoordenaar (Nicolas Cage) verblijft in Bangkok om een aantal klussen af te handelen. Maar dat blijkt lastiger dan gedacht, en hij ondervindt de nodige tegenwerking. Dan valt hij ook nog eens voor een lokale schoonheid en moet hij een van zijn weinige vertrouwelingen te vriend zien te houden.",
+      "rating": 5.314,
+      "runtime": 99,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Joe",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 74747,
+          "name": "ชาคริต แย้มนาม",
+          "character": "Kong",
+          "profile_path": "/2A9HfrGI51uAIXsnh3LHghwlQnx.jpg"
+        },
+        {
+          "id": 66762,
+          "name": "楊采妮",
+          "character": "Fon",
+          "profile_path": "/peIJZb7cc3RtMhZjRbHqR3u4ac3.jpg"
+        },
+        {
+          "id": 76484,
+          "name": "ปานวาด เหมมณี",
+          "character": "Aom",
+          "profile_path": "/jaClEIDOAawJwwKmCsrsG1RNXp1.jpg"
+        },
+        {
+          "id": 76478,
+          "name": "ดอม เหตระกูล",
+          "character": "Aran",
+          "profile_path": "/3yjEcnMGeigyjyfDa1znycBhvkh.jpg"
+        },
+        {
+          "id": 76486,
+          "name": "Tuck Napaskorn",
+          "character": "Kong's Brother",
+          "profile_path": null
+        },
+        {
+          "id": 76487,
+          "name": "Steve Baldocchi",
+          "character": "Michigan",
+          "profile_path": null
+        },
+        {
+          "id": 76488,
+          "name": "Chris Heebink",
+          "character": "USC",
+          "profile_path": null
+        }
+      ],
+      "director_details": [
+        {
+          "id": 21905,
+          "name": "彭發",
+          "profile_path": "/A7jZ7cjEdWufEwN5Eh7CiIknLX7.jpg"
+        },
+        {
+          "id": 31033,
+          "name": "彭順",
+          "profile_path": "/l783aPnVADG5i3ZBEExJoojCjfU.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 6963,
+      "title": "The Weather Man",
+      "year": 2005,
+      "genre": [
+        "Komedie",
+        "Drama"
+      ],
+      "director": [
+        "Gore Verbinski"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Michael Caine",
+        "Hope Davis",
+        "Gemmenne de la Peña",
+        "Nicholas Hoult",
+        "Michael Rispoli",
+        "Gil Bellows",
+        "Judith McConnell"
+      ],
+      "characters": [
+        "David Spritz",
+        "Robert Spritzel",
+        "Noreen",
+        "Shelly Spritzel",
+        "Mike Spritzel",
+        "Russ",
+        "Don",
+        "Lauren"
+      ],
+      "poster_path": "/oQilVzOxLPxvBn9hAuvGpKTpONM.jpg",
+      "backdrop_path": "/wn2zysoNM6QncXEw9MyvSGJ6eS1.jpg",
+      "overview": "Dave Spritz is een succesvolle weerman in Chicago. Hij werkt voor een groot televisiestation en heeft eigenlijk weinig te klagen. Ware het niet dat zijn privéleven een zooitje is. Hij is gescheiden van zijn wat neurotische vrouw, hij heeft geen band met zijn puberzoon en probeert de band die hij heeft met zijn ongelukkige, te zware dochtertje krampachtig te verbeteren. Zijn relatie met zijn vader, een intellectueel die ernstig ziek blijkt te zijn, is ook verre van liefdevol. Wanneer Dave een geslaagde auditie doet voor de weermanpositie bij een grote landelijke zender en hij naar New York moet verhuizen, slaat de grote twijfel toe. Hoe harder hij probeert het contact met zijn familie op orde te krijgen, hoe meer hij zich realiseert dat het leven al net zo onvoorspelbaar is als het weer.",
+      "rating": 6.138,
+      "runtime": 101,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "David Spritz",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 3895,
+          "name": "Michael Caine",
+          "character": "Robert Spritzel",
+          "profile_path": "/bVZRMlpjTAO2pJK6v90buFgVbSW.jpg"
+        },
+        {
+          "id": 15250,
+          "name": "Hope Davis",
+          "character": "Noreen",
+          "profile_path": "/dJb76YQDFmfJ6ptlvBvx0ZBP44C.jpg"
+        },
+        {
+          "id": 51609,
+          "name": "Gemmenne de la Peña",
+          "character": "Shelly Spritzel",
+          "profile_path": "/smmfBGNOBuYQZPVbthefTViDyQ2.jpg"
+        },
+        {
+          "id": 3292,
+          "name": "Nicholas Hoult",
+          "character": "Mike Spritzel",
+          "profile_path": "/pXm8GWTm9eIA8pUGOjvmYjlxamu.jpg"
+        },
+        {
+          "id": 18313,
+          "name": "Michael Rispoli",
+          "character": "Russ",
+          "profile_path": "/4rtCKJTtPq9cSHFQqZSbyCLLWCO.jpg"
+        },
+        {
+          "id": 6575,
+          "name": "Gil Bellows",
+          "character": "Don",
+          "profile_path": "/eCOIv2nSGnWTHdn88NoMyNOKWyR.jpg"
+        },
+        {
+          "id": 51610,
+          "name": "Judith McConnell",
+          "character": "Lauren",
+          "profile_path": "/8QYjrcyQIXiA9oaIfrm6C5plQ8O.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 1704,
+          "name": "Gore Verbinski",
+          "profile_path": "/rSQRdmLNAwdKxrtvBSSlBmWeSsj.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 5994,
+      "title": "The Family Man",
+      "year": 2000,
+      "genre": [
+        "Komedie",
+        "Drama",
+        "Romantiek",
+        "Fantasie"
+      ],
+      "director": [
+        "Brett Ratner"
+      ],
+      "actors": [
+        "Nicolas Cage",
+        "Téa Leoni",
+        "Don Cheadle",
+        "Jeremy Piven",
+        "Saul Rubinek",
+        "Josef Sommer",
+        "Makenzie Vega",
+        "Jake Milkovich"
+      ],
+      "characters": [
+        "Jack Campbell",
+        "Kate Reynolds",
+        "Cash",
+        "Arnie",
+        "Alan Mintz",
+        "Peter Lassiter",
+        "Annie Campbell",
+        "Josh Campbell"
+      ],
+      "poster_path": "/1GwuoGZaCbdKt4lcx9ATG5KmN8C.jpg",
+      "backdrop_path": "/gnosJeDIDQXy9uDewXphEpDWNYT.jpg",
+      "overview": "Jack Campbell heeft het helemaal voorelkaar: een perfecte job, luxe penthouse, een Ferrari, en zijn firma staat op het punt een belangrijke deal te maken. Na kerstavond wordt Jack wakker in een ander bed, naast zijn vroegere vriendin en met kinderen. Hij komt erachter dat hij meemaakt hoe zijn leven eruit had kunnen zien als hij vroeger een andere beslissing had genomen.",
+      "rating": 6.826,
+      "runtime": 125,
+      "cast_details": [
+        {
+          "id": 2963,
+          "name": "Nicolas Cage",
+          "character": "Jack Campbell",
+          "profile_path": "/y1RtezurZYveYkVNRht7CwEgSYY.jpg"
+        },
+        {
+          "id": 4939,
+          "name": "Téa Leoni",
+          "character": "Kate Reynolds",
+          "profile_path": "/vWijsKTlNs9bgKdUVgsr2w4msGo.jpg"
+        },
+        {
+          "id": 1896,
+          "name": "Don Cheadle",
+          "character": "Cash",
+          "profile_path": "/umhTmcVF26qZKEpSfG1ZNpcbs9D.jpg"
+        },
+        {
+          "id": 12799,
+          "name": "Jeremy Piven",
+          "character": "Arnie",
+          "profile_path": "/pBD1jcAZiDrHWcFpJtBtqLRD4gR.jpg"
+        },
+        {
+          "id": 3712,
+          "name": "Saul Rubinek",
+          "character": "Alan Mintz",
+          "profile_path": "/vW4ERsjupcc9u1ipDR7w6h6sphe.jpg"
+        },
+        {
+          "id": 14792,
+          "name": "Josef Sommer",
+          "character": "Peter Lassiter",
+          "profile_path": "/eY3tCB4j7nWhsZX1enU6BYpaZl.jpg"
+        },
+        {
+          "id": 2139,
+          "name": "Makenzie Vega",
+          "character": "Annie Campbell",
+          "profile_path": "/yPJ11EdP5rggFUNorQtSCzIag9d.jpg"
+        },
+        {
+          "id": 47056,
+          "name": "Jake Milkovich",
+          "character": "Josh Campbell",
+          "profile_path": null
+        }
+      ],
+      "director_details": [
+        {
+          "id": 11091,
+          "name": "Brett Ratner",
+          "profile_path": "/y40YzrI2ooWiWxfisx6zCZGueEu.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 1138194,
+      "title": "Heretic",
+      "year": 2024,
+      "genre": [
+        "Thriller",
+        "Horror"
+      ],
+      "director": [
+        "Scott Beck",
+        "Bryan Woods"
+      ],
+      "actors": [
+        "Hugh Grant",
+        "Sophie Thatcher",
+        "Chloe East",
+        "Topher Grace",
+        "Elle Young",
+        "Julie Lynn-Mortensen",
+        "Haylie Hansen",
+        "Elle McKinnon"
+      ],
+      "characters": [
+        "Mr. Reed",
+        "Sister Barnes",
+        "Sister Paxton",
+        "Elder Kennedy",
+        "Prophet",
+        "Pedestrian",
+        "Teenager",
+        "Teenager"
+      ],
+      "poster_path": "/6PE3l78yhPV1S4kbtOhVZCwHQHi.jpg",
+      "backdrop_path": "/ag66gJCiZ06q1GSJuQlhGLi3Udx.jpg",
+      "overview": "Twee jonge missionarissen worden gedwongen om hun geloof te bewijzen wanneer ze aankloppen bij de verkeerde deur, begroet worden door de duivelse Mr. Reed en vervolgens verstrikt raken in zijn dodelijke kat-en-muisspel.",
+      "rating": 6.967,
+      "runtime": 111,
+      "cast_details": [
+        {
+          "id": 3291,
+          "name": "Hugh Grant",
+          "character": "Mr. Reed",
+          "profile_path": "/dvV843fOuzsEPXHtFvdzsHpy1rC.jpg"
+        },
+        {
+          "id": 1981044,
+          "name": "Sophie Thatcher",
+          "character": "Sister Barnes",
+          "profile_path": "/lQfSgP34VWtZXuyvULsA6ZZl3qE.jpg"
+        },
+        {
+          "id": 1512280,
+          "name": "Chloe East",
+          "character": "Sister Paxton",
+          "profile_path": "/dttzTZRYI84kW98NH16Z101czCe.jpg"
+        },
+        {
+          "id": 17052,
+          "name": "Topher Grace",
+          "character": "Elder Kennedy",
+          "profile_path": "/oJQxl4DG0KSCtOGrpWNhYz9gUZA.jpg"
+        },
+        {
+          "id": 2019444,
+          "name": "Elle Young",
+          "character": "Prophet",
+          "profile_path": "/rEcGyAm06RMBgR8T7xPOjZNMElO.jpg"
+        },
+        {
+          "id": 1834752,
+          "name": "Julie Lynn-Mortensen",
+          "character": "Pedestrian",
+          "profile_path": "/47bJBypW6YVBeQuTaaQQuusGRMm.jpg"
+        },
+        {
+          "id": 4932824,
+          "name": "Haylie Hansen",
+          "character": "Teenager",
+          "profile_path": "/gWsrbcsRQYoyxZp7LdUZ8kissc6.jpg"
+        },
+        {
+          "id": 1668152,
+          "name": "Elle McKinnon",
+          "character": "Teenager",
+          "profile_path": "/qBrsyaF4EM6cdBQfU7XnyFmx7Ym.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 1317685,
+          "name": "Scott Beck",
+          "profile_path": "/3x08LTI7LnZjfEPbRDlXjBRa36Q.jpg"
+        },
+        {
+          "id": 1317686,
+          "name": "Bryan Woods",
+          "profile_path": "/4rPYnBaMTv5P0L1HoxOIuQoqliR.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 13680,
+      "title": "The Game Plan",
+      "year": 2007,
+      "genre": [
+        "Komedie",
+        "Familie"
+      ],
+      "director": [
+        "Andy Fickman"
+      ],
+      "actors": [
+        "Dwayne Johnson",
+        "Madison Pettis",
+        "Kyra Sedgwick",
+        "Roselyn Sánchez",
+        "Morris Chestnut",
+        "Hayes MacArthur",
+        "Brian J. White",
+        "Jamal Duff"
+      ],
+      "characters": [
+        "Joe Kingman",
+        "Peyton Kelly",
+        "Stella Peck",
+        "Monique Vasquez",
+        "Travis Sanders",
+        "Kyle Cooper",
+        "Jamal Webber",
+        "Clarence Monroe"
+      ],
+      "poster_path": "/fcLFvIqCUrhY96mkSmr3okxaMEw.jpg",
+      "backdrop_path": "/pOaWXp9DTUGnk1awfFrhTMqxoKm.jpg",
+      "overview": "Joe Kingman is een professionele american footballspeler in de NFL. Hij is vrijgezel en geniet van het leven als bekend sporticoon. Maar dan blijkt dat hij een inmiddels 7-jarig dochtertje heeft uit een vorige relatie. Feesten, vriendinnen en afspraakjes moeten opeens gedeeltelijk plaatsmaken voor balletlessen, verhaaltjes voor het slapengaan en poppen.",
+      "rating": 6.511,
+      "runtime": 110,
+      "cast_details": [
+        {
+          "id": 18918,
+          "name": "Dwayne Johnson",
+          "character": "Joe Kingman",
+          "profile_path": "/5QApZVV8FUFlVxQpIK3Ew6cqotq.jpg"
+        },
+        {
+          "id": 74929,
+          "name": "Madison Pettis",
+          "character": "Peyton Kelly",
+          "profile_path": "/qhrDS8fupTeIknYBOfwMRBsWScF.jpg"
+        },
+        {
+          "id": 26467,
+          "name": "Kyra Sedgwick",
+          "character": "Stella Peck",
+          "profile_path": "/cfpLVZWChElvkKegZopC0xDjEWk.jpg"
+        },
+        {
+          "id": 41901,
+          "name": "Roselyn Sánchez",
+          "character": "Monique Vasquez",
+          "profile_path": "/srU7Oi0P5F3IuEEk14gKZwzzMWu.jpg"
+        },
+        {
+          "id": 9779,
+          "name": "Morris Chestnut",
+          "character": "Travis Sanders",
+          "profile_path": "/lbWJ1mIgAamsREnbKLoj1GdH0sr.jpg"
+        },
+        {
+          "id": 74930,
+          "name": "Hayes MacArthur",
+          "character": "Kyle Cooper",
+          "profile_path": "/h34sUP8iKK2tGo2swK8muHjEsHA.jpg"
+        },
+        {
+          "id": 31137,
+          "name": "Brian J. White",
+          "character": "Jamal Webber",
+          "profile_path": "/ihaudvlVUgeTqY6xtjXIFQ8cIB6.jpg"
+        },
+        {
+          "id": 74931,
+          "name": "Jamal Duff",
+          "character": "Clarence Monroe",
+          "profile_path": "/ka0LzcjFN1xDsKbeavf66CDhuPL.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 58375,
+          "name": "Andy Fickman",
+          "profile_path": "/iNj0z0q08sC2j1D8NCBKkkAeNyF.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 8975,
+      "title": "The Marine",
+      "year": 2006,
+      "genre": [
+        "Actie"
+      ],
+      "director": [
+        "John Bonito"
+      ],
+      "actors": [
+        "John Cena",
+        "Robert Patrick",
+        "Kelly Carlson",
+        "Anthony Ray Parker",
+        "Abigail Bianca",
+        "Jerome Ehlers",
+        "Manu Bennett",
+        "Damon Gibson"
+      ],
+      "characters": [
+        "John Triton",
+        "Rome",
+        "Kate Triton",
+        "Morgan",
+        "Angela",
+        "Van Buren",
+        "Bennett",
+        "Vescera"
+      ],
+      "poster_path": "/pONyvBJwHNg5CWu7mtsv4qaq75C.jpg",
+      "backdrop_path": "/mGT2XVE9MjSkGeTAw3VQFwECBYZ.jpg",
+      "overview": "Een marinier wordt oneervol ontslagen nadat hij een direct bevel had genegeerd. Hoe gaat direct op zoek naar een job, maar wordt reeds na één dag ontslagen. Zijn vriendin stelt voor op naar de bergen te trekken om eventjes te ontspannen. Onderweg komen ze in aanraking met een bende criminelen waarna hij zijn ontvoerde vriendin moet proberen te redden.",
+      "rating": 5.976,
+      "runtime": 92,
+      "cast_details": [
+        {
+          "id": 56446,
+          "name": "John Cena",
+          "character": "John Triton",
+          "profile_path": "/rgB2eIOt7WyQjdgJCOuESdDlrjg.jpg"
+        },
+        {
+          "id": 418,
+          "name": "Robert Patrick",
+          "character": "Rome",
+          "profile_path": "/qRv2Es9rZoloullTbzss3I5j1Mp.jpg"
+        },
+        {
+          "id": 56447,
+          "name": "Kelly Carlson",
+          "character": "Kate Triton",
+          "profile_path": "/9DdEGSIsVfvKpdeFnfPQisYPSAe.jpg"
+        },
+        {
+          "id": 9378,
+          "name": "Anthony Ray Parker",
+          "character": "Morgan",
+          "profile_path": "/k03O1ClFvGRSedUnK0sAjTkrogX.jpg"
+        },
+        {
+          "id": 160179,
+          "name": "Abigail Bianca",
+          "character": "Angela",
+          "profile_path": "/9ll2HAYWbWDyn2EaiF3BBh0Uv2w.jpg"
+        },
+        {
+          "id": 56449,
+          "name": "Jerome Ehlers",
+          "character": "Van Buren",
+          "profile_path": "/hTnininCfjbQpyRECW5WJaPHCeo.jpg"
+        },
+        {
+          "id": 41782,
+          "name": "Manu Bennett",
+          "character": "Bennett",
+          "profile_path": "/vwcTCQoRqfOjGZA1TPCx9TWTNht.jpg"
+        },
+        {
+          "id": 962631,
+          "name": "Damon Gibson",
+          "character": "Vescera",
+          "profile_path": null
+        }
+      ],
+      "director_details": [
+        {
+          "id": 56453,
+          "name": "John Bonito",
+          "profile_path": null
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": 17134,
+      "title": "12 Rounds",
+      "year": 2009,
+      "genre": [
+        "Actie",
+        "Thriller",
+        "Misdaad"
+      ],
+      "director": [
+        "Renny Harlin"
+      ],
+      "actors": [
+        "John Cena",
+        "Aidan Gillen",
+        "Ashley Scott",
+        "Steve Harris",
+        "Brian J. White",
+        "Gonzalo Menendez",
+        "Taylor Cole",
+        "Kyle Clements"
+      ],
+      "characters": [
+        "Danny Fisher",
+        "Miles Jackson",
+        "Molly Porter",
+        "George Aiken",
+        "Hank Carver",
+        "Ray Santiago",
+        "Erica Kessen",
+        "Dave Fisher"
+      ],
+      "poster_path": "/7k7qhrO57sVoBLrNo5HYoTp24sT.jpg",
+      "backdrop_path": "/c2EpOiIhpMtGCnG6HyHgbpyryPd.jpg",
+      "overview": "Detective Danny Fisher uit New Orleans beleeft de zwaarste dag uit zijn leven wanneer een zware crimineel zijn vriendin Molly kidnapt. De ontvoerder laat Danny twaalf opdrachten uitvoeren om zo zijn vriendin in leven te houden.",
+      "rating": 5.902,
+      "runtime": 108,
+      "cast_details": [
+        {
+          "id": 56446,
+          "name": "John Cena",
+          "character": "Danny Fisher",
+          "profile_path": "/rgB2eIOt7WyQjdgJCOuESdDlrjg.jpg"
+        },
+        {
+          "id": 49735,
+          "name": "Aidan Gillen",
+          "character": "Miles Jackson",
+          "profile_path": "/fWWRgyJEGjOPcx43CaFiUCWMBLo.jpg"
+        },
+        {
+          "id": 71128,
+          "name": "Ashley Scott",
+          "character": "Molly Porter",
+          "profile_path": "/7k7Sa5U8F5XL9Gjnn6OP5YsyBXF.jpg"
+        },
+        {
+          "id": 2202,
+          "name": "Steve Harris",
+          "character": "George Aiken",
+          "profile_path": "/6qD0I3RPe2ivV5GdXgW3tJHSu1e.jpg"
+        },
+        {
+          "id": 31137,
+          "name": "Brian J. White",
+          "character": "Hank Carver",
+          "profile_path": "/ihaudvlVUgeTqY6xtjXIFQ8cIB6.jpg"
+        },
+        {
+          "id": 84754,
+          "name": "Gonzalo Menendez",
+          "character": "Ray Santiago",
+          "profile_path": "/nWvWfIwLZVXjZUru5DG08nAnPW4.jpg"
+        },
+        {
+          "id": 54182,
+          "name": "Taylor Cole",
+          "character": "Erica Kessen",
+          "profile_path": "/kLIJiKWTi7zzgOY9pmLlRQvrwh9.jpg"
+        },
+        {
+          "id": 84756,
+          "name": "Kyle Clements",
+          "character": "Dave Fisher",
+          "profile_path": "/ui6PbmzVVp55Hg36VtAxiIOVxTr.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 16938,
+          "name": "Renny Harlin",
+          "profile_path": "/IhXiDrZBrsLZpB5K5BmzUGkp4G.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": "person-2167",
+      "title": "Mercedes Ruehl",
+      "year": 1948,
+      "genre": [
+        "Acteur"
+      ],
+      "director": [],
+      "actors": [
+        "Mercedes Ruehl"
+      ],
+      "characters": [],
+      "poster_path": "/8GUgm1Xcsb6LJgNugQEQCOpx5Su.jpg",
+      "overview": "",
+      "rating": 0,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 2167,
+          "name": "Mercedes Ruehl",
+          "character": "",
+          "profile_path": "/8GUgm1Xcsb6LJgNugQEQCOpx5Su.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "person"
+    },
+    {
+      "id": "person-5151",
+      "title": "Beth Grant",
+      "year": 1949,
+      "genre": [
+        "Acteur"
+      ],
+      "director": [],
+      "actors": [
+        "Beth Grant"
+      ],
+      "characters": [],
+      "poster_path": "/1l2emWQfB7mQJP17fN9ySY0YrWP.jpg",
+      "overview": "",
+      "rating": 0,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 5151,
+          "name": "Beth Grant",
+          "character": "",
+          "profile_path": "/1l2emWQfB7mQJP17fN9ySY0YrWP.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "person"
+    },
+    {
+      "id": "person-2956",
+      "title": "Amanda Peet",
+      "year": 1972,
+      "genre": [
+        "Acteur"
+      ],
+      "director": [],
+      "actors": [
+        "Amanda Peet"
+      ],
+      "characters": [],
+      "poster_path": "/tuIbShRCTlOwlChLkmYfTbCuRdp.jpg",
+      "overview": "",
+      "rating": 0,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 2956,
+          "name": "Amanda Peet",
+          "character": "",
+          "profile_path": "/tuIbShRCTlOwlChLkmYfTbCuRdp.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "person"
+    },
+    {
+      "id": "person-9827",
+      "title": "Rose Byrne",
+      "year": 1979,
+      "genre": [
+        "Acteur"
+      ],
+      "director": [],
+      "actors": [
+        "Rose Byrne"
+      ],
+      "characters": [],
+      "poster_path": "/wR8YZlrewVW2FixRBrJcxaXU3R1.jpg",
+      "overview": "",
+      "rating": 0,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 9827,
+          "name": "Rose Byrne",
+          "character": "",
+          "profile_path": "/wR8YZlrewVW2FixRBrJcxaXU3R1.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "person"
+    },
+    {
+      "id": 1771,
+      "title": "Captain America: The First Avenger",
+      "year": 2011,
+      "genre": [
+        "Actie",
+        "Avontuur",
+        "Sciencefiction"
+      ],
+      "director": [
+        "Joe Johnston"
+      ],
+      "actors": [
+        "Chris Evans",
+        "Hayley Atwell",
+        "Sebastian Stan",
+        "Tommy Lee Jones",
+        "Hugo Weaving",
+        "Dominic Cooper",
+        "Richard Armitage",
+        "Stanley Tucci"
+      ],
+      "characters": [
+        "Captain America / Steve Rogers",
+        "Peggy Carter",
+        "James Buchanan 'Bucky' Barnes",
+        "Colonel Chester Phillips",
+        "Johann Schmidt / Red Skull",
+        "Howard Stark",
+        "Heinz Kruger",
+        "Dr. Abraham Erskine"
+      ],
+      "poster_path": "/vSNxAJTlD0r02V9sPYpOjqDZXUK.jpg",
+      "backdrop_path": "/yFuKvT4Vm3sKHdFY4eG6I4ldAnn.jpg",
+      "overview": "Een dappere, maar zachtaardige jonge soldaat genaamd Steve Rogers moet aan een aantal experimenten deelnemen voor het Amerikaanse leger, het zogenaamde Super Soldier programma. Maar wanneer het experiment wordt stopgezet besluiten ze Steve te gebruiken om het imago van het Amerikaanse leger te verbeteren.",
+      "rating": 7,
+      "runtime": 124,
+      "cast_details": [
+        {
+          "id": 16828,
+          "name": "Chris Evans",
+          "character": "Captain America / Steve Rogers",
+          "profile_path": "/3bOGNsHlrswhyW79uvIHH1V43JI.jpg"
+        },
+        {
+          "id": 39459,
+          "name": "Hayley Atwell",
+          "character": "Peggy Carter",
+          "profile_path": "/x57wXHexIjD2ywly9cRA4rov7cu.jpg"
+        },
+        {
+          "id": 60898,
+          "name": "Sebastian Stan",
+          "character": "James Buchanan 'Bucky' Barnes",
+          "profile_path": "/v20RLWst39klatsqUgSrwHxhwee.jpg"
+        },
+        {
+          "id": 2176,
+          "name": "Tommy Lee Jones",
+          "character": "Colonel Chester Phillips",
+          "profile_path": "/mCiZNRAzbnPojJEZwVZWLw9kzxR.jpg"
+        },
+        {
+          "id": 1331,
+          "name": "Hugo Weaving",
+          "character": "Johann Schmidt / Red Skull",
+          "profile_path": "/lSC8Et0PYi5zeQb3IpPkFje7hgR.jpg"
+        },
+        {
+          "id": 55470,
+          "name": "Dominic Cooper",
+          "character": "Howard Stark",
+          "profile_path": "/wFPdARerxpaAaHucYGTSNqViWpn.jpg"
+        },
+        {
+          "id": 30315,
+          "name": "Richard Armitage",
+          "character": "Heinz Kruger",
+          "profile_path": "/oNoKjTOUNUiJ01UNQSCQDkt5EHi.jpg"
+        },
+        {
+          "id": 2283,
+          "name": "Stanley Tucci",
+          "character": "Dr. Abraham Erskine",
+          "profile_path": "/q4TanMDI5Rgsvw4SfyNbPBh4URr.jpg"
+        }
+      ],
+      "director_details": [
+        {
+          "id": 4945,
+          "name": "Joe Johnston",
+          "profile_path": "/fbGZo6CG9Z9zKFh8D5wHunyu7gJ.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "movie"
+    },
+    {
+      "id": "person-1331",
+      "title": "Hugo Weaving",
+      "year": 1960,
+      "genre": [
+        "Acteur"
+      ],
+      "director": [],
+      "actors": [
+        "Hugo Weaving"
+      ],
+      "characters": [],
+      "poster_path": "/lSC8Et0PYi5zeQb3IpPkFje7hgR.jpg",
+      "overview": "",
+      "rating": 0,
+      "runtime": null,
+      "cast_details": [
+        {
+          "id": 1331,
+          "name": "Hugo Weaving",
+          "character": "",
+          "profile_path": "/lSC8Et0PYi5zeQb3IpPkFje7hgR.jpg"
+        }
+      ],
+      "fullDetails": true,
+      "media_type": "person"
     }
   ]
 }

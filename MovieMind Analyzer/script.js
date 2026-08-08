@@ -5,6 +5,7 @@ const MOVIEMIND_API_KEY =
 
 const ACTOR_ALIAS_CACHE_KEY = "moviemindAnalyzerActorAliases";
 const ACTOR_POPULARITY_CACHE_KEY = "moviemindAnalyzerActorPopularity";
+const ACTOR_SCORE_ADJUSTMENT_KEY = "moviemindAnalyzerActorScoreAdjustments";
 
 const state = {
     database: null,
@@ -15,11 +16,13 @@ const state = {
         ranking: [],
         aliases: loadActorAliasCache(),
         popularity: loadActorPopularityCache(),
+        adjustments: loadActorScoreAdjustments(),
+        selectedActorKey: null,
         filtered: [],
         page: 1,
         pageSize: 50,
         query: "",
-        sort: "score-desc"
+        sort: "fame-desc"
     }
 };
 
@@ -287,19 +290,19 @@ function analyzeActors() {
 
     try {
         const actors = buildActorAnalysis(state.records);
-        const ranking = Array.from(actors.values())
-            .map(finaliseActorStatistics)
-            .sort((a, b) => {
-                if (b.rawScore !== a.rawScore) {
-                    return b.rawScore - a.rawScore;
-                }
+        const ranking = calculateActorFameScores(
+            Array.from(actors.values()).map(finaliseActorStatistics)
+        ).sort((a, b) => {
+            if (b.fameScore !== a.fameScore) {
+                return b.fameScore - a.fameScore;
+            }
 
-                if (b.titleCount !== a.titleCount) {
-                    return b.titleCount - a.titleCount;
-                }
+            if (b.rawScore !== a.rawScore) {
+                return b.rawScore - a.rawScore;
+            }
 
-                return a.name.localeCompare(b.name, "nl");
-            });
+            return a.name.localeCompare(b.name, "nl");
+        });
 
         state.analysis.actors = actors;
         state.analysis.ranking = ranking;
@@ -321,7 +324,7 @@ function analyzeActors() {
         );
     } finally {
         button.disabled = false;
-        button.textContent = "🎭 Acteurs opnieuw analyseren";
+        button.textContent = "⭐ Acteursscores opnieuw berekenen";
     }
 }
 
@@ -513,6 +516,133 @@ function finaliseActorStatistics(actor) {
     };
 }
 
+
+function calculateActorFameScores(actors) {
+    if (!actors.length) return actors;
+
+    const maxRawScore = Math.max(...actors.map((actor) => actor.rawScore), 1);
+    const maxTitles = Math.max(...actors.map((actor) => actor.titleCount), 1);
+    const maxCoActors = Math.max(...actors.map((actor) => actor.coActorCount), 1);
+
+    return actors.map((actor) => {
+        const popularityCache = state.analysis.popularity[
+            createActorPopularityCacheKey(actor)
+        ];
+        const tmdbPopularity = popularityCache
+            ? Number(popularityCache.popularity || 0)
+            : 0;
+
+        const databaseComponent = clamp(
+            Math.log1p(actor.rawScore) / Math.log1p(maxRawScore) * 50,
+            0,
+            50
+        );
+        const titleComponent = clamp(
+            Math.log1p(actor.titleCount) / Math.log1p(maxTitles) * 25,
+            0,
+            25
+        );
+        const networkComponent = clamp(
+            Math.log1p(actor.coActorCount) / Math.log1p(maxCoActors) * 15,
+            0,
+            15
+        );
+        const popularityComponent = tmdbPopularity > 0
+            ? clamp(Math.log1p(tmdbPopularity) / Math.log1p(250) * 10, 0, 10)
+            : 0;
+
+        const cacheKey = createActorScoreAdjustmentKey(actor);
+        const adjustment = Number(state.analysis.adjustments[cacheKey] || 0);
+        const automaticScore = Math.round(
+            databaseComponent + titleComponent + networkComponent + popularityComponent
+        );
+        const fameScore = clamp(automaticScore + adjustment, 0, 100);
+
+        return {
+            ...actor,
+            tmdbPopularity,
+            automaticScore,
+            adjustment,
+            fameScore,
+            tier: getActorTier(fameScore)
+        };
+    });
+}
+
+function clamp(value, minimum, maximum) {
+    return Math.min(maximum, Math.max(minimum, value));
+}
+
+function getActorTier(score) {
+    if (score >= 75) return "Makkelijk";
+    if (score >= 50) return "Gemiddeld";
+    return "Moeilijk";
+}
+
+function createActorScoreAdjustmentKey(actor) {
+    if (actor.id) return "id:" + String(actor.id);
+    return "name:" + normaliseActorKey(actor.name);
+}
+
+function loadActorScoreAdjustments() {
+    try {
+        const value = localStorage.getItem(ACTOR_SCORE_ADJUSTMENT_KEY);
+        const parsed = value ? JSON.parse(value) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function saveActorScoreAdjustments() {
+    localStorage.setItem(
+        ACTOR_SCORE_ADJUSTMENT_KEY,
+        JSON.stringify(state.analysis.adjustments)
+    );
+}
+
+function adjustSelectedActorScore(delta) {
+    const key = state.analysis.selectedActorKey;
+    if (!key) return;
+
+    const actor = state.analysis.ranking.find(
+        (item) => createActorScoreAdjustmentKey(item) === key
+    );
+    if (!actor) return;
+
+    const current = Number(state.analysis.adjustments[key] || 0);
+    const next = clamp(current + delta, -30, 30);
+    state.analysis.adjustments[key] = next;
+    saveActorScoreAdjustments();
+    refreshActorScores(actor);
+}
+
+function resetSelectedActorScore() {
+    const key = state.analysis.selectedActorKey;
+    if (!key) return;
+    delete state.analysis.adjustments[key];
+    saveActorScoreAdjustments();
+
+    const actor = state.analysis.ranking.find(
+        (item) => createActorScoreAdjustmentKey(item) === key
+    );
+    if (actor) refreshActorScores(actor);
+}
+
+function refreshActorScores(actorToReopen = null) {
+    state.analysis.ranking = calculateActorFameScores(state.analysis.ranking)
+        .sort((a, b) => b.fameScore - a.fameScore || b.rawScore - a.rawScore);
+    applyAnalysisView();
+
+    if (actorToReopen) {
+        const updated = state.analysis.ranking.find(
+            (item) => createActorScoreAdjustmentKey(item) ===
+                createActorScoreAdjustmentKey(actorToReopen)
+        );
+        if (updated) openActorDetail(updated, false);
+    }
+}
+
 function initialiseAnalysisControls() {
     const searchInput =
         document.getElementById("analysis-search-input");
@@ -524,6 +654,9 @@ function initialiseAnalysisControls() {
         document.getElementById("analysis-next-page");
     const closeDetailButton =
         document.getElementById("actor-detail-close");
+    const scoreMinusButton = document.getElementById("actor-score-minus");
+    const scorePlusButton = document.getElementById("actor-score-plus");
+    const scoreResetButton = document.getElementById("actor-score-reset");
 
     if (searchInput) {
         searchInput.addEventListener("input", () => {
@@ -568,6 +701,19 @@ function initialiseAnalysisControls() {
             closeActorDetail
         );
     }
+
+    if (scoreMinusButton && !scoreMinusButton.dataset.bound) {
+        scoreMinusButton.dataset.bound = "true";
+        scoreMinusButton.addEventListener("click", () => adjustSelectedActorScore(-5));
+    }
+    if (scorePlusButton && !scorePlusButton.dataset.bound) {
+        scorePlusButton.dataset.bound = "true";
+        scorePlusButton.addEventListener("click", () => adjustSelectedActorScore(5));
+    }
+    if (scoreResetButton && !scoreResetButton.dataset.bound) {
+        scoreResetButton.dataset.bound = "true";
+        scoreResetButton.addEventListener("click", resetSelectedActorScore);
+    }
 }
 
 function applyAnalysisView() {
@@ -606,6 +752,16 @@ function applyAnalysisView() {
 
 function getAnalysisSortFunction() {
     switch (state.analysis.sort) {
+        case "fame-asc":
+            return (a, b) =>
+                a.fameScore - b.fameScore ||
+                a.name.localeCompare(b.name, "nl");
+
+        case "fame-desc":
+            return (a, b) =>
+                b.fameScore - a.fameScore ||
+                b.rawScore - a.rawScore;
+
         case "score-asc":
             return (a, b) =>
                 a.rawScore - b.rawScore ||
@@ -682,6 +838,7 @@ function renderActorAnalysisPage() {
         })
     );
     setText("analysis-shown-count", state.analysis.filtered.length);
+    renderScoreDistribution();
 
     const tableBody =
         document.getElementById("analysis-table-body");
@@ -735,6 +892,13 @@ function renderActorAnalysisPage() {
             })
         );
 
+        const fameCell = appendCell(row, actor.fameScore);
+        fameCell.classList.add("actor-fame-score");
+        fameCell.dataset.actorFameKey = createActorScoreAdjustmentKey(actor);
+
+        const tierCell = appendCell(row, actor.tier);
+        tierCell.classList.add("actor-tier", "tier-" + actor.tier.toLowerCase());
+
         tableBody.appendChild(row);
     });
 
@@ -754,6 +918,114 @@ function renderActorAnalysisPage() {
     if (content) {
         content.hidden = false;
     }
+}
+
+function renderScoreDistribution() {
+    const allActors = state.analysis.ranking;
+    if (!allActors.length) return;
+
+    const playableActors = allActors.filter((actor) => actor.titleCount >= 2);
+
+    renderScoreBands(document.getElementById("score-band-list"), allActors);
+    renderScoreBands(document.getElementById("playable-score-band-list"), playableActors);
+    setText("playable-distribution-count", playableActors.length);
+
+    const thresholds = calculateSuggestedDifficultyThresholds(playableActors);
+    updatePlayableTierDistribution(playableActors, thresholds);
+}
+
+function getScoreBands() {
+    return [
+        { label: "90–100", minimum: 90, maximum: 100 },
+        { label: "80–89", minimum: 80, maximum: 89 },
+        { label: "70–79", minimum: 70, maximum: 79 },
+        { label: "60–69", minimum: 60, maximum: 69 },
+        { label: "50–59", minimum: 50, maximum: 59 },
+        { label: "40–49", minimum: 40, maximum: 49 },
+        { label: "30–39", minimum: 30, maximum: 39 },
+        { label: "20–29", minimum: 20, maximum: 29 },
+        { label: "10–19", minimum: 10, maximum: 19 },
+        { label: "0–9", minimum: 0, maximum: 9 }
+    ];
+}
+
+function renderScoreBands(container, actors) {
+    if (!container) return;
+
+    const total = actors.length;
+    const counts = getScoreBands().map((band) => ({
+        ...band,
+        count: actors.filter((actor) =>
+            actor.fameScore >= band.minimum && actor.fameScore <= band.maximum
+        ).length
+    }));
+    const largest = Math.max(...counts.map((band) => band.count), 1);
+
+    container.innerHTML = "";
+
+    counts.forEach((band) => {
+        const percentage = total ? band.count / total * 100 : 0;
+        const relativeWidth = band.count / largest * 100;
+        const row = document.createElement("div");
+        row.className = "score-band-row";
+        row.innerHTML =
+            '<span class="score-band-label">' + band.label + '</span>' +
+            '<div class="score-band-track"><span style="width:' +
+            relativeWidth.toFixed(2) + '%"></span></div>' +
+            '<strong>' + band.count.toLocaleString("nl-NL") + '</strong>' +
+            '<small>' + percentage.toLocaleString("nl-NL", {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }) + '%</small>';
+        container.appendChild(row);
+    });
+}
+
+function calculateSuggestedDifficultyThresholds(actors) {
+    if (!actors.length) return { easyMinimum: 75, mediumMinimum: 50 };
+
+    const scores = actors.map((actor) => actor.fameScore).sort((a, b) => b - a);
+    const easyIndex = Math.min(scores.length - 1, Math.max(0, Math.ceil(scores.length * 0.20) - 1));
+    const mediumIndex = Math.min(scores.length - 1, Math.max(0, Math.ceil(scores.length * 0.55) - 1));
+
+    const easyMinimum = scores[easyIndex];
+    let mediumMinimum = scores[mediumIndex];
+
+    if (mediumMinimum >= easyMinimum) mediumMinimum = Math.max(0, easyMinimum - 1);
+
+    return { easyMinimum, mediumMinimum };
+}
+
+function updatePlayableTierDistribution(actors, thresholds) {
+    const total = actors.length;
+    const easyMinimum = thresholds.easyMinimum;
+    const mediumMinimum = thresholds.mediumMinimum;
+
+    const counts = {
+        makkelijk: actors.filter((actor) => actor.fameScore >= easyMinimum).length,
+        gemiddeld: actors.filter((actor) =>
+            actor.fameScore >= mediumMinimum && actor.fameScore < easyMinimum
+        ).length,
+        moeilijk: actors.filter((actor) => actor.fameScore < mediumMinimum).length
+    };
+
+    setText("suggested-thresholds-text",
+        "Makkelijk " + easyMinimum + "–100 · Gemiddeld " +
+        mediumMinimum + "–" + (easyMinimum - 1) +
+        " · Moeilijk 0–" + (mediumMinimum - 1)
+    );
+    setText("tier-label-makkelijk", "Makkelijk · " + easyMinimum + "–100");
+    setText("tier-label-gemiddeld", "Gemiddeld · " + mediumMinimum + "–" + (easyMinimum - 1));
+    setText("tier-label-moeilijk", "Moeilijk · 0–" + (mediumMinimum - 1));
+
+    Object.entries(counts).forEach(([tier, count]) => {
+        setText("tier-count-" + tier, count);
+        const percentage = total ? count / total * 100 : 0;
+        setText("tier-percent-" + tier, percentage.toLocaleString("nl-NL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }) + "%");
+    });
 }
 
 function updateAnalysisPagination() {
@@ -785,7 +1057,7 @@ function updateAnalysisPagination() {
     }
 }
 
-function openActorDetail(actor) {
+function openActorDetail(actor, scrollIntoView = true) {
     const panel =
         document.getElementById("actor-detail-panel");
 
@@ -794,6 +1066,7 @@ function openActorDetail(actor) {
     }
 
     const displayName = getActorDisplayName(actor);
+    state.analysis.selectedActorKey = createActorScoreAdjustmentKey(actor);
     const originalName =
         document.getElementById("actor-detail-original-name");
 
@@ -813,6 +1086,12 @@ function openActorDetail(actor) {
             maximumFractionDigits: 2
         })
     );
+    setText("actor-detail-fame", actor.fameScore);
+    setText("actor-detail-tier", actor.tier);
+    setText(
+        "actor-score-adjustment",
+        actor.adjustment > 0 ? "+" + actor.adjustment : actor.adjustment
+    );
 
     if (originalName) {
         originalName.hidden = displayName === actor.name;
@@ -827,10 +1106,12 @@ function openActorDetail(actor) {
     renderActorCoActorList(actor.coActors);
 
     panel.hidden = false;
-    panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
+    if (scrollIntoView) {
+        panel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
 }
 
 function closeActorDetail() {
@@ -840,6 +1121,7 @@ function closeActorDetail() {
     if (panel) {
         panel.hidden = true;
     }
+    state.analysis.selectedActorKey = null;
 }
 
 function renderActorTitleList(titles) {
@@ -959,7 +1241,9 @@ function ensureAnalysisResultsMarkup() {
             '<div class="analysis-controls">' +
                 '<input id="analysis-search-input" type="search" placeholder="Zoek acteur..." autocomplete="off">' +
                 '<select id="analysis-sort-select">' +
-                    '<option value="score-desc">Score: hoog naar laag</option>' +
+                    '<option value="fame-desc">Bekendheid: hoog naar laag</option>' +
+                    '<option value="fame-asc">Bekendheid: laag naar hoog</option>' +
+                    '<option value="score-desc">Databasescore: hoog naar laag</option>' +
                     '<option value="score-asc">Score: laag naar hoog</option>' +
                     '<option value="titles-desc">Titels: meeste eerst</option>' +
                     '<option value="coactors-desc">Medespelers: meeste eerst</option>' +
@@ -976,7 +1260,9 @@ function ensureAnalysisResultsMarkup() {
                         '<th>Medespelers</th>' +
                         '<th>Mogelijke antwoorden</th>' +
                         '<th>TMDB-populariteit</th>' +
-                        '<th>Ruwe score</th>' +
+                        '<th>Databasescore</th>' +
+                        '<th>Bekendheid</th>' +
+                        '<th>Niveau</th>' +
                     '</tr></thead>' +
                     '<tbody id="analysis-table-body"></tbody>' +
                 '</table>' +
@@ -1227,6 +1513,7 @@ async function resolveVisibleActorPopularity(actors) {
 
             saveActorPopularityCache();
             updateActorPopularityUi(actor);
+            refreshActorScoreFromPopularity(actor);
         } catch (error) {
             console.warn(
                 "TMDB-populariteit ophalen mislukt voor " +
@@ -1309,6 +1596,35 @@ function updateActorPopularityUi(actor) {
         detailName.textContent === getActorDisplayName(actor)
     ) {
         setText("actor-detail-popularity", display);
+    }
+}
+
+
+function refreshActorScoreFromPopularity(actor) {
+    const key = createActorScoreAdjustmentKey(actor);
+    const target = state.analysis.ranking.find(
+        (item) => createActorScoreAdjustmentKey(item) === key
+    );
+    if (!target) return;
+
+    const recalculated = calculateActorFameScores(state.analysis.ranking);
+    state.analysis.ranking = recalculated.sort(
+        (a, b) => b.fameScore - a.fameScore || b.rawScore - a.rawScore
+    );
+
+    const updated = state.analysis.ranking.find(
+        (item) => createActorScoreAdjustmentKey(item) === key
+    );
+    if (!updated) return;
+
+    const detailWasOpen = state.analysis.selectedActorKey === key &&
+        document.getElementById("actor-detail-panel") &&
+        !document.getElementById("actor-detail-panel").hidden;
+
+    applyAnalysisView();
+
+    if (detailWasOpen) {
+        openActorDetail(updated, false);
     }
 }
 

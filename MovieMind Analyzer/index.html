@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind Analyzer</title>
-    <link rel="stylesheet" href="style.css?v=1.4.0">
+    <link rel="stylesheet" href="style.css?v=1.7.0">
 </head>
 <body>
     <div class="analyzer-shell">
@@ -69,12 +69,12 @@
                     <span class="step-badge">Stap 3</span>
                     <div>
                         <h2>Acteurs analyseren</h2>
-                        <p>De echte analyse-engine bouwen we in de volgende stap.</p>
+                        <p>Bereken automatisch een bekendheidsscore van 0–100 en een passend MovieMind-niveau.</p>
                     </div>
                 </header>
 
                 <button id="analyze-actors-button" class="primary-button large-button" type="button" disabled>
-                    🎭 Acteurs analyseren
+                    ⭐ Acteursscores berekenen
                 </button>
             </section>
 
@@ -114,6 +114,57 @@
                             </div>
                         </div>
 
+                        <section class="score-distribution" id="score-distribution">
+                            <div class="score-distribution-header">
+                                <div>
+                                    <p class="eyebrow">SCOREVERDELING</p>
+                                    <h3>Verdeling van alle bekendheidsscores</h3>
+                                    <p>Dit is de volledige database. De speelbare verdeling hieronder is bepalender voor de moeilijkheidsgrenzen.</p>
+                                </div>
+                            </div>
+                            <div class="score-band-list" id="score-band-list"></div>
+                        </section>
+
+                        <section class="score-distribution playable-distribution" id="playable-score-distribution">
+                            <div class="score-distribution-header playable-header">
+                                <div>
+                                    <p class="eyebrow">SPEELBARE ACTEURS</p>
+                                    <h3>Bekendheid van acteurs met minimaal 2 titels</h3>
+                                    <p>Deze groep gebruiken we om de moeilijkheidsniveaus te bepalen. De Analyzer berekent automatisch een voorstel op basis van deze verdeling.</p>
+                                </div>
+                                <div class="playable-count-chip">
+                                    <span>Speelbare acteurs</span>
+                                    <strong id="playable-distribution-count">0</strong>
+                                </div>
+                            </div>
+
+                            <div class="score-band-list" id="playable-score-band-list"></div>
+
+                            <div class="suggested-thresholds">
+                                <span class="suggested-label">VOORSTEL ANALYZER</span>
+                                <strong id="suggested-thresholds-text">Wordt berekend…</strong>
+                                <small>Richtlijn: ongeveer 20% Makkelijk, 35% Gemiddeld en 45% Moeilijk.</small>
+                            </div>
+
+                            <div class="tier-distribution">
+                                <div class="tier-summary tier-makkelijk">
+                                    <span id="tier-label-makkelijk">Makkelijk</span>
+                                    <strong id="tier-count-makkelijk">0</strong>
+                                    <small id="tier-percent-makkelijk">0%</small>
+                                </div>
+                                <div class="tier-summary tier-gemiddeld">
+                                    <span id="tier-label-gemiddeld">Gemiddeld</span>
+                                    <strong id="tier-count-gemiddeld">0</strong>
+                                    <small id="tier-percent-gemiddeld">0%</small>
+                                </div>
+                                <div class="tier-summary tier-moeilijk">
+                                    <span id="tier-label-moeilijk">Moeilijk</span>
+                                    <strong id="tier-count-moeilijk">0</strong>
+                                    <small id="tier-percent-moeilijk">0%</small>
+                                </div>
+                            </div>
+                        </section>
+
                         <div class="analysis-controls">
                             <input
                                 id="analysis-search-input"
@@ -123,8 +174,9 @@
                             >
 
                             <select id="analysis-sort-select">
-                                <option value="score-desc">Score: hoog naar laag</option>
-                                <option value="score-asc">Score: laag naar hoog</option>
+                                <option value="fame-desc">Bekendheid: hoog naar laag</option>
+                                <option value="fame-asc">Bekendheid: laag naar hoog</option>
+                                <option value="score-desc">Databasescore: hoog naar laag</option>
                                 <option value="titles-desc">Titels: meeste eerst</option>
                                 <option value="coactors-desc">Medespelers: meeste eerst</option>
                                 <option value="name-asc">Naam: A–Z</option>
@@ -142,7 +194,9 @@
                                         <th>Medespelers</th>
                                         <th>Mogelijke antwoorden</th>
                                         <th>TMDB-populariteit</th>
-                                        <th>Ruwe score</th>
+                                        <th>Databasescore</th>
+                                        <th>Bekendheid</th>
+                                        <th>Niveau</th>
                                     </tr>
                                 </thead>
                                 <tbody id="analysis-table-body"></tbody>
@@ -178,7 +232,22 @@
                                 <div><span>Medespelers</span><strong id="actor-detail-coactors">0</strong></div>
                                 <div><span>Mogelijke antwoorden</span><strong id="actor-detail-answers">0</strong></div>
                                 <div><span>TMDB-populariteit</span><strong id="actor-detail-popularity">—</strong></div>
-                                <div><span>Ruwe score</span><strong id="actor-detail-score">0</strong></div>
+                                <div><span>Databasescore</span><strong id="actor-detail-score">0</strong></div>
+                                <div><span>Bekendheid</span><strong id="actor-detail-fame">0</strong></div>
+                                <div><span>Niveau</span><strong id="actor-detail-tier">—</strong></div>
+                            </div>
+
+                            <div class="actor-score-controls">
+                                <div>
+                                    <strong>Handmatige correctie</strong>
+                                    <small>Alleen gebruiken als de automatische score duidelijk niet klopt.</small>
+                                </div>
+                                <div class="score-adjust-buttons">
+                                    <button id="actor-score-minus" class="secondary-button" type="button">−5</button>
+                                    <span id="actor-score-adjustment">0</span>
+                                    <button id="actor-score-plus" class="secondary-button" type="button">+5</button>
+                                    <button id="actor-score-reset" class="secondary-button" type="button">Reset</button>
+                                </div>
                             </div>
 
                             <div class="actor-detail-columns">
@@ -205,6 +274,6 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="script.js?v=1.4.0"></script>
+    <script src="script.js?v=1.7.0"></script>
 </body>
 </html>

@@ -847,3 +847,216 @@ h1, h2, h3, h4, p, dl, dd { margin-top: 0; }
         width: 100% !important;
     }
 }
+
+/* =========================================================
+   ACTEURSFILMOGRAFIE - STAP 1A
+========================================================= */
+
+.filmography-section[hidden] {
+    display: none;
+}
+
+.filmography-heading-row {
+    margin-top: 26px;
+}
+
+.filmography-list {
+    max-height: 430px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(8, 5, 5, .42);
+}
+
+.filmography-item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 72px;
+    padding: 9px 11px;
+    border-bottom: 1px solid rgba(214, 174, 95, .12);
+}
+
+.filmography-item:last-child {
+    border-bottom: 0;
+}
+
+.filmography-poster {
+    width: 48px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 7px;
+    background: var(--panel-light);
+}
+
+.filmography-poster-placeholder {
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+}
+
+.filmography-copy {
+    min-width: 0;
+}
+
+.filmography-copy strong,
+.filmography-copy span {
+    display: block;
+}
+
+.filmography-copy strong {
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.filmography-copy span {
+    margin-top: 4px;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.filmography-badge {
+    padding: 6px 8px;
+    color: var(--gold-light);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(74, 18, 24, .48);
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.filmography-empty {
+    padding: 25px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (max-width: 560px) {
+    .filmography-item {
+        grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .filmography-poster {
+        width: 42px;
+        height: 56px;
+    }
+
+    .filmography-badge {
+        grid-column: 2;
+        justify-self: start;
+    }
+}
+
+/* =========================================================
+   BULKFOTO'S SCORE 50–69 - VERSIE 2.0.4
+========================================================= */
+
+.maintenance-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.bulk-photo-block {
+    border-color: rgba(214, 174, 95, .46);
+    background:
+        linear-gradient(145deg, rgba(74, 18, 24, .42), rgba(8, 5, 5, .42));
+}
+
+.bulk-photo-block #bulk-score-photos-status {
+    min-height: 40px;
+}
+
+@media (max-width: 1450px) {
+    .maintenance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .maintenance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   ROBUUSTE BULKFOTO-VOORTGANG - VERSIE 2.0.5
+========================================================= */
+
+.bulk-photo-progress {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid rgba(214, 174, 95, .28);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, .2);
+}
+
+.bulk-photo-progress[hidden] {
+    display: none;
+}
+
+.bulk-photo-progress-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    color: var(--cream);
+}
+
+.bulk-photo-progress-head span {
+    color: var(--gold-soft);
+    font-weight: 800;
+}
+
+.bulk-photo-progress-track {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(214, 174, 95, .18);
+}
+
+.bulk-photo-progress-track span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--burgundy), var(--gold-soft));
+    transition: width .2s ease;
+}
+
+.bulk-photo-current {
+    margin: 10px 0 0;
+    min-height: 22px;
+    color: var(--cream);
+    font-size: .86rem;
+}
+
+.bulk-photo-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.bulk-photo-stats span {
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .035);
+    color: var(--muted);
+    font-size: .76rem;
+}
+
+.bulk-photo-stats strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--gold-light);
+    font-size: .95rem;
+}

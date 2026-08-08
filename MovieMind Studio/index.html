@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind Studio 2.0</title>
-    <link rel="stylesheet" href="style.css?v=2.0.2">
+    <link rel="stylesheet" href="style.css?v=2.0.5">
     <style>
         .search-pagination {
             display: flex;
@@ -148,6 +148,16 @@
                             </div>
                         </div>
 
+                        <section class="filmography-section" id="filmography-section" hidden>
+                            <div class="section-label-row filmography-heading-row">
+                                <h4>Films en series</h4>
+                                <span id="filmography-count">0 titels</span>
+                            </div>
+                            <div class="filmography-list" id="filmography-list">
+                                <div class="filmography-empty">Filmografie verschijnt hier.</div>
+                            </div>
+                        </section>
+
                         <button id="add-selected-button" class="primary-button" type="button" disabled>
                             ＋ Toevoegen aan MovieMind
                         </button>
@@ -194,6 +204,35 @@
                             <button id="connect-actors-folder-button" class="secondary-button" type="button">📁 Acteursmap koppelen</button>
                             <button id="reconnect-actors-folder-button" class="ghost-button" type="button" hidden>🔐 Toestemming herstellen</button>
                             <p class="database-status" id="actors-folder-status">Nog geen acteursmap gekoppeld.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Foto's score 50–69</h3>
+                            <p>Eenmalige bulkactie voor speelbare acteurs in de middengroep. Bestaande foto's worden overgeslagen; alleen ontbrekende foto's worden via TMDB opgehaald.</p>
+
+                            <button id="bulk-score-photos-button" class="secondary-button" type="button" disabled>📸 Ontbrekende foto's 50–69 aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-score-photos-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-score-photos-counter">0 / 0</strong>
+                                    <span id="bulk-score-photos-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-score-photos-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-score-photos-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Gedownload <strong id="bulk-stat-downloaded">0</strong></span>
+                                    <span>Aanwezig <strong id="bulk-stat-existing">0</strong></span>
+                                    <span>Geen foto <strong id="bulk-stat-no-photo">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-stat-failed">0</strong></span>
+                                </div>
+                            </div>
+
+                            <p class="database-status" id="bulk-score-photos-status">Koppel eerst de database en acteursmap.</p>
                         </div>
 
                         <div class="maintenance-block">
@@ -249,6 +288,6 @@
     </div>
 
 <script src="config.js"></script>
-<script src="script.js?v=2.0.9"></script>
+<script src="script.js?v=2.0.12"></script>
 </body>
 </html>
