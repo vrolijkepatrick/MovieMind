@@ -4279,3 +4279,684 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
 .draw-score-orange { box-shadow:inset 0 0 14px rgba(141,34,29,.26); }
 .draw-new-game-btn { display:block; width:58%; min-height:clamp(31px,2.65vw,48px); margin:5% auto 0; border:1px solid #d4a13e; border-radius:9px; background:linear-gradient(180deg,#8a211f 0%,#651112 58%,#3b0809 100%); color:#f7d985; font-family:Georgia,"Times New Roman",serif; font-size:clamp(8px,.72vw,14px); font-weight:800; letter-spacing:.09em; text-transform:uppercase; box-shadow:inset 0 0 0 1px rgba(255,225,151,.16),0 6px 13px rgba(0,0,0,.34); }
 .draw-new-game-btn:hover { transform:translateY(-2px); filter:brightness(1.08); border-color:#f3cf71; }
+
+/* =========================================================
+   MOVIEMIND – MOBILE V2
+   Definitieve mobiele override op basis van echte iPhone-test.
+   Desktop blijft onaangetast.
+========================================================= */
+
+@media (max-width: 760px) and (orientation: portrait) {
+    html,
+    body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        background: #050000;
+    }
+
+    .cinema-shell {
+        position: relative !important;
+        inset: auto !important;
+        width: 100vw !important;
+        height: 100svh !important;
+        min-height: 700px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background-image: url("images/cinema-background-v1.png") !important;
+        background-size: auto 100% !important;
+        background-position: center top !important;
+        background-repeat: no-repeat !important;
+    }
+
+    /* Het projectiedoek wordt in portrait bewust veel groter. */
+    .screen-content,
+    body.game-active .screen-content {
+        position: absolute !important;
+        left: 4vw !important;
+        top: 14.5svh !important;
+        width: 92vw !important;
+        height: 59svh !important;
+        min-height: 430px !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    /* ---------------- STARTSCHERM ---------------- */
+    .brand-block {
+        height: auto !important;
+        padding: 10px 0 5px !important;
+    }
+
+    .brand-block h1 {
+        font-size: clamp(30px, 10.5vw, 43px) !important;
+        line-height: 1 !important;
+    }
+
+    .brand-line {
+        width: 68% !important;
+        margin: 5px auto 2px !important;
+    }
+
+    #startScreen {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 4px 14px 12px !important;
+        overflow: visible !important;
+    }
+
+    .player-input-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        transform: none !important;
+    }
+
+    .player-setup {
+        min-width: 0 !important;
+    }
+
+    .player-field {
+        display: grid !important;
+        grid-template-columns: 82px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .player-field span {
+        font-size: 12px !important;
+    }
+
+    .player-avatar {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .player-field input {
+        height: 36px !important;
+        padding: 0 10px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+    }
+
+    .token-picker {
+        margin-top: 4px !important;
+        padding: 0 !important;
+    }
+
+    .token-picker legend {
+        margin-bottom: 3px !important;
+        font-size: 8px !important;
+    }
+
+    .token-options {
+        gap: 6px !important;
+        justify-content: center !important;
+    }
+
+    .token-option {
+        width: 44px !important;
+        height: 38px !important;
+        min-width: 44px !important;
+        min-height: 38px !important;
+    }
+
+    .token-option img {
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+
+    .difficulty-section {
+        margin-top: 10px !important;
+    }
+
+    .difficulty-title {
+        margin: 0 0 6px !important;
+        font-size: 13px !important;
+    }
+
+    .difficulty-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+    }
+
+    .difficulty-card {
+        height: 76px !important;
+        min-height: 76px !important;
+        padding: 8px 3px !important;
+        border-radius: 7px !important;
+    }
+
+    .difficulty-name {
+        margin-top: 0 !important;
+        font-size: clamp(10px, 3.25vw, 13px) !important;
+    }
+
+    .difficulty-description {
+        width: 96% !important;
+        margin-top: 6px !important;
+        font-size: clamp(7px, 2.25vw, 9px) !important;
+        line-height: 1.08 !important;
+    }
+
+    .difficulty-card.selected::after {
+        font-size: 5px !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: 6px !important;
+        font-size: 10px !important;
+    }
+
+    #startBtn {
+        width: 72% !important;
+        height: 40px !important;
+        margin-top: 5px !important;
+        font-size: 13px !important;
+    }
+
+    .developerToggleRow {
+        margin-top: 5px !important;
+    }
+
+    #developerToggleBtn {
+        padding: 4px 9px !important;
+        font-size: 7px !important;
+    }
+
+    /* ---------------- SPEELSCHERM ---------------- */
+    body.game-active .screen-content {
+        top: 12.5svh !important;
+        height: 64svh !important;
+        min-height: 470px !important;
+    }
+
+    body.game-active .screen-frame,
+    .screen-frame {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.game-active #gameScreen,
+    #gameScreen {
+        position: relative !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.game-active .status.hud-ready,
+    body.game-active .status.hud-ready.blue-turn,
+    body.game-active .status.hud-ready.orange-turn {
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 10% !important;
+        min-height: 48px !important;
+        padding: 0 8px !important;
+        grid-template-columns: minmax(0, .95fr) minmax(0, 1.25fr) minmax(0, .85fr) !important;
+        border-radius: 13px !important;
+    }
+
+    body.game-active .hud-difficulty,
+    body.game-active .status-center,
+    body.game-active .hud-progress {
+        min-width: 0 !important;
+    }
+
+    body.game-active .hud-meta-label,
+    body.game-active .hud-progress-label,
+    body.game-active .status-label {
+        font-size: 6px !important;
+        letter-spacing: .06em !important;
+    }
+
+    body.game-active #hudDifficulty,
+    body.game-active #hudRemaining,
+    body.game-active #player {
+        font-size: clamp(8px, 2.55vw, 11px) !important;
+    }
+
+    body.game-active .status-icon {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    body.game-active .hud-player-token {
+        max-width: 26px !important;
+        max-height: 26px !important;
+    }
+
+    body.game-active .board {
+        position: absolute !important;
+        left: 0 !important;
+        top: 11% !important;
+        width: 100% !important;
+        height: 89% !important;
+        display: grid !important;
+        grid-template-columns: 23% repeat(3, minmax(0, 1fr)) !important;
+        grid-template-rows: 29% repeat(3, minmax(0, 1fr)) !important;
+        gap: 3px !important;
+    }
+
+    body.game-active .board .actor-header {
+        min-width: 0 !important;
+        min-height: 0 !important;
+    }
+
+    body.game-active .board .actor-header .actor-portrait,
+    body.game-active .board .actor-header:hover .actor-portrait {
+        top: 3% !important;
+        bottom: 3% !important;
+        left: 50% !important;
+        width: auto !important;
+        height: 94% !important;
+        max-width: 94% !important;
+        aspect-ratio: 1.02 / 1 !important;
+        object-fit: cover !important;
+        object-position: 50% 18% !important;
+        transform: translateX(-50%) !important;
+    }
+
+    body.game-active .board .actor-name {
+        font-size: clamp(7px, 2.3vw, 10px) !important;
+        letter-spacing: .015em !important;
+    }
+
+    body.game-active .board .side.genre-panel,
+    body.game-active .cell {
+        border-radius: 5px !important;
+    }
+
+    body.game-active .board .side-without-image .side-label {
+        font-size: clamp(7px, 2.1vw, 9px) !important;
+    }
+
+    body.game-active .cell {
+        padding: 2px !important;
+        font-size: clamp(7px, 2.05vw, 9px) !important;
+    }
+
+    body.game-active .cell:empty::before {
+        width: 20px !important;
+        height: 15px !important;
+        margin-bottom: 4px !important;
+    }
+
+    body.game-active .cell:empty::after {
+        font-size: clamp(6px, 1.85vw, 8px) !important;
+        line-height: 1.05 !important;
+    }
+
+    body.game-active .claimed-title {
+        font-size: clamp(7px, 2.05vw, 9px) !important;
+    }
+
+    body.game-active .claimed-owner {
+        font-size: clamp(6px, 1.7vw, 8px) !important;
+    }
+
+    body.game-active .claimed-token,
+    body.game-active .claimed-token-image {
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+
+    /* Touch: voorkom vastplakkende hover-effecten. */
+    body.game-active .cell:hover {
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* ---------------- POPUPS ---------------- */
+    .popup,
+    .feedback-overlay,
+    .winner-overlay,
+    .draw-overlay {
+        padding: 12px !important;
+    }
+
+    .popup-box,
+    .feedback-card,
+    .winner-overlay-card,
+    .draw-overlay-card {
+        width: min(94vw, 460px) !important;
+        max-height: 88svh !important;
+        overflow-y: auto !important;
+    }
+
+    .popup-box {
+        padding: 22px 16px 16px !important;
+    }
+
+    #question {
+        font-size: clamp(18px, 5.4vw, 24px) !important;
+    }
+
+    .popup-question-hint {
+        font-size: 11px !important;
+    }
+
+    .popup-input-wrap input,
+    #answerInput {
+        min-height: 44px !important;
+        font-size: 16px !important;
+    }
+
+    .buttons {
+        gap: 7px !important;
+    }
+
+    .buttons button {
+        min-height: 42px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* Landscape: behoud de bestaande desktoppresentatie, maar zorg dat de
+   startknop en het onderste deel van het startscherm binnen het doek blijven. */
+@media (max-height: 520px) and (orientation: landscape) {
+    #startScreen {
+        padding-top: 0 !important;
+    }
+
+    .brand-block {
+        height: 13% !important;
+        padding-top: .4% !important;
+    }
+
+    .player-input-grid {
+        transform: translateY(2%) !important;
+    }
+
+    .difficulty-section {
+        margin-top: .5% !important;
+    }
+
+    .difficulty-card {
+        height: clamp(58px, 5.2vw, 88px) !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: .35% !important;
+    }
+
+    #startBtn {
+        height: clamp(27px, 2.35vw, 40px) !important;
+        margin-top: 0 !important;
+    }
+
+    .developerToggleRow {
+        margin-top: -.15% !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – MOBILE V3 LANDSCAPE FIX
+   Gebruikt de zichtbare Safari-hoogte (svh), zodat MovieMind
+   niet achter de browserbalken verdwijnt. Portrait V2 blijft gelijk.
+========================================================= */
+
+@media (orientation: landscape) and (max-height: 600px) {
+    html,
+    body {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background: #050000 !important;
+    }
+
+    .cinema-shell {
+        position: fixed !important;
+        inset: 0 !important;
+        width: min(100vw, 150svh) !important;
+        height: min(100svh, 66.6667vw) !important;
+        min-height: 0 !important;
+        margin: auto !important;
+        overflow: hidden !important;
+        background-size: 100% 100% !important;
+        background-position: center center !important;
+    }
+
+    /*
+    Startscherm: behoud exact de desktopverhouding binnen het
+    zichtbare bioscoopcanvas, maar maak het nét compacter.
+    */
+    .screen-content {
+        left: 22.85% !important;
+        top: 23.15% !important;
+        width: 54.30% !important;
+        height: 40.85% !important;
+        overflow: hidden !important;
+    }
+
+    .brand-block {
+        height: 13% !important;
+        padding-top: .3% !important;
+    }
+
+    .player-input-grid {
+        transform: none !important;
+        gap: 1.7% !important;
+    }
+
+    .token-picker {
+        margin-top: .7% !important;
+    }
+
+    .token-option {
+        height: clamp(24px, 2.3vw, 39px) !important;
+    }
+
+    .difficulty-section {
+        margin-top: 0 !important;
+    }
+
+    .difficulty-title {
+        margin-bottom: .4% !important;
+    }
+
+    .difficulty-card {
+        height: clamp(48px, 4.1vw, 70px) !important;
+        padding-top: 2% !important;
+        padding-bottom: 1.8% !important;
+    }
+
+    .difficulty-card .difficulty-description {
+        margin-top: 1% !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: .2% !important;
+    }
+
+    #startBtn {
+        height: clamp(24px, 2.1vw, 35px) !important;
+        margin-top: 0 !important;
+    }
+
+    .developerToggleRow {
+        margin-top: -1.1% !important;
+    }
+
+    /*
+    Speelscherm: gebruik dezelfde desktop-bordverhouding,
+    maar volledig binnen het zichtbare Safari-canvas.
+    */
+    body.game-active .screen-content {
+        left: 19.7% !important;
+        top: 19.8% !important;
+        width: 60.6% !important;
+        height: 49.2% !important;
+        overflow: visible !important;
+    }
+
+    body.game-active .screen-frame {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.game-active #gameScreen {
+        position: relative !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+    }
+
+    body.game-active .status.hud-ready,
+    body.game-active .status.hud-ready.blue-turn,
+    body.game-active .status.hud-ready.orange-turn {
+        top: .5% !important;
+        left: .8% !important;
+        right: .8% !important;
+        width: auto !important;
+        height: 9.5% !important;
+        min-height: 30px !important;
+    }
+
+    body.game-active .board {
+        position: absolute !important;
+        left: .8% !important;
+        top: 10.7% !important;
+        width: 98.4% !important;
+        height: 89.3% !important;
+        grid-template-columns: 18.5% repeat(3, minmax(0, 1fr)) !important;
+        grid-template-rows: 30% repeat(3, minmax(0, 1fr)) !important;
+        gap: .55% !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – MOBILE V3.1
+   Alleen landscape startscherm: maak ruimte voor START SPEL.
+   Portrait en het speelbord blijven ongewijzigd.
+========================================================= */
+
+@media (orientation: landscape) and (max-height: 600px) {
+    body:not(.game-active) .brand-block {
+        height: 11.5% !important;
+        padding-top: 0 !important;
+    }
+
+    body:not(.game-active) .brand-block h1 {
+        font-size: clamp(20px, 2.25vw, 38px) !important;
+        line-height: .92 !important;
+    }
+
+    body:not(.game-active) .brand-line {
+        margin-top: .2% !important;
+        margin-bottom: .1% !important;
+    }
+
+    body:not(.game-active) #startScreen {
+        height: 88.5% !important;
+        padding-top: 0 !important;
+    }
+
+    body:not(.game-active) .player-input-grid {
+        transform: translateY(-2%) !important;
+    }
+
+    body:not(.game-active) .token-picker {
+        margin-top: .15% !important;
+    }
+
+    body:not(.game-active) .token-picker legend {
+        margin-bottom: .1% !important;
+    }
+
+    body:not(.game-active) .token-option {
+        height: clamp(22px, 2.05vw, 34px) !important;
+    }
+
+    body:not(.game-active) .difficulty-section {
+        margin-top: -.3% !important;
+    }
+
+    body:not(.game-active) .difficulty-title {
+        margin-bottom: .15% !important;
+    }
+
+    body:not(.game-active) .difficulty-card {
+        height: clamp(43px, 3.75vw, 63px) !important;
+    }
+
+    body:not(.game-active) .difficulty-name {
+        margin-top: 1% !important;
+    }
+
+    body:not(.game-active) .difficulty-description {
+        margin-top: .4% !important;
+        line-height: 1.05 !important;
+    }
+
+    body:not(.game-active) .selected-difficulty-summary {
+        margin-top: 0 !important;
+        line-height: 1 !important;
+    }
+
+    body:not(.game-active) #startBtn {
+        display: block !important;
+        width: 54% !important;
+        height: clamp(23px, 1.95vw, 33px) !important;
+        margin: .35% auto 0 !important;
+        font-size: clamp(8px, .72vw, 12px) !important;
+    }
+
+    body:not(.game-active) .developerToggleRow {
+        margin-top: -.35% !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – MOBILE V3.2
+   Landscape startscherm: START SPEL altijd zichtbaar.
+   We positioneren de knop onderaan ín het projectiedoek.
+========================================================= */
+
+@media (orientation: landscape) and (max-height: 600px) {
+    body:not(.game-active) #startScreen {
+        position: relative !important;
+        height: 88.5% !important;
+        padding-bottom: 34px !important;
+        overflow: hidden !important;
+    }
+
+    body:not(.game-active) #startBtn {
+        position: absolute !important;
+        left: 50% !important;
+        bottom: 3px !important;
+        transform: translateX(-50%) !important;
+
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+
+        width: 54% !important;
+        height: 28px !important;
+        margin: 0 !important;
+
+        z-index: 50 !important;
+    }
+
+    body:not(.game-active) #startBtn:hover {
+        transform: translateX(-50%) translateY(-1px) !important;
+    }
+
+    body:not(.game-active) .developerToggleRow {
+        display: none !important;
+    }
+}
