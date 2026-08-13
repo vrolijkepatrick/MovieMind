@@ -91,7 +91,7 @@ const DIFFICULTY_PROFILES = {
         candidatePool: 30,
         fame: {
             minimum: 50,
-            maximum: 70
+            maximum: 100
         }
     },
 
@@ -1068,7 +1068,7 @@ function buildLookupCaches() {
         "| Gemiddeld",
         eligibleActorsCache.filter(function (actor) {
             const score = getActorFameScore(actor);
-            return score >= 50 && score <= 70;
+            return score >= 50 && score <= 100;
         }).length,
         "| Moeilijk",
         eligibleActorsCache.filter(function (actor) {
@@ -1883,7 +1883,7 @@ function findSmartGrid() {
     Eerst zoeken we uitsluitend binnen de bekendheidsgroep die bij
     de gekozen moeilijkheid hoort:
     Makkelijk   54–100
-    Gemiddeld   50–70
+    Gemiddeld   50–100 (met voorkeur voor bekendere namen)
     Moeilijk     0–53
 
     Alleen wanneer zo geen speelbaar bord kan worden gemaakt,
@@ -2102,8 +2102,31 @@ function pickBalancedActors(
             0
         );
 
+        const fameScore = getActorFameScore(actor);
+
+        /*
+        Gemiddeld mag nu ook bekende acteurs uit de Makkelijk-pool gebruiken.
+        We geven die bekende namen een lichte voorkeur, maar niet zoveel dat
+        ieder bord alleen maar uit supersterren bestaat.
+        */
+        let mediumFamePenalty = 0;
+
+        if (difficulty === "blockbuster") {
+            if (fameScore >= 75) {
+                mediumFamePenalty = 0;
+            } else if (fameScore >= 65) {
+                mediumFamePenalty = 120;
+            } else if (fameScore >= 58) {
+                mediumFamePenalty = 260;
+            } else {
+                mediumFamePenalty = 480;
+            }
+        }
+
         return {
             name: actor,
+            fameScore: fameScore,
+            mediumFamePenalty: mediumFamePenalty,
             difficultyDistance: difficultyDistance,
             totalAnswers: totalAnswers,
             repeatPenalty: getActorRepeatPenalty(actor),
@@ -2137,6 +2160,16 @@ function pickBalancedActors(
                 return (
                     first.photoPenalty -
                     second.photoPenalty
+                );
+            }
+
+            if (
+                first.mediumFamePenalty !==
+                second.mediumFamePenalty
+            ) {
+                return (
+                    first.mediumFamePenalty -
+                    second.mediumFamePenalty
                 );
             }
 
