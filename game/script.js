@@ -20,6 +20,184 @@ let usedMediaKeys = [];
 let usedCoStarNames = [];
 let selectedSuggestionKey = null;
 
+/* =========================================
+   SPELSTATISTIEKEN
+========================================= */
+
+/*
+Lokale statistieken werken direct en zijn handig om de metingen te testen.
+Voor gezamenlijke statistieken van alle online spelers kan MovieMind ook
+GoatCounter gebruiken. Vul daarvoor later alleen MOVIEMIND_GOATCOUNTER_CODE
+in, bijvoorbeeld "moviemind" voor moviemind.goatcounter.com.
+*/
+const MOVIEMIND_STATS_STORAGE_KEY = "moviemindGameStatsV1";
+const MOVIEMIND_GOATCOUNTER_CODE = "";
+
+let currentGameStatsActive = false;
+let currentGameStatsFinished = false;
+let pendingAnalyticsEvents = [];
+
+function createEmptyMovieMindStats() {
+    return {
+        pageViews: 0,
+        gameStarts: 0,
+        completedGames: 0,
+        wins: 0,
+        draws: 0,
+        difficulty: {
+            moviehouse: 0,
+            blockbuster: 0,
+            oscarnight: 0
+        },
+        firstVisit: null,
+        lastVisit: null
+    };
+}
+
+function loadMovieMindStats() {
+    try {
+        const raw = localStorage.getItem(MOVIEMIND_STATS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        const empty = createEmptyMovieMindStats();
+
+        return {
+            ...empty,
+            ...parsed,
+            difficulty: {
+                ...empty.difficulty,
+                ...(parsed.difficulty || {})
+            }
+        };
+    } catch (_) {
+        return createEmptyMovieMindStats();
+    }
+}
+
+function saveMovieMindStats(stats) {
+    try {
+        localStorage.setItem(
+            MOVIEMIND_STATS_STORAGE_KEY,
+            JSON.stringify(stats)
+        );
+    } catch (_) {
+        /* Statistieken mogen de game nooit blokkeren. */
+    }
+}
+
+function registerPageView() {
+    const stats = loadMovieMindStats();
+    const now = new Date().toISOString();
+
+    stats.pageViews += 1;
+    stats.firstVisit = stats.firstVisit || now;
+    stats.lastVisit = now;
+    saveMovieMindStats(stats);
+}
+
+function trackGameStarted() {
+    if (currentGameStatsActive) {
+        return;
+    }
+
+    currentGameStatsActive = true;
+    currentGameStatsFinished = false;
+
+    const stats = loadMovieMindStats();
+    stats.gameStarts += 1;
+
+    if (Object.prototype.hasOwnProperty.call(stats.difficulty, difficulty)) {
+        stats.difficulty[difficulty] += 1;
+    }
+
+    saveMovieMindStats(stats);
+    sendMovieMindAnalyticsEvent(
+        "/events/game-start/" + difficulty,
+        "Game gestart · " + getDifficultyLabel(difficulty)
+    );
+}
+
+function trackGameCompleted(result) {
+    if (!currentGameStatsActive || currentGameStatsFinished) {
+        return;
+    }
+
+    currentGameStatsFinished = true;
+    currentGameStatsActive = false;
+
+    const stats = loadMovieMindStats();
+    stats.completedGames += 1;
+
+    if (result === "win") {
+        stats.wins += 1;
+    } else if (result === "draw") {
+        stats.draws += 1;
+    }
+
+    saveMovieMindStats(stats);
+    sendMovieMindAnalyticsEvent(
+        "/events/game-complete/" + result + "/" + difficulty,
+        "Game uitgespeeld · " + result + " · " + getDifficultyLabel(difficulty)
+    );
+}
+
+function abandonCurrentGameStats() {
+    currentGameStatsActive = false;
+    currentGameStatsFinished = false;
+}
+
+function initializeMovieMindAnalytics() {
+    registerPageView();
+
+    if (!MOVIEMIND_GOATCOUNTER_CODE) {
+        return;
+    }
+
+    window.goatcounter = window.goatcounter || {};
+    window.goatcounter.endpoint =
+        "https://" + MOVIEMIND_GOATCOUNTER_CODE + ".goatcounter.com/count";
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://gc.zgo.at/count.js";
+    script.dataset.goatcounter = window.goatcounter.endpoint;
+
+    script.addEventListener("load", flushPendingAnalyticsEvents);
+    document.head.appendChild(script);
+}
+
+function sendMovieMindAnalyticsEvent(path, title) {
+    if (!MOVIEMIND_GOATCOUNTER_CODE) {
+        return;
+    }
+
+    if (window.goatcounter && typeof window.goatcounter.count === "function") {
+        window.goatcounter.count({
+            path: path,
+            title: title,
+            event: true
+        });
+        return;
+    }
+
+    pendingAnalyticsEvents.push({ path: path, title: title });
+}
+
+function flushPendingAnalyticsEvents() {
+    if (!window.goatcounter || typeof window.goatcounter.count !== "function") {
+        return;
+    }
+
+    pendingAnalyticsEvents.splice(0).forEach(function (event) {
+        window.goatcounter.count({
+            path: event.path,
+            title: event.title,
+            event: true
+        });
+    });
+}
+
+initializeMovieMindAnalytics();
+
 /*
 Snelle zoekindexen voor de bordgenerator.
 Deze worden één keer opgebouwd nadat de databases zijn geladen.
@@ -273,6 +451,9 @@ const test100Btn =
 const databaseStatsBtn =
     document.getElementById("databaseStatsBtn");
 
+const gameStatsBtn =
+    document.getElementById("gameStatsBtn");
+
 const weakCombinationsBtn =
     document.getElementById("weakCombinationsBtn");
 
@@ -470,6 +651,7 @@ function updateGameHud() {
 }
 
 function returnToStartScreen() {
+    abandonCurrentGameStats();
     gameOver = true;
     consecutivePasses = 0;
     lastPassingPlayer = null;
@@ -1678,6 +1860,13 @@ databaseStatsBtn.addEventListener(
     showDatabaseStatistics
 );
 
+if (gameStatsBtn) {
+    gameStatsBtn.addEventListener(
+        "click",
+        showGameStatistics
+    );
+}
+
 weakCombinationsBtn.addEventListener(
     "click",
     showWeakCombinations
@@ -1730,6 +1919,11 @@ function startRound() {
     animateTurnIndicator();
 
     createSmartGrid();
+
+    if (columns.length === 3 && rows.length === 3 && cells.length === 9) {
+        trackGameStarted();
+    }
+
     updateGameHud();
 }
 
@@ -3083,6 +3277,7 @@ function checkWinner() {
 }
 
 function finishGame(winner) {
+    trackGameCompleted("win");
     gameOver = true;
     playSound("winner", { volume: 0.82 });
 
@@ -3145,6 +3340,7 @@ function finishGame(winner) {
 }
 
 function finishDraw(reason = "Het bord is vol.") {
+    trackGameCompleted("draw");
     gameOver = true;
     consecutivePasses = 0;
     lastPassingPlayer = null;
@@ -3424,6 +3620,53 @@ function validateTestGrid(testGrid) {
                 : lowestAnswerCount,
         highestAnswerCount: highestAnswerCount
     };
+}
+
+
+function showGameStatistics() {
+    developerProgress.classList.add("hidden");
+    developerReport.innerHTML = "";
+
+    const stats = loadMovieMindStats();
+    const completionRate = stats.gameStarts > 0
+        ? Math.round((stats.completedGames / stats.gameStarts) * 100)
+        : 0;
+
+    const title = document.createElement("h4");
+    title.textContent = "Spelstatistieken";
+    developerReport.appendChild(title);
+
+    const summary = document.createElement("div");
+    summary.className = "developerSummary";
+
+    summary.appendChild(createDeveloperStat("Bezoeken op dit apparaat", stats.pageViews, ""));
+    summary.appendChild(createDeveloperStat("Gestarte potjes", stats.gameStarts, ""));
+    summary.appendChild(createDeveloperStat("Uitgespeelde potjes", stats.completedGames, ""));
+    summary.appendChild(createDeveloperStat("Uitgespeeld", completionRate, "%"));
+    summary.appendChild(createDeveloperStat("Met winnaar", stats.wins, ""));
+    summary.appendChild(createDeveloperStat("Remises", stats.draws, ""));
+
+    developerReport.appendChild(summary);
+
+    const difficultyTitle = document.createElement("h4");
+    difficultyTitle.textContent = "Gekozen moeilijkheid";
+    developerReport.appendChild(difficultyTitle);
+
+    const difficultySummary = document.createElement("div");
+    difficultySummary.className = "developerSummary";
+    difficultySummary.appendChild(createDeveloperStat("Makkelijk", stats.difficulty.moviehouse || 0, ""));
+    difficultySummary.appendChild(createDeveloperStat("Gemiddeld", stats.difficulty.blockbuster || 0, ""));
+    difficultySummary.appendChild(createDeveloperStat("Moeilijk", stats.difficulty.oscarnight || 0, ""));
+    developerReport.appendChild(difficultySummary);
+
+    const note = document.createElement("p");
+    note.className = "developerIntro";
+    note.textContent = MOVIEMIND_GOATCOUNTER_CODE
+        ? "Online meting staat aan. De gezamenlijke bezoekers- en eventcijfers staan ook in GoatCounter."
+        : "Dit zijn nu alleen de cijfers van deze browser. Voor gezamenlijke cijfers van alle online spelers hoeft straks alleen de GoatCounter-code te worden ingevuld.";
+    developerReport.appendChild(note);
+
+    developerReport.classList.remove("hidden");
 }
 
 
