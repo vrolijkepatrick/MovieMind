@@ -4775,3 +4775,160 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
         height: 89.6% !important;
     }
 }
+
+/* =========================================================
+   MOVIEMIND – MOBILE V4.1 PORTRAIT START FIX
+   Alleen het STARTSCHERM in portrait.
+   Landscape en het speelbord blijven exact zoals V4.
+========================================================= */
+
+@media (max-width: 760px) and (orientation: portrait) {
+    body:not(.game-active) .screen-content {
+        left: 4% !important;
+        top: 24.5% !important;
+        width: 92% !important;
+        height: 37.5% !important;
+        overflow: hidden !important;
+    }
+
+    body:not(.game-active) .brand-block {
+        height: 15% !important;
+        padding-top: .6% !important;
+    }
+
+    body:not(.game-active) .brand-block h1 {
+        font-size: clamp(24px, 7.8vw, 34px) !important;
+        line-height: .96 !important;
+    }
+
+    body:not(.game-active) .brand-line {
+        width: 58% !important;
+        margin: .5% auto .15% !important;
+    }
+
+    body:not(.game-active) #startScreen {
+        width: 96% !important;
+        height: 85% !important;
+        margin: 0 auto !important;
+        padding: 0 2% !important;
+        overflow: hidden !important;
+    }
+
+    /*
+    Belangrijkste correctie:
+    spelers blijven ook in portrait naast elkaar.
+    Zo behouden we de originele brede MovieMind-verhouding.
+    */
+    body:not(.game-active) .player-input-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 2.2% !important;
+        transform: none !important;
+    }
+
+    body:not(.game-active) .player-field {
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        gap: 4% !important;
+    }
+
+    body:not(.game-active) .player-field span {
+        font-size: clamp(7px, 2.15vw, 9px) !important;
+        white-space: nowrap !important;
+    }
+
+    body:not(.game-active) .player-avatar {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    body:not(.game-active) .player-field input {
+        height: clamp(23px, 6.4vw, 28px) !important;
+        padding: 0 6px !important;
+        font-size: clamp(8px, 2.2vw, 10px) !important;
+        border-radius: 6px !important;
+    }
+
+    body:not(.game-active) .token-picker {
+        margin-top: 2px !important;
+        padding: 0 !important;
+    }
+
+    body:not(.game-active) .token-picker legend {
+        margin-bottom: 1px !important;
+        font-size: clamp(5px, 1.45vw, 6px) !important;
+    }
+
+    body:not(.game-active) .token-options {
+        gap: 3px !important;
+        justify-content: center !important;
+    }
+
+    body:not(.game-active) .token-option {
+        width: auto !important;
+        height: clamp(22px, 6vw, 26px) !important;
+        min-height: 22px !important;
+        padding: 1px !important;
+        border-radius: 5px !important;
+    }
+
+    body:not(.game-active) .token-option img {
+        width: 86% !important;
+        height: 86% !important;
+        object-fit: contain !important;
+    }
+
+    body:not(.game-active) .difficulty-section {
+        margin-top: 2px !important;
+    }
+
+    body:not(.game-active) .difficulty-title {
+        margin: 0 0 2px !important;
+        font-size: clamp(9px, 2.55vw, 11px) !important;
+    }
+
+    body:not(.game-active) .difficulty-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+    }
+
+    body:not(.game-active) .difficulty-card {
+        height: clamp(48px, 13.4vw, 58px) !important;
+        min-height: 48px !important;
+        padding: 4px 2px !important;
+    }
+
+    body:not(.game-active) .difficulty-name {
+        margin-top: 0 !important;
+        font-size: clamp(8px, 2.35vw, 10px) !important;
+    }
+
+    body:not(.game-active) .difficulty-description {
+        width: 95% !important;
+        margin-top: 3px !important;
+        font-size: clamp(5.3px, 1.55vw, 6.5px) !important;
+        line-height: 1.05 !important;
+    }
+
+    body:not(.game-active) .difficulty-card.selected::after {
+        font-size: 4px !important;
+    }
+
+    body:not(.game-active) .selected-difficulty-summary {
+        margin-top: 2px !important;
+        font-size: clamp(6px, 1.8vw, 8px) !important;
+        line-height: 1 !important;
+    }
+
+    body:not(.game-active) #startBtn {
+        position: static !important;
+        display: block !important;
+        width: 62% !important;
+        height: clamp(26px, 7.2vw, 31px) !important;
+        margin: 3px auto 0 !important;
+        transform: none !important;
+        font-size: clamp(8px, 2.2vw, 10px) !important;
+    }
+
+    body:not(.game-active) .developerToggleRow {
+        display: none !important;
+    }
+}
