@@ -31,7 +31,7 @@ GoatCounter gebruiken. Vul daarvoor later alleen MOVIEMIND_GOATCOUNTER_CODE
 in, bijvoorbeeld "moviemind" voor moviemind.goatcounter.com.
 */
 const MOVIEMIND_STATS_STORAGE_KEY = "moviemindGameStatsV1";
-const MOVIEMIND_GOATCOUNTER_CODE = "";
+const MOVIEMIND_GOATCOUNTER_CODE = "moviemind";
 
 let currentGameStatsActive = false;
 let currentGameStatsFinished = false;
