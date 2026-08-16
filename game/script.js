@@ -233,6 +233,8 @@ const ACTOR_PHOTO_STATUS_STORAGE_KEY = "moviemindActorPhotoStatusV1";
 let actorPhotoStatus = loadActorPhotoStatus();
 
 const PLAYED_TOGETHER_CATEGORY = "Speelde samen met...";
+const TV_SERIES_CATEGORY = "TV-series";
+const TV_SERIES_GRID_CHANCE = 0.25;
 
 const DIFFICULTY_PROFILES = {
     moviehouse: {
@@ -1105,6 +1107,28 @@ function buildLookupCaches() {
             );
         });
 
+        /*
+        TV-series is een eigen bordcategorie en geen genre.
+        Iedere serie telt daarom als antwoord voor acteur × TV-series,
+        ongeacht het genre van die serie.
+        */
+        if (item.media_type === "tv") {
+            activeGenres.add(TV_SERIES_CATEGORY);
+
+            uniqueActors.forEach(function (actorName, normalizedActor) {
+                const tvKey =
+                    normalizedActor +
+                    "|" +
+                    normalizeText(TV_SERIES_CATEGORY);
+
+                if (!actorGenreMediaIndex.has(tvKey)) {
+                    actorGenreMediaIndex.set(tvKey, []);
+                }
+
+                actorGenreMediaIndex.get(tvKey).push(item);
+            });
+        }
+
         const usableGenres = item.genre.filter(function (genre) {
             return allowedGenres.has(genre);
         });
@@ -1693,67 +1717,139 @@ const LOADING_ICONS = {
         </svg>`
 };
 
+function getCinemaTransitionLayer() {
+    const cinemaShell = document.querySelector(".cinema-shell");
+
+    if (!cinemaShell) {
+        return null;
+    }
+
+    let layer = cinemaShell.querySelector(".cinema-transition-layer");
+
+    if (!layer) {
+        layer = document.createElement("div");
+        layer.className = "cinema-transition-layer";
+        layer.setAttribute("aria-hidden", "true");
+        layer.innerHTML =
+            '<span class="cinema-projector-glow"></span>' +
+            '<span class="cinema-film-flicker"></span>';
+        cinemaShell.appendChild(layer);
+    }
+
+    return layer;
+}
+
 async function startGameWithLoadingScreen() {
     startBtn.disabled = true;
 
-    if (startScreen) {
-        startScreen.classList.add("hidden");
-    }
+    /*
+       MovieMind-overgang V6:
+       geen laadscherm en geen teksten. We verduisteren het echte projectiedoek,
+       wisselen daarachter naar het speelbord en laten de projector opnieuw aangaan.
+    */
+    hideLoadingScreen();
+    document.body.classList.remove("loading-active");
 
-    if (brandBlock) {
-        brandBlock.classList.add("hidden");
-    }
-
-    if (screenFrame) {
-        screenFrame.classList.add("hidden");
-    }
-
-    if (gameScreen) {
-        gameScreen.classList.add("hidden");
-    }
-
-    document.body.classList.add("loading-active");
-    showLoadingScreen("De zaal loopt vol...", "audience");
-
-    await waitForPaint();
-    await delay(450);
-    setLoadingPhase("Popcorn wordt klaargezet...", "popcorn");
-
-    await delay(450);
-    setLoadingPhase("De projector wordt opgestart...", "projector");
-
-    await delay(350);
-    setLoadingPhase("Het speelbord wordt samengesteld...", "board");
-
-    await waitForPaint();
+    const transitionLayer = getCinemaTransitionLayer();
 
     try {
+        if (transitionLayer) {
+            transitionLayer.classList.remove(
+                "screen-dimming",
+                "projector-on",
+                "transition-finished"
+            );
+        }
+
+        document.body.classList.add(
+            "cinema-transitioning",
+            "cinema-screen-dimming"
+        );
+        playSound("start", { volume: 0.30 });
+
+        /* Laat het bestaande beeld zelf uitdoven; geen zwart vlak ervoor. */
+        await waitForPaint();
+        await delay(700);
+
+        document.body.classList.remove("cinema-screen-dimming");
+
+        if (startScreen) {
+            startScreen.classList.add("hidden");
+        }
+
+        if (brandBlock) {
+            brandBlock.classList.add("hidden");
+        }
+
         startRound();
-
-        setLoadingPhase("De voorstelling kan beginnen!", "curtain");
-        playSound("curtains", { volume: 0.66 });
-        await delay(400);
-
-        hideLoadingScreen();
-        document.body.classList.remove("loading-active");
         document.body.classList.add("game-active");
 
         if (screenFrame) {
-            screenFrame.classList.remove("hidden");
-            screenFrame.classList.add("screen-reveal");
-
-            window.setTimeout(function () {
-                screenFrame.classList.remove("screen-reveal");
-            }, 650);
+            screenFrame.classList.remove("hidden", "cinema-board-reveal-v6");
+            screenFrame.classList.add("cinema-board-prelight");
         }
 
         if (gameScreen) {
             gameScreen.classList.remove("hidden");
         }
+
+        /* Korte donkere projectorpauze, maar zonder een los zwart rechthoekig vlak. */
+        await delay(350);
+
+        if (transitionLayer) {
+            transitionLayer.classList.add("projector-on");
+        }
+
+        /* Nu pas groeit het echte bord vanuit het donkere doek naar volledig beeld. */
+        if (screenFrame) {
+            screenFrame.classList.remove("cinema-board-prelight");
+            void screenFrame.offsetWidth;
+            screenFrame.classList.add("cinema-board-reveal-v6");
+        }
+
+        playSound("curtains", { volume: 0.28 });
+        await delay(1420);
+
+        document.body.classList.remove("cinema-transitioning");
+        document.body.classList.add("cinema-transition-settled");
+
+        if (transitionLayer) {
+            transitionLayer.classList.add("transition-finished");
+        }
+
+        window.setTimeout(function () {
+            document.body.classList.remove("cinema-transition-settled");
+
+            if (screenFrame) {
+                screenFrame.classList.remove(
+                    "cinema-board-reveal-v6",
+                    "cinema-board-prelight"
+                );
+            }
+
+            if (transitionLayer) {
+                transitionLayer.classList.remove(
+                    "projector-on",
+                    "transition-finished"
+                );
+            }
+        }, 750);
     } catch (error) {
         console.error("Het speelbord kon niet worden gemaakt:", error);
-        hideLoadingScreen();
-        document.body.classList.remove("loading-active");
+        document.body.classList.remove(
+            "cinema-transitioning",
+            "cinema-transition-settled",
+            "cinema-screen-dimming"
+        );
+
+        if (transitionLayer) {
+            transitionLayer.classList.remove(
+                "screen-dimming",
+                "projector-on",
+                "transition-finished"
+            );
+        }
+
         returnToStartScreen();
         alert("Het speelbord kon niet worden geladen. Probeer het opnieuw.");
     } finally {
@@ -1950,6 +2046,7 @@ function getCategoryImage(category) {
         "comedy": "komedie.png",
         "romantiek": "romantiek.png",
         "romance": "romantiek.png",
+        "tv-series": "tv-series.png",
         "speelde samen met...": "speelde-samen-met.png"
     };
 
@@ -2074,22 +2171,34 @@ function findSmartGrid() {
     const profile = getDifficultyProfile();
 
     /*
-    Eerst zoeken we uitsluitend binnen de bekendheidsgroep die bij
-    de gekozen moeilijkheid hoort:
-    Makkelijk   54–100
-    Gemiddeld   50–70
-    Moeilijk     0–53
+    ACTEURSVARIATIE:
+    De 9 meest recente acteurs zijn de drie acteurs uit de laatste
+    drie grids. Die worden eerst HARD uitgesloten. Pas wanneer er
+    daardoor werkelijk geen speelbaar bord kan worden gemaakt,
+    mogen recente acteurs als noodfallback terugkomen.
 
-    Alleen wanneer zo geen speelbaar bord kan worden gemaakt,
-    valt de generator terug op alle speelbare acteurs. Zo blijft
-    de game robuust wanneer een zeldzame genrecombinatie weinig
-    kandidaten heeft.
+    Zo kan een bekende naam niet meer meerdere rondes kort na
+    elkaar verschijnen alleen omdat zijn antwoordscore gunstig is.
     */
+    const recentThreeGridActors =
+        new Set(recentActorHistory.slice(0, 9));
+
+    const excludeRecentActors = function (actors) {
+        return actors.filter(function (actor) {
+            return !recentThreeGridActors.has(
+                normalizeText(actor)
+            );
+        });
+    };
+
     const difficultyActors =
         getEligibleActorsForDifficulty(profile);
 
+    const difficultyActorsWithoutRecent =
+        excludeRecentActors(difficultyActors);
+
     const primaryGrid = findSmartGridFromPool(
-        difficultyActors,
+        difficultyActorsWithoutRecent,
         categories,
         profile,
         1000
@@ -2097,16 +2206,53 @@ function findSmartGrid() {
 
     if (primaryGrid) {
         primaryGrid.usedFameFallback = false;
+        primaryGrid.usedRecentActorFallback = false;
         return primaryGrid;
     }
 
-    console.warn(
-        "Geen grid gevonden binnen de primaire bekendheidsgroep.",
-        profile.label,
-        "Kandidaten:",
-        difficultyActors.length,
-        "— bredere fallback wordt geprobeerd."
+    /*
+    Eerst verbreden we de bekendheidspool, maar houden we de
+    laatste drie grids nog steeds buiten beeld.
+    */
+    const allActorsWithoutRecent =
+        excludeRecentActors(getEligibleActors());
+
+    const widerGridWithoutRecent = findSmartGridFromPool(
+        allActorsWithoutRecent,
+        categories,
+        profile,
+        700
     );
+
+    if (widerGridWithoutRecent) {
+        widerGridWithoutRecent.usedFameFallback = true;
+        widerGridWithoutRecent.usedRecentActorFallback = false;
+        return widerGridWithoutRecent;
+    }
+
+    /*
+    Alleen als beide bovenstaande pogingen onmogelijk zijn,
+    laten we recente acteurs weer toe. Daarmee kan de generator
+    nooit vastlopen door de variatieregel.
+    */
+    console.warn(
+        "Geen grid zonder acteurs uit de laatste 3 grids gevonden.",
+        profile.label,
+        "— recente acteurs worden alleen als noodfallback toegestaan."
+    );
+
+    const recentFallbackPrimary = findSmartGridFromPool(
+        difficultyActors,
+        categories,
+        profile,
+        500
+    );
+
+    if (recentFallbackPrimary) {
+        recentFallbackPrimary.usedFameFallback = false;
+        recentFallbackPrimary.usedRecentActorFallback = true;
+        return recentFallbackPrimary;
+    }
 
     const fallbackGrid = findSmartGridFromPool(
         getEligibleActors(),
@@ -2117,10 +2263,39 @@ function findSmartGrid() {
 
     if (fallbackGrid) {
         fallbackGrid.usedFameFallback = true;
+        fallbackGrid.usedRecentActorFallback = true;
     }
 
     return fallbackGrid;
 }
+
+function chooseGridCategories(categories) {
+    const available = [...categories];
+    const hasTvSeries = available.includes(TV_SERIES_CATEGORY);
+
+    if (!hasTvSeries) {
+        return shuffleArray(available).slice(0, 3);
+    }
+
+    const withoutTv = available.filter(function (category) {
+        return category !== TV_SERIES_CATEGORY;
+    });
+
+    /*
+    Ongeveer 1 op de 4 bordpogingen krijgt bewust TV-series als rij.
+    Daardoor is de categorie duidelijk aanwezig, maar neemt hij het
+    speelbord niet over.
+    */
+    if (Math.random() < TV_SERIES_GRID_CHANCE) {
+        return shuffleArray([
+            TV_SERIES_CATEGORY,
+            ...shuffleArray(withoutTv).slice(0, 2)
+        ]);
+    }
+
+    return shuffleArray(withoutTv).slice(0, 3);
+}
+
 
 function findSmartGridFromPool(
     actors,
@@ -2151,7 +2326,7 @@ function findSmartGridFromPool(
         attempt++
     ) {
         const chosenGenres =
-            shuffleArray(categories).slice(0, 3);
+            chooseGridCategories(categories);
 
         if (chosenGenres.length < 3) {
             return null;
@@ -2518,8 +2693,10 @@ function openAnswerPopup(cell) {
         questionHint.textContent =
             genre === PLAYED_TOGETHER_CATEGORY
                 ? "Noem een acteur die samen met " + actor + " heeft gespeeld."
-                : "Noem een film of serie waarin " + actor +
-                  " en het genre " + genre + " samen voorkomen.";
+                : genre === TV_SERIES_CATEGORY
+                    ? "Noem een TV-serie waarin " + actor + " heeft gespeeld."
+                    : "Noem een film of serie waarin " + actor +
+                      " en het genre " + genre + " samen voorkomen.";
     }
 
     answerInput.placeholder =
@@ -2531,6 +2708,13 @@ function openAnswerPopup(cell) {
 
     movieSuggestions.innerHTML = "";
     movieSuggestions.classList.add("hidden");
+
+    /*
+    Touch & feel: laat het antwoordpaneel meekleuren met de speler die aan zet is.
+    De MovieMind-goudaccenten blijven behouden; alleen de spelerskleur wisselt.
+    */
+    popup.classList.toggle("player-blue", currentPlayer === 1);
+    popup.classList.toggle("player-orange", currentPlayer === 2);
 
     popup.classList.remove("hidden");
     answerInput.focus();
@@ -2975,11 +3159,14 @@ function checkMedia(title, rowIndex, columnIndex) {
             return normalizeText(actor) === requiredActor;
         });
 
-        const genreMatches = item.genre.some(function (genre) {
-            return normalizeText(genre) === requiredGenre;
-        });
+        const categoryMatches =
+            rows[rowIndex] === TV_SERIES_CATEGORY
+                ? item.media_type === "tv"
+                : item.genre.some(function (genre) {
+                    return normalizeText(genre) === requiredGenre;
+                });
 
-        return actorMatches && genreMatches;
+        return actorMatches && categoryMatches;
     });
 
     if (!matchingItem) {
@@ -2993,6 +3180,12 @@ function checkMedia(title, rowIndex, columnIndex) {
 }
 
 function placeMedia(item) {
+    const targetCell = selectedCell;
+
+    if (!targetCell) {
+        return;
+    }
+
     let answerTitle = "";
 
     if (item.answer_type === "actor") {
@@ -3005,10 +3198,10 @@ function placeMedia(item) {
                 return sharedItem.title;
             });
 
-        selectedCell.title =
+        targetCell.title =
             item.name +
             " speelde samen met " +
-            columns[Number(selectedCell.dataset.column)] +
+            columns[Number(targetCell.dataset.column)] +
             (sharedTitleNames.length
                 ? " in " + sharedTitleNames.join(", ")
                 : "");
@@ -3016,7 +3209,7 @@ function placeMedia(item) {
         usedMediaKeys.push(item.game_key);
         answerTitle = item.title;
 
-        selectedCell.title =
+        targetCell.title =
             (item.media_type === "tv" ? "Serie: " : "Film: ") +
             item.title +
             " (" +
@@ -3024,49 +3217,184 @@ function placeMedia(item) {
             ")";
     }
 
+    const claimingPlayer = currentPlayer;
     const ownerName =
-        currentPlayer === 1
+        claimingPlayer === 1
             ? playerBlue
             : playerOrange;
 
-    selectedCell.replaceChildren(
-        createClaimedCard(answerTitle, ownerName)
-    );
-
-    if (currentPlayer === 1) {
-        selectedCell.classList.add("blue");
-    } else {
-        selectedCell.classList.add("orange");
-    }
-
-    selectedCell.classList.remove("movie-placed");
-    void selectedCell.offsetWidth;
-    selectedCell.classList.add("movie-placed");
+    const selectedToken = claimingPlayer === 1
+        ? playerOneToken
+        : playerTwoToken;
 
     consecutivePasses = 0;
     lastPassingPlayer = null;
 
     playSound("correct", { volume: 0.68 });
-    window.setTimeout(function () {
-        playSound("claim", { volume: 0.58 });
-    }, 120);
-
-    updateGameHud();
     closePopup();
 
-    const winner = checkWinner();
+    const finishClaim = function () {
+        targetCell.replaceChildren(
+            createClaimedCardForPlayer(answerTitle, ownerName, claimingPlayer)
+        );
 
-    if (winner) {
-        finishGame(winner);
+        if (claimingPlayer === 1) {
+            targetCell.classList.add("blue");
+        } else {
+            targetCell.classList.add("orange");
+        }
+
+        targetCell.classList.remove("movie-placed");
+        void targetCell.offsetWidth;
+        targetCell.classList.add("movie-placed");
+
+        playSound("claim", { volume: 0.58 });
+        updateGameHud();
+
+        const winner = checkWinner();
+
+        if (winner) {
+            finishGame(winner);
+            return;
+        }
+
+        if (cells.every(isOccupiedCell)) {
+            finishDraw();
+            return;
+        }
+
+        switchPlayer();
+    };
+
+    /*
+    Alleen film- en serie-antwoorden hebben een poster_path.
+    Bij acteurs-antwoorden of ontbrekende posters claimen we direct,
+    zodat de bestaande spelwerking altijd als fallback blijft werken.
+    */
+    if (
+        item.answer_type !== "actor" &&
+        item.poster_path
+    ) {
+        animatePosterToCell(
+            item,
+            targetCell,
+            selectedToken,
+            finishClaim
+        );
+    } else {
+        window.setTimeout(finishClaim, 120);
+    }
+}
+
+function createClaimedCardForPlayer(title, ownerName, playerNumber) {
+    const previousPlayer = currentPlayer;
+    currentPlayer = playerNumber;
+    const card = createClaimedCard(title, ownerName);
+    currentPlayer = previousPlayer;
+    return card;
+}
+
+function animatePosterToCell(item, targetCell, selectedToken, onComplete) {
+    const posterPath = String(item.poster_path || "").trim();
+
+    if (!posterPath) {
+        onComplete();
         return;
     }
 
-    if (cells.every(isOccupiedCell)) {
-        finishDraw();
-        return;
-    }
+    const posterUrl = posterPath.startsWith("http")
+        ? posterPath
+        : "https://image.tmdb.org/t/p/w500" +
+          (posterPath.startsWith("/") ? posterPath : "/" + posterPath);
 
-    switchPlayer();
+    const tokenFilenames = {
+        projector: "projector-token.png",
+        clapperboard: "clapperboard-token.png",
+        "directors-chair": "directors-chair-token.png",
+        statuette: "statuette-token.png"
+    };
+
+    const overlay = document.createElement("div");
+    overlay.className = "poster-claim-overlay";
+
+    const posterFrame = document.createElement("div");
+    posterFrame.className = "poster-claim-frame";
+
+    const posterImage = document.createElement("img");
+    posterImage.className = "poster-claim-image";
+    posterImage.alt = "Poster van " + (item.title || "de gekozen titel");
+    posterImage.draggable = false;
+
+    const tokenImage = document.createElement("img");
+    tokenImage.className = "poster-claim-token";
+    tokenImage.src =
+        "images/tokens/" +
+        (tokenFilenames[selectedToken] || tokenFilenames.projector);
+    tokenImage.alt = "";
+    tokenImage.draggable = false;
+
+    posterFrame.appendChild(posterImage);
+    posterFrame.appendChild(tokenImage);
+    overlay.appendChild(posterFrame);
+    document.body.appendChild(overlay);
+
+    let completed = false;
+
+    const cleanupAndComplete = function () {
+        if (completed) {
+            return;
+        }
+
+        completed = true;
+        overlay.remove();
+        document.body.classList.remove("poster-claim-active");
+        onComplete();
+    };
+
+    posterImage.addEventListener("error", cleanupAndComplete, { once: true });
+
+    posterImage.addEventListener("load", function () {
+        document.body.classList.add("poster-claim-active");
+
+        requestAnimationFrame(function () {
+            overlay.classList.add("is-visible");
+            posterFrame.classList.add("is-presented");
+        });
+
+        window.setTimeout(function () {
+            if (completed || !targetCell.isConnected) {
+                cleanupAndComplete();
+                return;
+            }
+
+            const startRect = posterFrame.getBoundingClientRect();
+            const targetRect = targetCell.getBoundingClientRect();
+
+            const targetX =
+                targetRect.left + targetRect.width / 2 -
+                (startRect.left + startRect.width / 2);
+            const targetY =
+                targetRect.top + targetRect.height / 2 -
+                (startRect.top + startRect.height / 2);
+
+            const scaleX = Math.max(0.18, targetRect.width / startRect.width * 0.58);
+            const scaleY = Math.max(0.18, targetRect.height / startRect.height * 0.72);
+            const targetScale = Math.min(scaleX, scaleY, 0.48);
+
+            posterFrame.style.setProperty("--poster-target-x", targetX + "px");
+            posterFrame.style.setProperty("--poster-target-y", targetY + "px");
+            posterFrame.style.setProperty("--poster-target-scale", String(targetScale));
+            posterFrame.classList.add("is-flying");
+
+            window.setTimeout(function () {
+                posterFrame.classList.add("is-morphing");
+            }, 430);
+
+            window.setTimeout(cleanupAndComplete, 720);
+        }, 520);
+    }, { once: true });
+
+    posterImage.src = posterUrl;
 }
 
 function createClaimedCard(title, ownerName) {
@@ -3292,6 +3620,37 @@ function finishGame(winner) {
 
     if (winnerOverlayText) {
         winnerOverlayText.textContent = winner;
+    }
+
+    /* De gekozen spelpion is de trofee van de winnaar. */
+    if (winnerOverlay) {
+        const winnerTokenImage = winnerOverlay.querySelector(".winner-popcorn-image");
+        const winnerIsBlue = winner === playerBlue;
+        const winningToken = winnerIsBlue ? playerOneToken : playerTwoToken;
+        const tokenFilenames = {
+            projector: "projector-token.png",
+            clapperboard: "clapperboard-token.png",
+            "directors-chair": "directors-chair-token.png",
+            statuette: "statuette-token.png"
+        };
+        const tokenNames = {
+            projector: "Filmprojector",
+            clapperboard: "Filmklapper",
+            "directors-chair": "Regisseursstoel",
+            statuette: "Filmbeeldje"
+        };
+
+        winnerOverlay.classList.toggle("winner-blue", winnerIsBlue);
+        winnerOverlay.classList.toggle("winner-orange", !winnerIsBlue);
+
+        if (winnerTokenImage) {
+            winnerTokenImage.src =
+                "images/tokens/" +
+                (tokenFilenames[winningToken] || tokenFilenames.projector);
+            winnerTokenImage.alt =
+                (tokenNames[winningToken] || tokenNames.projector) +
+                " van winnaar " + winner;
+        }
     }
 
     if (winnerDifficulty) {

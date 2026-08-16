@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind Analyzer</title>
-    <link rel="stylesheet" href="style.css?v=1.7.0">
+    <link rel="stylesheet" href="style.css?v=1.8.0">
 </head>
 <body>
     <div class="analyzer-shell">
@@ -76,6 +76,38 @@
                 <button id="analyze-actors-button" class="primary-button large-button" type="button" disabled>
                     ⭐ Acteursscores berekenen
                 </button>
+            </section>
+
+            <section class="analyzer-card analyzer-action-card">
+                <header class="card-header">
+                    <span class="step-badge">Onderhoud</span>
+                    <div>
+                        <h2>TMDB-populariteit</h2>
+                        <p>Vernieuw ontbrekende of verouderde populariteitswaarden. Waarden jonger dan 30 dagen worden overgeslagen.</p>
+                    </div>
+                </header>
+
+                <button id="refresh-popularity-button" class="secondary-button" type="button" disabled>
+                    🔄 TMDB-populariteit vernieuwen
+                </button>
+
+                <p id="popularity-maintenance-status" class="database-status">
+                    Koppel eerst de database.
+                </p>
+
+                <div id="popularity-progress" hidden style="margin-top:14px;">
+                    <div style="height:12px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;">
+                        <div id="popularity-progress-bar"
+                             role="progressbar"
+                             aria-valuemin="0"
+                             aria-valuemax="100"
+                             aria-valuenow="0"
+                             style="height:100%;width:0%;background:currentColor;transition:width .15s ease;"></div>
+                    </div>
+                    <strong id="popularity-progress-count" style="display:block;margin-top:8px;">0 / 0 acteurs · 0%</strong>
+                    <small id="popularity-progress-current" style="display:block;margin-top:4px;">Voorbereiden…</small>
+                    <small id="popularity-progress-stats" style="display:block;margin-top:4px;">Bijgewerkt: 0 · Cache geldig: 0 · Mislukt: 0</small>
+                </div>
             </section>
 
             <section class="analyzer-card results-card">
@@ -274,6 +306,6 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="script.js?v=1.7.0"></script>
+    <script src="script.js?v=1.8.0"></script>
 </body>
 </html>

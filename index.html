@@ -2,13 +2,365 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=game/">
-    <title>MovieMind</title>
-    <script>
-        window.location.replace("game/");
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMind Studio 2.0</title>
+    <link rel="stylesheet" href="style.css?v=2.0.5">
+    <style>
+        .search-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .search-pagination[hidden] {
+            display: none;
+        }
+
+        #search-page-info {
+            min-width: 120px;
+            text-align: center;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
-    <p>Je wordt doorgestuurd naar MovieMind...</p>
+    <div class="studio-shell">
+        <header class="studio-header">
+            <div>
+                <p class="eyebrow">MOVIEMIND</p>
+                <h1>MovieMind Studio</h1>
+                <p class="subtitle">Films, series en acteurs beheren voor de game</p>
+            </div>
+
+            <div class="database-chip" id="database-chip" data-state="offline">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong id="database-chip-title">Geen database gekoppeld</strong>
+                    <small id="database-chip-text">Open Stap 4 om te koppelen</small>
+                </div>
+            </div>
+        </header>
+
+        <main class="studio-grid">
+            <!-- STAP 1 -->
+            <section class="studio-card step-one">
+                <header class="card-header">
+                    <span class="step-badge">Stap 1</span>
+                    <div>
+                        <h2>Wat wil je toevoegen?</h2>
+                        <p>Kies het onderdeel dat je aan MovieMind wilt toevoegen.</p>
+                    </div>
+                </header>
+
+                <div class="type-grid" role="tablist" aria-label="Type kiezen">
+                    <button class="type-button is-active" type="button" data-type="movie">
+                        <span class="type-icon">🎬</span>
+                        <span><strong>Films</strong><small>Zoek en voeg films toe</small></span>
+                    </button>
+
+                    <button class="type-button" type="button" data-type="tv">
+                        <span class="type-icon">📺</span>
+                        <span><strong>Series</strong><small>Zoek en voeg series toe</small></span>
+                    </button>
+
+                    <button class="type-button" type="button" data-type="person">
+                        <span class="type-icon">👤</span>
+                        <span><strong>Acteurs</strong><small>Zoek acteurs en foto's</small></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- STAP 2 -->
+            <section class="studio-card step-two">
+                <header class="card-header">
+                    <span class="step-badge">Stap 2</span>
+                    <div>
+                        <h2 id="search-heading">Film zoeken</h2>
+                        <p>Na drie letters zoekt MovieMind automatisch bij TMDB.</p>
+                    </div>
+                </header>
+
+                <label class="search-label" for="search-input">Naam</label>
+
+                <div class="search-bar">
+                    <input id="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Typ minimaal 3 letters...">
+                    <button id="search-button" type="button">Zoeken</button>
+                </div>
+
+                <p class="search-status" id="search-status">Begin met typen om te zoeken.</p>
+
+                <div class="search-results" id="search-results" aria-live="polite">
+                    <div class="empty-state">
+                        <span>🔎</span>
+                        <strong>Nog geen zoekresultaten</strong>
+                        <p>Zoek hierboven naar een film, serie of acteur.</p>
+                    </div>
+                </div>
+
+                <div class="search-pagination" id="search-pagination" hidden>
+                    <button id="search-prev-page" class="ghost-button" type="button">
+                        ← Vorige
+                    </button>
+                    <span id="search-page-info">Pagina 1 van 1</span>
+                    <button id="search-next-page" class="ghost-button" type="button">
+                        Volgende →
+                    </button>
+                </div>
+            </section>
+
+            <!-- STAP 3 -->
+            <section class="studio-card step-three">
+                <header class="card-header">
+                    <span class="step-badge">Stap 3</span>
+                    <div>
+                        <h2>Poster en acteursfoto's</h2>
+                        <p>Controleer de titel en de afbeeldingen vóór het toevoegen.</p>
+                    </div>
+                </header>
+
+                <div class="preview-layout">
+                    <div class="poster-frame">
+                        <img id="preview-poster" alt="" hidden>
+                        <div id="poster-placeholder" class="poster-placeholder">
+                            <span>🎞️</span>
+                            <p>Selecteer eerst een resultaat</p>
+                        </div>
+                    </div>
+
+                    <div class="preview-content">
+                        <div class="selected-title">
+                            <p class="eyebrow">GESELECTEERD</p>
+                            <h3 id="preview-title">Nog geen titel geselecteerd</h3>
+                            <p id="preview-meta">Kies een resultaat uit Stap 2.</p>
+                        </div>
+
+                        <p id="preview-overview" class="overview"></p>
+
+                        <div>
+                            <div class="section-label-row">
+                                <h4 id="people-heading">Acteurs</h4>
+                                <span id="people-count">0 geselecteerd</span>
+                            </div>
+                            <div class="people-grid" id="people-grid">
+                                <div class="people-empty">Acteursfoto's verschijnen hier.</div>
+                            </div>
+                        </div>
+
+                        <section class="filmography-section" id="filmography-section" hidden>
+                            <div class="section-label-row filmography-heading-row">
+                                <h4>Films en series</h4>
+                                <span id="filmography-count">0 titels</span>
+                            </div>
+                            <div class="filmography-list" id="filmography-list">
+                                <div class="filmography-empty">Filmografie verschijnt hier.</div>
+                            </div>
+                        </section>
+
+                        <button id="add-selected-button" class="primary-button" type="button" disabled>
+                            ＋ Toevoegen aan MovieMind
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAP 4 -->
+            <section class="studio-card maintenance-card is-collapsed" id="maintenance-card">
+                <button class="maintenance-toggle" id="maintenance-toggle" type="button" aria-expanded="false">
+                    <span class="step-badge">Stap 4</span>
+                    <span class="maintenance-toggle-copy">
+                        <strong>Database onderhouden</strong>
+                        <small>Koppelen, controleren en statistieken bekijken</small>
+                    </span>
+                    <span class="toggle-chevron" aria-hidden="true">⌄</span>
+                </button>
+
+                <div class="maintenance-body" id="maintenance-body">
+                    <div class="maintenance-grid">
+                        <div class="maintenance-block">
+                            <h3>Vaste database</h3>
+                            <p>Kies eenmalig de samengevoegde database. MovieMind onthoudt het bestand en schrijft nieuwe titels rechtstreeks weg.</p>
+                            <button id="connect-database-button" class="secondary-button" type="button">📂 Database koppelen</button>
+                            <button id="reconnect-database-button" class="ghost-button" type="button" hidden>🔐 Toestemming herstellen</button>
+                            <p class="database-status" id="database-status">Nog geen database gekoppeld.</p>
+                        </div>
+
+                        <div class="maintenance-block">
+                            <h3>Databasegegevens</h3>
+                            <dl class="statistics-list">
+                                <div><dt>Alle titels</dt><dd id="stat-total">0</dd></div>
+                                <div><dt>Films</dt><dd id="stat-movies">0</dd></div>
+                                <div><dt>Series</dt><dd id="stat-series">0</dd></div>
+                                <div><dt>Acteurs</dt><dd id="stat-actors">0</dd></div>
+                                <div><dt>Regisseurs</dt><dd id="stat-directors">0</dd></div>
+                                <div><dt>Laatste wijziging</dt><dd id="stat-modified">—</dd></div>
+                            </dl>
+                        </div>
+
+                        <div class="maintenance-block">
+                            <h3>Acteursfoto's</h3>
+                            <p>Koppel eenmalig de map <strong>game/images/actors</strong>. Nieuwe of gewijzigde acteursfoto's worden daarna rechtstreeks in deze map opgeslagen.</p>
+                            <button id="connect-actors-folder-button" class="secondary-button" type="button">📁 Acteursmap koppelen</button>
+                            <button id="reconnect-actors-folder-button" class="ghost-button" type="button" hidden>🔐 Toestemming herstellen</button>
+                            <p class="database-status" id="actors-folder-status">Nog geen acteursmap gekoppeld.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Acteursfoto's op score</h3>
+                            <p>Kies zelf een scorebereik en vul alleen de ontbrekende foto's in dat kleine bulkje aan. Bestaande foto's worden automatisch overgeslagen.</p>
+
+                            <div style="display:flex; gap:10px; align-items:end; margin:14px 0; flex-wrap:wrap;">
+                                <label style="display:grid; gap:5px; color:var(--text-muted); font-size:13px; font-weight:700;">
+                                    Vanaf score
+                                    <input id="bulk-photo-min-score" type="number" min="0" max="100" step="1" value="50" style="width:90px; padding:9px 10px; border-radius:8px; border:1px solid rgba(218,171,69,.45); background:#160909; color:var(--gold); font:inherit;">
+                                </label>
+                                <label style="display:grid; gap:5px; color:var(--text-muted); font-size:13px; font-weight:700;">
+                                    Tot en met
+                                    <input id="bulk-photo-max-score" type="number" min="0" max="100" step="1" value="54" style="width:90px; padding:9px 10px; border-radius:8px; border:1px solid rgba(218,171,69,.45); background:#160909; color:var(--gold); font:inherit;">
+                                </label>
+                            </div>
+
+                            <button id="bulk-score-photos-button" class="secondary-button" type="button" disabled>📸 Ontbrekende foto's score 50–54 aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-score-photos-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-score-photos-counter">0 / 0</strong>
+                                    <span id="bulk-score-photos-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-score-photos-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-score-photos-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Gedownload <strong id="bulk-stat-downloaded">0</strong></span>
+                                    <span>Aanwezig <strong id="bulk-stat-existing">0</strong></span>
+                                    <span>Geen foto <strong id="bulk-stat-no-photo">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-stat-failed">0</strong></span>
+                                </div>
+
+                                <div id="bulk-photo-no-photo-list" hidden style="margin-top:12px; padding:12px 14px; border:1px solid rgba(218,171,69,.28); border-radius:10px; background:rgba(0,0,0,.16); color:var(--text-muted); font-size:13px;"></div>
+
+                                <div id="bulk-photo-failed-list" hidden style="margin-top:10px; padding:12px 14px; border:1px solid rgba(218,171,69,.28); border-radius:10px; background:rgba(0,0,0,.16); color:var(--text-muted); font-size:13px;"></div>
+                            </div>
+
+                            <p class="database-status" id="bulk-score-photos-status">Koppel eerst de database en acteursmap.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Filmposters</h3>
+                            <p>Vult alleen ontbrekende <strong>poster_path</strong>-velden aan via TMDB. Bestaande posterpaden blijven ongemoeid en de database wordt tussendoor veilig opgeslagen.</p>
+
+                            <button id="bulk-poster-paths-button" class="secondary-button" type="button" disabled>🎞 Ontbrekende posterpaden aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-poster-paths-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-poster-paths-counter">0 / 0</strong>
+                                    <span id="bulk-poster-paths-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-poster-paths-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-poster-paths-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Gevonden <strong id="bulk-poster-stat-found">0</strong></span>
+                                    <span>Aanwezig <strong id="bulk-poster-stat-existing">0</strong></span>
+                                    <span>Geen poster <strong id="bulk-poster-stat-no-poster">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-poster-stat-failed">0</strong></span>
+                                </div>
+                            </div>
+
+                            <p class="database-status" id="bulk-poster-paths-status">Koppel eerst de database.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Cast aanvullen tot 20</h3>
+                            <p>Haalt voor alle films en series opnieuw de TMDB-cast op en bewaart maximaal <strong>20 acteurs</strong>. Dit verbetert vooral <strong>Acteerde met</strong>. De database wordt tijdens de run niet tussendoor opgeslagen, zodat Live Server de actie niet afbreekt.</p>
+
+                            <button id="bulk-cast-20-button" class="secondary-button" type="button" disabled>👥 Cast tot 20 acteurs aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-cast-20-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-cast-20-counter">0 / 0</strong>
+                                    <span id="bulk-cast-20-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-cast-20-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-cast-20-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Bijgewerkt <strong id="bulk-cast-stat-updated">0</strong></span>
+                                    <span>Al 20+ <strong id="bulk-cast-stat-complete">0</strong></span>
+                                    <span>Geen cast <strong id="bulk-cast-stat-no-cast">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-cast-stat-failed">0</strong></span>
+                                </div>
+                            </div>
+
+                            <p class="database-status" id="bulk-cast-20-status">Koppel eerst de database.</p>
+                        </div>
+
+                        <div class="maintenance-block">
+                            <h3>Veiligheid</h3>
+                            <p>Elke toevoeging wordt rechtstreeks naar het gekoppelde JSON-bestand geschreven. Acteursfoto's worden alleen opgeslagen wanneer de acteursmap is gekoppeld.</p>
+                            <button id="reload-database-button" class="secondary-button" type="button" disabled>↻ Database opnieuw laden</button>
+                            <button id="test-save-button" class="ghost-button" type="button" disabled>✓ Schrijftoegang controleren</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-log-block">
+                        <div class="activity-log-grid">
+                            <section class="activity-log-panel">
+                                <div class="activity-log-header">
+                                    <div>
+                                        <h3>Activiteiten</h3>
+                                        <p>De laatste 10 acties van MovieMind Studio.</p>
+                                    </div>
+                                    <button id="clear-activity-log-button" class="ghost-button activity-log-clear" type="button">
+                                        Log wissen
+                                    </button>
+                                </div>
+
+                                <div class="activity-log" id="activity-log" role="log" aria-live="polite" aria-relevant="additions">
+                                    <div class="activity-log-empty" id="activity-log-empty">
+                                        Nog geen activiteiten uitgevoerd.
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="activity-log-panel">
+                                <div class="activity-log-header">
+                                    <div>
+                                        <h3>Recent toegevoegd</h3>
+                                        <p>De laatste 10 toegevoegde films, series en acteurs.</p>
+                                    </div>
+                                </div>
+
+                                <div class="recent-items-list" id="recent-items-list" aria-live="polite">
+                                    <div class="activity-log-empty" id="recent-items-empty">
+                                        Nog niets toegevoegd.
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </div>
+
+<script src="config.js"></script>
+<script src="script.js?v=2.0.16"></script>
 </body>
 </html>

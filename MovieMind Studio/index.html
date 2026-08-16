@@ -207,10 +207,21 @@
                         </div>
 
                         <div class="maintenance-block bulk-photo-block">
-                            <h3>Foto's score 50–69</h3>
-                            <p>Eenmalige bulkactie voor speelbare acteurs in de middengroep. Bestaande foto's worden overgeslagen; alleen ontbrekende foto's worden via TMDB opgehaald.</p>
+                            <h3>Acteursfoto's op score</h3>
+                            <p>Kies zelf een scorebereik en vul alleen de ontbrekende foto's in dat kleine bulkje aan. Bestaande foto's worden automatisch overgeslagen.</p>
 
-                            <button id="bulk-score-photos-button" class="secondary-button" type="button" disabled>📸 Ontbrekende foto's 50–69 aanvullen</button>
+                            <div style="display:flex; gap:10px; align-items:end; margin:14px 0; flex-wrap:wrap;">
+                                <label style="display:grid; gap:5px; color:var(--text-muted); font-size:13px; font-weight:700;">
+                                    Vanaf score
+                                    <input id="bulk-photo-min-score" type="number" min="0" max="100" step="1" value="50" style="width:90px; padding:9px 10px; border-radius:8px; border:1px solid rgba(218,171,69,.45); background:#160909; color:var(--gold); font:inherit;">
+                                </label>
+                                <label style="display:grid; gap:5px; color:var(--text-muted); font-size:13px; font-weight:700;">
+                                    Tot en met
+                                    <input id="bulk-photo-max-score" type="number" min="0" max="100" step="1" value="54" style="width:90px; padding:9px 10px; border-radius:8px; border:1px solid rgba(218,171,69,.45); background:#160909; color:var(--gold); font:inherit;">
+                                </label>
+                            </div>
+
+                            <button id="bulk-score-photos-button" class="secondary-button" type="button" disabled>📸 Ontbrekende foto's score 50–54 aanvullen</button>
 
                             <div class="bulk-photo-progress" id="bulk-score-photos-progress" hidden>
                                 <div class="bulk-photo-progress-head">
@@ -233,6 +244,64 @@
                             </div>
 
                             <p class="database-status" id="bulk-score-photos-status">Koppel eerst de database en acteursmap.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Filmposters</h3>
+                            <p>Vult alleen ontbrekende <strong>poster_path</strong>-velden aan via TMDB. Bestaande posterpaden blijven ongemoeid en de database wordt tussendoor veilig opgeslagen.</p>
+
+                            <button id="bulk-poster-paths-button" class="secondary-button" type="button" disabled>🎞 Ontbrekende posterpaden aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-poster-paths-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-poster-paths-counter">0 / 0</strong>
+                                    <span id="bulk-poster-paths-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-poster-paths-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-poster-paths-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Gevonden <strong id="bulk-poster-stat-found">0</strong></span>
+                                    <span>Aanwezig <strong id="bulk-poster-stat-existing">0</strong></span>
+                                    <span>Geen poster <strong id="bulk-poster-stat-no-poster">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-poster-stat-failed">0</strong></span>
+                                </div>
+                            </div>
+
+                            <p class="database-status" id="bulk-poster-paths-status">Koppel eerst de database.</p>
+                        </div>
+
+                        <div class="maintenance-block bulk-photo-block">
+                            <h3>Cast aanvullen tot 20</h3>
+                            <p>Haalt voor alle films en series opnieuw de TMDB-cast op en bewaart maximaal <strong>20 acteurs</strong>. Dit verbetert vooral <strong>Acteerde met</strong>. De database wordt tijdens de run niet tussendoor opgeslagen, zodat Live Server de actie niet afbreekt.</p>
+
+                            <button id="bulk-cast-20-button" class="secondary-button" type="button" disabled>👥 Cast tot 20 acteurs aanvullen</button>
+
+                            <div class="bulk-photo-progress" id="bulk-cast-20-progress" hidden>
+                                <div class="bulk-photo-progress-head">
+                                    <strong id="bulk-cast-20-counter">0 / 0</strong>
+                                    <span id="bulk-cast-20-percent">0%</span>
+                                </div>
+
+                                <div class="bulk-photo-progress-track" aria-hidden="true">
+                                    <span id="bulk-cast-20-bar"></span>
+                                </div>
+
+                                <p class="bulk-photo-current" id="bulk-cast-20-current">Voorbereiden…</p>
+
+                                <div class="bulk-photo-stats">
+                                    <span>Bijgewerkt <strong id="bulk-cast-stat-updated">0</strong></span>
+                                    <span>Al 20+ <strong id="bulk-cast-stat-complete">0</strong></span>
+                                    <span>Geen cast <strong id="bulk-cast-stat-no-cast">0</strong></span>
+                                    <span>Mislukt <strong id="bulk-cast-stat-failed">0</strong></span>
+                                </div>
+                            </div>
+
+                            <p class="database-status" id="bulk-cast-20-status">Koppel eerst de database.</p>
                         </div>
 
                         <div class="maintenance-block">
@@ -288,6 +357,6 @@
     </div>
 
 <script src="config.js"></script>
-<script src="script.js?v=2.0.12"></script>
+<script src="script.js?v=2.0.15"></script>
 </body>
 </html>

@@ -1175,6 +1175,59 @@ body.game-active .board {
     animation: popupPanelEnter 0.24s ease both;
 }
 
+/* =========================================================
+   TOUCH & FEEL – ANTWOORDPANEEL IN KLEUR VAN ACTIEVE SPELER
+   Blauw = speler 1, warm rood/oranje = speler 2.
+   Goud blijft de vaste MovieMind-accentkleur.
+========================================================= */
+
+.popup.player-blue {
+    background:
+        radial-gradient(circle at 50% 45%, rgba(23, 111, 159, 0.24), transparent 37%),
+        rgba(3, 7, 12, 0.78);
+}
+
+.popup.player-blue .popup-box {
+    background:
+        linear-gradient(180deg, rgba(224, 244, 255, 0.075), transparent 22%),
+        radial-gradient(circle at 50% 0%, rgba(58, 155, 210, 0.16), transparent 38%),
+        linear-gradient(145deg, #176f9f 0%, #114c70 54%, #08283d 100%);
+    box-shadow:
+        inset 0 0 0 2px rgba(5, 33, 49, 0.94),
+        inset 0 0 0 4px rgba(226, 184, 84, 0.30),
+        inset 0 -22px 34px rgba(2, 18, 29, 0.28),
+        0 24px 70px rgba(0, 0, 0, 0.72),
+        0 0 38px rgba(35, 124, 175, 0.34);
+}
+
+.popup.player-blue .popup-film-emblem {
+    background:
+        radial-gradient(circle at 50% 35%, #278fc6 0 36%, #145b83 66%, #08283d 100%);
+    box-shadow:
+        inset 0 0 0 2px rgba(5, 33, 49, 0.92),
+        inset 0 0 0 4px rgba(225, 185, 89, 0.25),
+        0 8px 18px rgba(0, 0, 0, 0.48),
+        0 0 20px rgba(58, 155, 210, 0.24);
+}
+
+.popup.player-blue .popup-question-hint {
+    color: #d9e9ef;
+}
+
+.popup.player-orange {
+    background:
+        radial-gradient(circle at 50% 45%, rgba(141, 34, 29, 0.24), transparent 37%),
+        rgba(6, 2, 2, 0.76);
+}
+
+.popup.player-orange .popup-box {
+    background:
+        linear-gradient(180deg, rgba(255, 239, 184, 0.075), transparent 22%),
+        radial-gradient(circle at 50% 0%, rgba(206, 151, 54, 0.13), transparent 38%),
+        linear-gradient(145deg, #7a1f1e 0%, #591313 54%, #330909 100%);
+}
+
+
 .popup-box::before,
 .popup-box::after {
     content: "";
@@ -4932,3 +4985,392 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
         display: none !important;
     }
 }
+
+/* =========================================
+   POSTER -> PION CLAIMANIMATIE
+========================================= */
+body.poster-claim-active {
+    cursor: wait;
+}
+
+.poster-claim-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(7, 2, 2, 0.12);
+    transition: opacity 0.16s ease;
+}
+
+.poster-claim-overlay.is-visible {
+    opacity: 1;
+}
+
+.poster-claim-frame {
+    --poster-target-x: 0px;
+    --poster-target-y: 0px;
+    --poster-target-scale: 0.3;
+    position: relative;
+    width: clamp(150px, 15vw, 235px);
+    aspect-ratio: 2 / 3;
+    border: 2px solid rgba(238, 199, 103, 0.92);
+    border-radius: 10px;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.72);
+    transform-origin: center center;
+    background: #140606;
+    box-shadow:
+        0 22px 55px rgba(0, 0, 0, 0.72),
+        0 0 0 5px rgba(78, 18, 18, 0.55),
+        0 0 28px rgba(231, 190, 91, 0.25);
+    transition:
+        opacity 0.18s ease,
+        transform 0.24s cubic-bezier(.2,.85,.25,1.15);
+    will-change: transform, opacity;
+}
+
+.poster-claim-frame.is-presented {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.poster-claim-image,
+.poster-claim-token {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+}
+
+.poster-claim-image {
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+.poster-claim-token {
+    z-index: 2;
+    padding: 17%;
+    object-fit: contain;
+    opacity: 0;
+    transform: scale(0.58);
+    filter:
+        drop-shadow(0 7px 7px rgba(0, 0, 0, 0.62))
+        drop-shadow(0 0 8px rgba(239, 199, 98, 0.28));
+    transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.9,.3,1.25);
+}
+
+.poster-claim-frame.is-flying {
+    transform:
+        translate(var(--poster-target-x), var(--poster-target-y))
+        scale(var(--poster-target-scale));
+    transition: transform 0.68s cubic-bezier(.35,.02,.18,1);
+}
+
+.poster-claim-frame.is-morphing .poster-claim-image {
+    opacity: 0;
+    filter: blur(2px) brightness(1.25);
+}
+
+.poster-claim-frame.is-morphing .poster-claim-token {
+    opacity: 1;
+    transform: scale(1);
+}
+
+@media (max-width: 760px) {
+    .poster-claim-frame {
+        width: clamp(118px, 34vw, 175px);
+        border-radius: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .poster-claim-overlay,
+    .poster-claim-frame,
+    .poster-claim-image,
+    .poster-claim-token {
+        transition-duration: 0.01ms !important;
+    }
+}
+/* =========================================================
+   PIONNEN IN SPELERKLEUR
+   Goedgekeurde MovieMind-uitwerking: de bestaande gouden
+   pion-afbeeldingen krijgen in het spel duidelijk de kleur
+   van de eigenaar, met extra gloed voor betere zichtbaarheid.
+========================================================= */
+
+/* Geclaimde vakjes — Speler 1 blauw */
+.cell.blue .claimed-token {
+    filter:
+        brightness(0.82)
+        saturate(2.15)
+        sepia(0.18)
+        hue-rotate(155deg)
+        saturate(2.35)
+        brightness(1.18)
+        drop-shadow(0 3px 3px rgba(0, 0, 0, 0.58))
+        drop-shadow(0 0 4px rgba(42, 156, 255, 0.95))
+        drop-shadow(0 0 9px rgba(23, 111, 159, 0.72));
+}
+
+/* Geclaimde vakjes — Speler 2 rood/bordeaux */
+.cell.orange .claimed-token {
+    filter:
+        brightness(0.78)
+        saturate(2.25)
+        sepia(0.22)
+        hue-rotate(315deg)
+        saturate(2.65)
+        brightness(1.12)
+        drop-shadow(0 3px 3px rgba(0, 0, 0, 0.58))
+        drop-shadow(0 0 4px rgba(255, 63, 47, 0.95))
+        drop-shadow(0 0 9px rgba(141, 34, 29, 0.78));
+}
+
+/* De pion in de beurtbalk volgt dezelfde spelerkleur. */
+body.game-active .status.hud-ready.blue-turn .hud-player-token {
+    filter:
+        brightness(0.82)
+        saturate(2.15)
+        sepia(0.18)
+        hue-rotate(155deg)
+        saturate(2.35)
+        brightness(1.18)
+        drop-shadow(0 0 3px rgba(42, 156, 255, 0.95))
+        drop-shadow(0 0 7px rgba(23, 111, 159, 0.72));
+}
+
+body.game-active .status.hud-ready.orange-turn .hud-player-token {
+    filter:
+        brightness(0.78)
+        saturate(2.25)
+        sepia(0.22)
+        hue-rotate(315deg)
+        saturate(2.65)
+        brightness(1.12)
+        drop-shadow(0 0 3px rgba(255, 63, 47, 0.95))
+        drop-shadow(0 0 7px rgba(141, 34, 29, 0.78));
+}
+
+/* Iets groter in het vakje: de pion blijft binnen zijn eigen zone,
+   maar is duidelijker zichtbaar dan de oude gouden uitvoering. */
+.claimed-token {
+    max-width: 82%;
+    max-height: 108%;
+}
+
+
+/* =========================================================
+   MOVIEMIND – CINEMATISCHE STARTOVERGANG V6
+   Geen zwart tussenvlak: het bestaande doek dooft zelf uit.
+========================================================= */
+
+body.cinema-transitioning .loading-screen {
+    display: none !important;
+}
+
+/* Het startbeeld zelf dooft uit, zodat er nergens een los zwart blok verschijnt. */
+body.cinema-screen-dimming .brand-block,
+body.cinema-screen-dimming #startScreen {
+    animation: movieMindContentDimV5 .70s ease-in forwards !important;
+}
+
+.cinema-transition-layer {
+    position: absolute;
+    left: 22.85%;
+    top: 23.15%;
+    width: 54.30%;
+    height: 40.85%;
+    z-index: 9999;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* De laag is nu alleen nog voor projectorlicht en filmflikkering. */
+.cinema-transition-layer.projector-on {
+    opacity: 1;
+    animation: movieMindProjectorLayerV5 1.28s ease-out forwards;
+}
+
+.cinema-projector-glow,
+.cinema-film-flicker {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cinema-projector-glow {
+    background:
+        radial-gradient(ellipse at 50% 46%,
+            rgba(255, 244, 199, .68) 0%,
+            rgba(239, 202, 117, .25) 36%,
+            rgba(156, 113, 45, .07) 60%,
+            transparent 78%);
+    mix-blend-mode: screen;
+}
+
+.cinema-film-flicker {
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,.03) 0 1px,
+            transparent 1px 4px
+        );
+    mix-blend-mode: screen;
+}
+
+.cinema-transition-layer.projector-on .cinema-projector-glow {
+    animation: movieMindProjectorGlowV5 1.08s ease-out both;
+}
+
+.cinema-transition-layer.projector-on .cinema-film-flicker {
+    animation: movieMindFilmFlickerV5 .88s steps(1, end) both;
+}
+
+/* Heel even is alleen het echte bord bijna donker; geen overlay/rechthoek ervoor. */
+.screen-frame.cinema-board-prelight {
+    opacity: .045 !important;
+    filter: brightness(.09) blur(3.2px) saturate(.72) !important;
+    transform: scale(.994);
+}
+
+.screen-frame.cinema-board-reveal-v6 {
+    transform-origin: 50% 50%;
+    animation: movieMindBoardRevealV6 1.38s cubic-bezier(.18,.76,.24,1) both !important;
+}
+
+body.cinema-transition-settled .screen-frame::after {
+    content: "";
+    position: absolute;
+    inset: -.8%;
+    z-index: 90;
+    pointer-events: none;
+    border-radius: 8px;
+    animation: movieMindGoldFinishV5 .70s ease-out both;
+}
+
+@keyframes movieMindContentDimV5 {
+    0% {
+        opacity: 1;
+        filter: brightness(1) blur(0);
+    }
+    62% {
+        opacity: .28;
+        filter: brightness(.38) blur(.35px);
+    }
+    100% {
+        opacity: .035;
+        filter: brightness(.10) blur(1.1px);
+    }
+}
+
+@keyframes movieMindProjectorLayerV5 {
+    0%, 82% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes movieMindProjectorGlowV5 {
+    0%   { opacity: 0; transform: scale(.92); filter: brightness(.65); }
+    18%  { opacity: .78; transform: scale(.96); filter: brightness(1.25); }
+    27%  { opacity: .16; filter: brightness(.78); }
+    39%  { opacity: .60; filter: brightness(1.15); }
+    68%  { opacity: .20; transform: scale(1.02); filter: brightness(1); }
+    100% { opacity: 0; transform: scale(1.04); filter: brightness(1); }
+}
+
+@keyframes movieMindFilmFlickerV5 {
+    0%   { opacity: 0; }
+    14%  { opacity: .17; }
+    22%  { opacity: .025; }
+    31%  { opacity: .12; }
+    43%  { opacity: .02; }
+    58%  { opacity: .07; }
+    100% { opacity: 0; }
+}
+
+@keyframes movieMindBoardRevealV6 {
+    0% {
+        opacity: .045;
+        filter: brightness(.09) blur(3.4px) saturate(.72);
+        transform: scale(.994);
+    }
+    20% {
+        opacity: .17;
+        filter: brightness(.34) blur(2.7px) saturate(.80);
+    }
+    38% {
+        opacity: .42;
+        filter: brightness(1.22) blur(2.05px) saturate(.88);
+        transform: scale(.997);
+    }
+    52% {
+        opacity: .72;
+        filter: brightness(1.12) blur(1.35px) saturate(.93);
+    }
+    66% {
+        opacity: .90;
+        filter: brightness(1.04) blur(.72px) saturate(.97);
+    }
+    /* Projectorlens vindt hier zichtbaar zijn focus. */
+    76% {
+        opacity: .98;
+        filter: brightness(1.02) blur(.42px) saturate(.99);
+    }
+    84% {
+        opacity: 1;
+        filter: brightness(1) blur(0) saturate(1);
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        filter: brightness(1) blur(0) saturate(1);
+        transform: scale(1);
+    }
+}
+
+@keyframes movieMindGoldFinishV5 {
+    0% {
+        border: 1px solid rgba(239, 202, 105, 0);
+        box-shadow: 0 0 0 rgba(239, 202, 105, 0);
+        opacity: 0;
+    }
+    42% {
+        border: 1px solid rgba(239, 202, 105, .64);
+        box-shadow:
+            0 0 11px rgba(239, 202, 105, .22),
+            inset 0 0 8px rgba(239, 202, 105, .09);
+        opacity: 1;
+    }
+    100% {
+        border: 1px solid rgba(239, 202, 105, 0);
+        box-shadow: 0 0 0 rgba(239, 202, 105, 0);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.cinema-screen-dimming .brand-block,
+    body.cinema-screen-dimming #startScreen,
+    .cinema-transition-layer.projector-on,
+    .cinema-transition-layer.projector-on .cinema-projector-glow,
+    .cinema-transition-layer.projector-on .cinema-film-flicker,
+    .screen-frame.cinema-board-prelight,
+    .screen-frame.cinema-board-reveal-v6,
+    body.cinema-transition-settled .screen-frame::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+\n\n/* =========================================================\n   MOVIEMIND – WINNAARSCHERM V1\n   De gekozen spelpion is de trofee van de winnaar.\n========================================================= */\n\n.winner-award {\n    min-height: clamp(108px, 10vw, 180px);\n    margin: 1% 0 0;\n}\n\n.winner-award::before {\n    width: 58%;\n    background: radial-gradient(circle, rgba(245, 209, 112, 0.20), transparent 69%);\n}\n\n.winner-popcorn-image {\n    max-width: 58%;\n    max-height: clamp(104px, 9.6vw, 174px);\n    animation: winnerTokenRise 1.05s cubic-bezier(.18,.78,.22,1) both;\n    transform-origin: 50% 88%;\n}\n\n.winner-overlay.winner-blue .winner-popcorn-image {\n    filter:\n        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))\n        drop-shadow(0 0 9px rgba(58, 155, 210, 0.78))\n        drop-shadow(0 0 24px rgba(23, 111, 159, 0.52));\n}\n\n.winner-overlay.winner-orange .winner-popcorn-image {\n    filter:\n        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))\n        drop-shadow(0 0 9px rgba(196, 54, 48, 0.82))\n        drop-shadow(0 0 24px rgba(123, 24, 22, 0.58));\n}\n\n.winner-overlay.winner-blue .winner-overlay-text {\n    color: #9edcff;\n    text-shadow: 0 1px 0 #174b69, 0 0 12px rgba(58,155,210,.42), 0 3px 9px rgba(20,1,1,.72);\n}\n\n.winner-overlay.winner-orange .winner-overlay-text {\n    color: #ffb0a8;\n    text-shadow: 0 1px 0 #6e1c18, 0 0 12px rgba(196,54,48,.38), 0 3px 9px rgba(20,1,1,.72);\n}\n\n.winner-overlay.show .winner-kicker {\n    position: relative;\n    overflow: hidden;\n}\n\n.winner-overlay.show .winner-kicker::after {\n    content: "";\n    position: absolute;\n    top: -40%;\n    bottom: -40%;\n    width: 18%;\n    left: -28%;\n    transform: skewX(-20deg);\n    background: linear-gradient(90deg, transparent, rgba(255,239,181,.72), transparent);\n    animation: winnerGoldSweep 1.05s ease .82s both;\n}\n\n@keyframes winnerTokenRise {\n    0% { opacity: 0; transform: translateY(22px) scale(.82); }\n    58% { opacity: 1; transform: translateY(-3px) scale(1.035); }\n    100% { opacity: 1; transform: translateY(0) scale(1); }\n}\n\n@keyframes winnerGoldSweep {\n    from { left: -28%; opacity: 0; }\n    20% { opacity: 1; }\n    to { left: 112%; opacity: 0; }\n}\n\n@media (prefers-reduced-motion: reduce) {\n    .winner-popcorn-image,\n    .winner-overlay.show .winner-kicker::after { animation: none; }\n}\n

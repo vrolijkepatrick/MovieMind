@@ -35,11 +35,19 @@ const SELECTED_TYPE_KEY = "moviemindStudioSelectedType";
 const ACTIVITY_LOG_KEY = "moviemindStudioActivityLog";
 const RECENT_ITEMS_KEY = "moviemindStudioRecentItems";
 const MAX_LOG_ITEMS = 10;
-const BULK_PHOTO_MIN_SCORE = 50;
-const BULK_PHOTO_MAX_SCORE = 69;
+const BULK_PHOTO_DEFAULT_MIN_SCORE = 50;
+const BULK_PHOTO_DEFAULT_MAX_SCORE = 54;
+const BULK_PHOTO_RANGE_STORAGE_KEY = "moviemindStudioBulkPhotoScoreRangeV1";
+const MAINTENANCE_OPEN_STORAGE_KEY = "moviemindStudioMaintenanceOpenV1";
 const ANALYZER_POPULARITY_CACHE_KEY = "moviemindAnalyzerActorPopularity";
 const BULK_PHOTO_PROGRESS_STORAGE_KEY = "moviemindStudioBulkPhotoProgress50_69V2";
+const BULK_POSTER_PROGRESS_STORAGE_KEY = "moviemindStudioBulkPosterPathsV1";
+const BULK_POSTER_SAVE_EVERY = 25;
+const BULK_CAST_PROGRESS_STORAGE_KEY = "moviemindStudioBulkCast20V1";
+const BULK_CAST_LIMIT = 20;
 let bulkScorePhotoRunActive = false;
+let bulkPosterRunActive = false;
+let bulkCastRunActive = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     restoreSelectedType();
@@ -51,6 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initialiseDatabaseButtons();
     initialiseActorsFolderButtons();
     initialiseBulkScorePhotoButton();
+    initialiseBulkPosterButton();
+    initialiseBulkCastButton();
     initialiseAddButton();
     initialiseActivityLog();
     restoreDatabaseConnection();
@@ -470,7 +480,7 @@ function renderTitlePreview(details) {
         ? details.first_air_date
         : details.release_date;
     const cast = details.credits && Array.isArray(details.credits.cast)
-        ? details.credits.cast.slice(0, 8)
+        ? details.credits.cast.slice(0, BULK_CAST_LIMIT)
         : [];
 
     setPoster(details.poster_path, title);
@@ -1274,16 +1284,827 @@ function renderPersonProfiles(profiles, personName) {
 
 
 /* =========================================================
+   BULK POSTER_PATHS AANVULLEN
+========================================================= */
+
+function initialiseBulkPosterButton() {
+    const button = document.getElementById("bulk-poster-paths-button");
+
+    if (!button) return;
+
+    button.addEventListener("click", fillMissingPosterPaths);
+    updateBulkPosterUi();
+}
+
+function getPosterEligibleRecords() {
+    return state.records
+        .filter((record) =>
+            record &&
+            record.id !== undefined &&
+            record.id !== null &&
+            (record.media_type === "tv" || record.media_type === "movie" || !record.media_type)
+        )
+        .map((record) => ({
+            record,
+            key: (record.media_type === "tv" ? "tv" : "movie") + ":" + String(record.id)
+        }))
+        .sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function getMissingPosterPathCount() {
+    return getPosterEligibleRecords().filter(({ record }) =>
+        !String(record.poster_path || "").trim()
+    ).length;
+}
+
+function updateBulkPosterUi(message = "") {
+    const button = document.getElementById("bulk-poster-paths-button");
+    const status = document.getElementById("bulk-poster-paths-status");
+
+    if (!button || !status) return;
+
+    const ready = Boolean(
+        state.database &&
+        state.records.length &&
+        state.databaseHandle &&
+        MOVIEMIND_API_KEY
+    );
+
+    button.disabled = !ready || bulkPosterRunActive;
+
+    if (message) {
+        status.textContent = message;
+    } else if (bulkPosterRunActive) {
+        status.textContent = "Posterpaden worden aangevuld. De database wordt tussendoor veilig opgeslagen.";
+    } else if (!state.database || !state.records.length || !state.databaseHandle) {
+        status.textContent = "Koppel eerst de MovieMind-database.";
+    } else if (!MOVIEMIND_API_KEY) {
+        status.textContent = "TMDB_API_KEY ontbreekt.";
+    } else {
+        const missing = getMissingPosterPathCount();
+        const saved = loadBulkPosterProgress();
+
+        if (saved && saved.completed === false && saved.nextIndex > 0) {
+            status.textContent =
+                "Vorige postercontrole stopte bij " + saved.nextIndex + "/" + saved.total +
+                ". Klik om veilig te hervatten.";
+        } else if (missing) {
+            status.textContent =
+                missing.toLocaleString("nl-NL") +
+                " titels hebben nog geen poster_path.";
+        } else {
+            status.textContent = "Alle geschikte titels hebben al een poster_path.";
+        }
+    }
+
+    restoreBulkPosterProgressUi();
+}
+
+function loadBulkPosterProgress() {
+    try {
+        const raw = localStorage.getItem(BULK_POSTER_PROGRESS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function saveBulkPosterProgress(progress) {
+    try {
+        localStorage.setItem(
+            BULK_POSTER_PROGRESS_STORAGE_KEY,
+            JSON.stringify(progress)
+        );
+    } catch (_) {
+        /* Voortgang mag de bulkactie nooit blokkeren. */
+    }
+}
+
+function clearBulkPosterProgress() {
+    try {
+        localStorage.removeItem(BULK_POSTER_PROGRESS_STORAGE_KEY);
+    } catch (_) {}
+}
+
+function makeInitialBulkPosterProgress(items) {
+    return {
+        total: items.length,
+        nextIndex: 0,
+        found: 0,
+        alreadyPresent: 0,
+        noPoster: 0,
+        failed: 0,
+        currentTitle: "",
+        completed: false,
+        signature: items.map((item) => item.key).join("|"),
+        startedAt: Date.now()
+    };
+}
+
+function restoreBulkPosterProgressUi() {
+    const progress = loadBulkPosterProgress();
+    if (progress) renderBulkPosterProgress(progress);
+}
+
+function renderBulkPosterProgress(progress) {
+    const panel = document.getElementById("bulk-poster-paths-progress");
+    const counter = document.getElementById("bulk-poster-paths-counter");
+    const percent = document.getElementById("bulk-poster-paths-percent");
+    const bar = document.getElementById("bulk-poster-paths-bar");
+    const current = document.getElementById("bulk-poster-paths-current");
+
+    if (!panel || !counter || !percent || !bar || !current) return;
+
+    panel.hidden = false;
+
+    const total = Math.max(0, Number(progress.total || 0));
+    const processed = Math.max(0, Math.min(total, Number(progress.nextIndex || 0)));
+    const percentage = total ? Math.round(processed / total * 100) : 0;
+
+    counter.textContent = processed.toLocaleString("nl-NL") + " / " + total.toLocaleString("nl-NL");
+    percent.textContent = percentage + "%";
+    bar.style.width = percentage + "%";
+
+    current.textContent = progress.completed
+        ? "Klaar."
+        : progress.currentTitle
+            ? "Nu: " + progress.currentTitle
+            : "Voorbereiden…";
+
+    setBulkPosterStat("bulk-poster-stat-found", progress.found);
+    setBulkPosterStat("bulk-poster-stat-existing", progress.alreadyPresent);
+    setBulkPosterStat("bulk-poster-stat-no-poster", progress.noPoster);
+    setBulkPosterStat("bulk-poster-stat-failed", progress.failed);
+}
+
+function setBulkPosterStat(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = Number(value || 0).toLocaleString("nl-NL");
+}
+
+async function fetchPosterPathForRecord(record) {
+    const type = record.media_type === "tv" ? "tv" : "movie";
+    const response = await fetch(
+        "https://api.themoviedb.org/3/" + type + "/" + encodeURIComponent(record.id) +
+        "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+        "&language=nl-NL"
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status + ".");
+    }
+
+    const details = await response.json();
+    return details && details.poster_path ? String(details.poster_path) : "";
+}
+
+async function fillMissingPosterPaths() {
+    const button = document.getElementById("bulk-poster-paths-button");
+
+    if (bulkPosterRunActive) return;
+
+    if (!state.database || !state.records.length || !state.databaseHandle) {
+        showToast("Koppel eerst de database.", "error");
+        return;
+    }
+
+    if (!MOVIEMIND_API_KEY) {
+        showToast("TMDB_API_KEY ontbreekt.", "error");
+        return;
+    }
+
+    const permission = await ensurePermission(state.databaseHandle, true);
+    if (!permission) {
+        showToast("Geen toestemming om de database te wijzigen.", "error");
+        return;
+    }
+
+    const items = getPosterEligibleRecords();
+
+    if (!items.length || getMissingPosterPathCount() === 0) {
+        clearBulkPosterProgress();
+        updateBulkPosterUi("Alle geschikte titels hebben al een poster_path.");
+        showToast("Geen ontbrekende posterpaden gevonden.", "success");
+        return;
+    }
+
+    const signature = items.map((item) => item.key).join("|");
+    let progress = loadBulkPosterProgress();
+
+    if (
+        !progress ||
+        progress.completed ||
+        progress.signature !== signature ||
+        Number(progress.total) !== items.length ||
+        Number(progress.nextIndex) < 0 ||
+        Number(progress.nextIndex) > items.length
+    ) {
+        progress = makeInitialBulkPosterProgress(items);
+    }
+
+    bulkPosterRunActive = true;
+    button.disabled = true;
+    button.textContent = progress.nextIndex > 0
+        ? "⏳ Posterpaden hervatten..."
+        : "⏳ Posterpaden aanvullen...";
+
+    saveBulkPosterProgress(progress);
+    renderBulkPosterProgress(progress);
+    updateBulkPosterUi();
+
+    let unsavedChanges = 0;
+
+    try {
+        for (let index = progress.nextIndex; index < items.length; index++) {
+            const { record } = items[index];
+            const title = String(record.title || record.name || "Onbekende titel");
+
+            progress.currentTitle = title;
+            renderBulkPosterProgress(progress);
+
+            if (String(record.poster_path || "").trim()) {
+                progress.alreadyPresent += 1;
+            } else {
+                try {
+                    const posterPath = await fetchPosterPathForRecord(record);
+
+                    if (posterPath) {
+                        record.poster_path = posterPath;
+                        progress.found += 1;
+                        unsavedChanges += 1;
+                    } else {
+                        progress.noPoster += 1;
+                    }
+                } catch (error) {
+                    console.warn("Poster ophalen mislukt:", title, error);
+                    progress.failed += 1;
+                }
+            }
+
+            progress.nextIndex = index + 1;
+            saveBulkPosterProgress(progress);
+            renderBulkPosterProgress(progress);
+
+            /*
+            BELANGRIJK BIJ LIVE SERVER:
+            Niet tussendoor naar moviemind_database.json schrijven.
+            Omdat die JSON in de actieve MovieMind-map staat, ziet Live Server
+            iedere tussentijdse save als een bestandswijziging en kan hij de
+            browser automatisch herladen. Dat was de reden dat de posterbulk
+            steeds rond 25/50/etc. records leek te stoppen.
+
+            We houden de gevonden poster_paths tijdens de run in het geheugen
+            en schrijven de database één keer weg wanneer de volledige controle
+            klaar is. De voortgangsteller blijft wel na ieder item in
+            localStorage bijgewerkt.
+            */
+
+            // Kleine pauze houdt de UI responsief en voorkomt onnodig agressieve API-calls.
+            await new Promise((resolve) => window.setTimeout(resolve, 120));
+        }
+
+        if (unsavedChanges > 0) {
+            await writeDatabase();
+        }
+
+        const refreshedFile = await state.databaseHandle.getFile();
+        updateStatistics(refreshedFile);
+
+        progress.completed = true;
+        progress.currentTitle = "";
+        progress.finishedAt = Date.now();
+        saveBulkPosterProgress(progress);
+        renderBulkPosterProgress(progress);
+
+        addActivityLog(
+            "Posterpaden aangevuld: " + progress.found +
+            " gevonden, " + progress.noPoster +
+            " zonder poster, " + progress.failed + " mislukt."
+        );
+
+        updateBulkPosterUi(
+            "Klaar: " + progress.found.toLocaleString("nl-NL") +
+            " posterpaden toegevoegd."
+        );
+
+        showToast(
+            progress.found.toLocaleString("nl-NL") +
+            " posterpaden toegevoegd aan de database.",
+            "success"
+        );
+    } catch (error) {
+        console.error("Bulk poster_path aanvullen mislukt:", error);
+
+        if (unsavedChanges > 0) {
+            try { await writeDatabase(); } catch (_) {}
+        }
+
+        saveBulkPosterProgress(progress);
+        updateBulkPosterUi(
+            "Onderbroken bij " + progress.nextIndex + "/" + progress.total +
+            ". Klik opnieuw om te hervatten."
+        );
+        showToast(
+            "Postercontrole onderbroken: " + (error.message || "onbekende fout"),
+            "error"
+        );
+    } finally {
+        bulkPosterRunActive = false;
+        button.textContent = "🎞 Ontbrekende posterpaden aanvullen";
+        updateBulkPosterUi();
+    }
+}
+
+
+/* =========================================================
+   EENMALIGE CAST-AANVULLER TOT 20 ACTEURS
+   Live Server-proof: slechts één databasesave aan het einde.
+========================================================= */
+
+function initialiseBulkCastButton() {
+    ensureBulkCastUi();
+
+    const button = document.getElementById("bulk-cast-20-button");
+    if (!button) return;
+
+    button.addEventListener("click", enrichAllTitleCastsTo20);
+    updateBulkCastUi();
+}
+
+function ensureBulkCastUi() {
+    if (document.getElementById("bulk-cast-20-button")) return;
+
+    const posterButton = document.getElementById("bulk-poster-paths-button");
+    const posterBlock = posterButton
+        ? posterButton.closest(".maintenance-block")
+        : null;
+
+    if (!posterBlock || !posterBlock.parentElement) return;
+
+    const block = document.createElement("div");
+    block.className = "maintenance-block bulk-photo-block";
+    block.innerHTML = `
+        <h3>Cast aanvullen tot 20</h3>
+        <p>Haalt voor alle films en series opnieuw de TMDB-cast op en bewaart maximaal <strong>20 acteurs</strong>. Dit verbetert vooral <strong>Acteerde met</strong>. De database wordt tijdens de run niet tussendoor opgeslagen, zodat Live Server de actie niet afbreekt.</p>
+
+        <button id="bulk-cast-20-button" class="secondary-button" type="button" disabled>👥 Cast tot 20 acteurs aanvullen</button>
+
+        <div class="bulk-photo-progress" id="bulk-cast-20-progress" hidden>
+            <div class="bulk-photo-progress-head">
+                <strong id="bulk-cast-20-counter">0 / 0</strong>
+                <span id="bulk-cast-20-percent">0%</span>
+            </div>
+
+            <div class="bulk-photo-progress-track" aria-hidden="true">
+                <span id="bulk-cast-20-bar"></span>
+            </div>
+
+            <p class="bulk-photo-current" id="bulk-cast-20-current">Voorbereiden…</p>
+
+            <div class="bulk-photo-stats">
+                <span>Bijgewerkt <strong id="bulk-cast-stat-updated">0</strong></span>
+                <span>Al 20+ <strong id="bulk-cast-stat-complete">0</strong></span>
+                <span>Geen cast <strong id="bulk-cast-stat-no-cast">0</strong></span>
+                <span>Mislukt <strong id="bulk-cast-stat-failed">0</strong></span>
+            </div>
+        </div>
+
+        <p class="database-status" id="bulk-cast-20-status">Koppel eerst de database.</p>
+    `;
+
+    posterBlock.insertAdjacentElement("afterend", block);
+}
+
+function getCastEligibleRecords() {
+    return state.records
+        .filter((record) =>
+            record &&
+            record.id !== undefined &&
+            record.id !== null &&
+            (record.media_type === "tv" ||
+             record.media_type === "movie" ||
+             !record.media_type)
+        )
+        .map((record) => ({
+            record,
+            type: record.media_type === "tv" ? "tv" : "movie",
+            key: (record.media_type === "tv" ? "tv" : "movie") + ":" + String(record.id)
+        }))
+        .sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function getStoredCastCount(record) {
+    const names = new Set();
+
+    [record.actors, record.cast, record.cast_details].forEach((source) => {
+        const list = Array.isArray(source) ? source : [];
+        list.forEach((value) => {
+            const name = typeof value === "object" && value !== null
+                ? value.name || value.actor || ""
+                : value;
+            const key = normaliseStudioActorKey(name);
+            if (key) names.add(key);
+        });
+    });
+
+    return names.size;
+}
+
+function loadBulkCastProgress() {
+    try {
+        const raw = localStorage.getItem(BULK_CAST_PROGRESS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function saveBulkCastProgress(progress) {
+    try {
+        localStorage.setItem(
+            BULK_CAST_PROGRESS_STORAGE_KEY,
+            JSON.stringify(progress)
+        );
+    } catch (_) {
+        /* De voortgangsweergave mag de run nooit blokkeren. */
+    }
+}
+
+function makeInitialBulkCastProgress(items) {
+    return {
+        total: items.length,
+        nextIndex: 0,
+        updated: 0,
+        complete: 0,
+        noCast: 0,
+        failed: 0,
+        currentTitle: "",
+        completed: false,
+        signature: items.map((item) => item.key).join("|"),
+        startedAt: Date.now()
+    };
+}
+
+function updateBulkCastUi(message = "") {
+    ensureBulkCastUi();
+
+    const button = document.getElementById("bulk-cast-20-button");
+    const status = document.getElementById("bulk-cast-20-status");
+    if (!button || !status) return;
+
+    const ready = Boolean(
+        state.database &&
+        state.records.length &&
+        state.databaseHandle &&
+        MOVIEMIND_API_KEY
+    );
+
+    button.disabled = !ready || bulkCastRunActive;
+
+    if (message) {
+        status.textContent = message;
+    } else if (bulkCastRunActive) {
+        status.textContent = "Cast wordt aangevuld. Laat dit tabblad open; de database wordt pas aan het einde opgeslagen.";
+    } else if (!state.database || !state.records.length || !state.databaseHandle) {
+        status.textContent = "Koppel eerst de MovieMind-database.";
+    } else if (!MOVIEMIND_API_KEY) {
+        status.textContent = "TMDB_API_KEY ontbreekt.";
+    } else {
+        const items = getCastEligibleRecords();
+        const incomplete = items.filter(({ record }) =>
+            getStoredCastCount(record) < BULK_CAST_LIMIT
+        ).length;
+
+        status.textContent = incomplete
+            ? incomplete.toLocaleString("nl-NL") +
+              " titels hebben minder dan " + BULK_CAST_LIMIT + " opgeslagen acteurs."
+            : "Alle geschikte titels hebben al minimaal " + BULK_CAST_LIMIT + " opgeslagen acteurs.";
+    }
+
+    const progress = loadBulkCastProgress();
+    if (progress) renderBulkCastProgress(progress);
+}
+
+function renderBulkCastProgress(progress) {
+    const panel = document.getElementById("bulk-cast-20-progress");
+    const counter = document.getElementById("bulk-cast-20-counter");
+    const percent = document.getElementById("bulk-cast-20-percent");
+    const bar = document.getElementById("bulk-cast-20-bar");
+    const current = document.getElementById("bulk-cast-20-current");
+
+    if (!panel || !counter || !percent || !bar || !current) return;
+
+    panel.hidden = false;
+
+    const total = Math.max(0, Number(progress.total || 0));
+    const processed = Math.max(
+        0,
+        Math.min(total, Number(progress.nextIndex || 0))
+    );
+    const percentage = total
+        ? Math.round(processed / total * 100)
+        : 0;
+
+    counter.textContent =
+        processed.toLocaleString("nl-NL") +
+        " / " +
+        total.toLocaleString("nl-NL");
+    percent.textContent = percentage + "%";
+    bar.style.width = percentage + "%";
+
+    current.textContent = progress.completed
+        ? "Klaar."
+        : progress.currentTitle
+            ? "Nu: " + progress.currentTitle
+            : "Voorbereiden…";
+
+    setBulkCastStat("bulk-cast-stat-updated", progress.updated);
+    setBulkCastStat("bulk-cast-stat-complete", progress.complete);
+    setBulkCastStat("bulk-cast-stat-no-cast", progress.noCast);
+    setBulkCastStat("bulk-cast-stat-failed", progress.failed);
+}
+
+function setBulkCastStat(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = Number(value || 0).toLocaleString("nl-NL");
+    }
+}
+
+async function fetchCastForBulk(record, type) {
+    const response = await fetch(
+        "https://api.themoviedb.org/3/" + type + "/" + encodeURIComponent(record.id) +
+        "?api_key=" + encodeURIComponent(MOVIEMIND_API_KEY) +
+        "&language=nl-NL&append_to_response=credits"
+    );
+
+    if (!response.ok) {
+        throw new Error("TMDB gaf foutcode " + response.status + ".");
+    }
+
+    const details = await response.json();
+    return details.credits && Array.isArray(details.credits.cast)
+        ? details.credits.cast.slice(0, BULK_CAST_LIMIT)
+        : [];
+}
+
+function applyBulkCastToRecord(record, cast) {
+    const actors = cast
+        .map((person) => String(person.name || "").trim())
+        .filter(Boolean);
+
+    const characters = cast.map((person) => person.character || "");
+
+    const details = cast.map((person, index) => ({
+        id: person.id,
+        name: person.name || "",
+        character: person.character || "",
+        order: Number.isFinite(Number(person.order))
+            ? Number(person.order)
+            : index,
+        popularity: Number(person.popularity || 0),
+        profile_path: person.profile_path || null
+    }));
+
+    record.actors = actors;
+    record.characters = characters;
+    record.cast_details = details;
+
+    /*
+    Sommige serie-records gebruiken daarnaast `cast` als hoofdveld.
+    Als dat veld al bestaat, houden we het synchroon met dezelfde 20.
+    */
+    if (Array.isArray(record.cast)) {
+        record.cast = details.map((person) => ({ ...person }));
+    }
+}
+
+async function enrichAllTitleCastsTo20() {
+    const button = document.getElementById("bulk-cast-20-button");
+
+    if (bulkCastRunActive) return;
+
+    if (!state.database || !state.records.length || !state.databaseHandle) {
+        showToast("Koppel eerst de database.", "error");
+        return;
+    }
+
+    if (!MOVIEMIND_API_KEY) {
+        showToast("TMDB_API_KEY ontbreekt.", "error");
+        return;
+    }
+
+    const permission = await ensurePermission(state.databaseHandle, true);
+    if (!permission) {
+        showToast("Geen toestemming om de database te wijzigen.", "error");
+        return;
+    }
+
+    const items = getCastEligibleRecords();
+    if (!items.length) {
+        showToast("Geen geschikte films of series gevonden.", "error");
+        return;
+    }
+
+    /*
+    We starten bij iedere klik bewust vanaf record 0.
+    Tijdens deze Live Server-proof run worden wijzigingen alleen in het
+    geheugen bewaard. Als de browser onverwacht wordt gesloten, zijn die
+    wijzigingen dus nog niet veilig op schijf en moet de run opnieuw vanaf
+    het begin. Normaal hoort hij echter in één keer door te lopen.
+    */
+    const progress = makeInitialBulkCastProgress(items);
+    saveBulkCastProgress(progress);
+
+    bulkCastRunActive = true;
+    button.disabled = true;
+    button.textContent = "⏳ Cast tot 20 aanvullen...";
+    renderBulkCastProgress(progress);
+    updateBulkCastUi();
+
+    addActivityLog(
+        "Cast-aanvuller gestart voor " +
+        items.length.toLocaleString("nl-NL") +
+        " titels (maximaal " + BULK_CAST_LIMIT + " acteurs).",
+        "info"
+    );
+
+    try {
+        for (let index = 0; index < items.length; index++) {
+            const { record, type } = items[index];
+            const title = String(
+                record.title || record.name || "Onbekende titel"
+            );
+
+            progress.currentTitle = title;
+            renderBulkCastProgress(progress);
+
+            try {
+                if (getStoredCastCount(record) >= BULK_CAST_LIMIT) {
+                    progress.complete += 1;
+                } else {
+                    const cast = await fetchCastForBulk(record, type);
+
+                    if (!cast.length) {
+                        progress.noCast += 1;
+                    } else {
+                        applyBulkCastToRecord(record, cast);
+                        progress.updated += 1;
+                    }
+                }
+            } catch (error) {
+                progress.failed += 1;
+                console.warn(
+                    "Cast ophalen mislukt voor " + title + ":",
+                    error
+                );
+            }
+
+            progress.nextIndex = index + 1;
+            saveBulkCastProgress(progress);
+            renderBulkCastProgress(progress);
+
+            /*
+            Cruciaal: GEEN writeDatabase() in deze lus.
+            Daardoor ziet Live Server geen JSON-wijzigingen en kan hij de
+            pagina niet iedere 20/25/30 titels automatisch herladen.
+            */
+            await new Promise((resolve) =>
+                window.setTimeout(resolve, 120)
+            );
+        }
+
+        /* Eén enkele databasesave nadat álle titels zijn verwerkt. */
+        await writeDatabase();
+
+        const refreshedFile = await state.databaseHandle.getFile();
+        updateStatistics(refreshedFile);
+
+        progress.completed = true;
+        progress.currentTitle = "";
+        progress.finishedAt = Date.now();
+        saveBulkCastProgress(progress);
+        renderBulkCastProgress(progress);
+
+        const summary =
+            "Klaar · " + progress.updated + " bijgewerkt · " +
+            progress.complete + " hadden al 20+ acteurs · " +
+            progress.noCast + " zonder cast · " +
+            progress.failed + " mislukt.";
+
+        addActivityLog(
+            "Cast tot 20: " + summary,
+            progress.failed ? "warning" : "success"
+        );
+        showToast(
+            summary,
+            progress.failed ? "error" : "success"
+        );
+        updateBulkCastUi(summary);
+    } catch (error) {
+        console.error("Bulk cast tot 20 mislukt:", error);
+
+        saveBulkCastProgress(progress);
+        showToast(
+            "Cast-aanvuller is onderbroken vóór de eindsave: " +
+            (error.message || "onbekende fout") +
+            ". Start de actie opnieuw; hij begint veilig vanaf het begin.",
+            "error"
+        );
+        updateBulkCastUi(
+            "Onderbroken vóór opslaan. Klik opnieuw om de volledige run opnieuw te starten."
+        );
+    } finally {
+        bulkCastRunActive = false;
+        button.textContent = "👥 Cast tot 20 acteurs aanvullen";
+        updateBulkCastUi();
+    }
+}
+
+
+/* =========================================================
    EENMALIGE BULKFOTO'S SCORE 50–69
 ========================================================= */
 
 function initialiseBulkScorePhotoButton() {
     const button = document.getElementById("bulk-score-photos-button");
+    const minInput = document.getElementById("bulk-photo-min-score");
+    const maxInput = document.getElementById("bulk-photo-max-score");
 
-    if (!button) return;
+    if (!button || !minInput || !maxInput) return;
+
+    const savedRange = loadBulkPhotoScoreRange();
+    minInput.value = savedRange.min;
+    maxInput.value = savedRange.max;
+
+    const handleRangeChange = function () {
+        const range = getBulkPhotoScoreRange();
+        minInput.value = range.min;
+        maxInput.value = range.max;
+        saveBulkPhotoScoreRange(range);
+        updateBulkScorePhotoUi();
+    };
+
+    minInput.addEventListener("change", handleRangeChange);
+    maxInput.addEventListener("change", handleRangeChange);
+    minInput.addEventListener("input", updateBulkScorePhotoUi);
+    maxInput.addEventListener("input", updateBulkScorePhotoUi);
 
     button.addEventListener("click", downloadMissingScoreBandActorPhotos);
     updateBulkScorePhotoUi();
+}
+
+function loadBulkPhotoScoreRange() {
+    try {
+        const parsed = JSON.parse(
+            localStorage.getItem(BULK_PHOTO_RANGE_STORAGE_KEY) || "null"
+        );
+
+        if (parsed && Number.isFinite(Number(parsed.min)) && Number.isFinite(Number(parsed.max))) {
+            return normaliseBulkPhotoScoreRange(parsed.min, parsed.max);
+        }
+    } catch (_) {}
+
+    return {
+        min: BULK_PHOTO_DEFAULT_MIN_SCORE,
+        max: BULK_PHOTO_DEFAULT_MAX_SCORE
+    };
+}
+
+function saveBulkPhotoScoreRange(range) {
+    try {
+        localStorage.setItem(
+            BULK_PHOTO_RANGE_STORAGE_KEY,
+            JSON.stringify(range)
+        );
+    } catch (_) {}
+}
+
+function normaliseBulkPhotoScoreRange(minValue, maxValue) {
+    let min = Math.max(0, Math.min(100, Math.round(Number(minValue) || 0)));
+    let max = Math.max(0, Math.min(100, Math.round(Number(maxValue) || 0)));
+
+    if (min > max) {
+        [min, max] = [max, min];
+    }
+
+    return { min, max };
+}
+
+function getBulkPhotoScoreRange() {
+    const minInput = document.getElementById("bulk-photo-min-score");
+    const maxInput = document.getElementById("bulk-photo-max-score");
+
+    if (!minInput || !maxInput) {
+        return loadBulkPhotoScoreRange();
+    }
+
+    return normaliseBulkPhotoScoreRange(
+        minInput.value,
+        maxInput.value
+    );
 }
 
 function updateBulkScorePhotoUi(message = "") {
@@ -1291,6 +2112,9 @@ function updateBulkScorePhotoUi(message = "") {
     const status = document.getElementById("bulk-score-photos-status");
 
     if (!button || !status) return;
+
+    const range = getBulkPhotoScoreRange();
+    const rangeLabel = range.min + "–" + range.max;
 
     const ready = Boolean(
         state.database &&
@@ -1300,11 +2124,16 @@ function updateBulkScorePhotoUi(message = "") {
     );
 
     button.disabled = !ready || bulkScorePhotoRunActive;
+    button.textContent = bulkScorePhotoRunActive
+        ? "⏳ Foto's " + rangeLabel + " aanvullen..."
+        : "📸 Ontbrekende foto's score " + rangeLabel + " aanvullen";
 
     if (message) {
         status.textContent = message;
     } else if (bulkScorePhotoRunActive) {
-        status.textContent = "Bulkactie is bezig. Laat dit tabblad open tot de eindmelding verschijnt.";
+        status.textContent =
+            "Bulkactie score " + rangeLabel +
+            " is bezig. Laat dit tabblad open tot de eindmelding verschijnt.";
     } else if (!state.database || !state.records.length) {
         status.textContent = "Koppel eerst de MovieMind-database.";
     } else if (!state.actorsFolderHandle) {
@@ -1313,19 +2142,28 @@ function updateBulkScorePhotoUi(message = "") {
         status.textContent = "TMDB_API_KEY ontbreekt.";
     } else {
         const saved = loadBulkPhotoProgress();
-        if (saved && saved.completed === false && saved.nextIndex > 0) {
+        const sameRange = saved &&
+            Number(saved.minScore) === range.min &&
+            Number(saved.maxScore) === range.max;
+
+        if (
+            sameRange &&
+            saved.completed === false &&
+            saved.nextIndex > 0
+        ) {
             status.textContent =
-                "Vorige bulkactie stopte bij " +
-                saved.nextIndex + "/" + saved.total +
+                "Vorige bulkactie score " + rangeLabel +
+                " stopte bij " + saved.nextIndex + "/" + saved.total +
                 ". Klik om veilig te hervatten; reeds aanwezige foto's worden overgeslagen.";
         } else {
-            status.textContent = "Klaar voor de eenmalige controle van score 50–69.";
+            status.textContent =
+                "Klaar voor ontbrekende acteursfoto's met score " +
+                rangeLabel + ".";
         }
     }
 
     restoreBulkPhotoProgressUi();
 }
-
 function loadBulkPhotoProgress() {
     try {
         const raw = localStorage.getItem(BULK_PHOTO_PROGRESS_STORAGE_KEY);
@@ -1406,6 +2244,75 @@ function renderBulkPhotoProgress(progress) {
     setBulkPhotoStat("bulk-stat-existing", progress.existing);
     setBulkPhotoStat("bulk-stat-no-photo", progress.noPhoto);
     setBulkPhotoStat("bulk-stat-failed", progress.failed);
+
+    renderBulkPhotoIssueList(
+        "bulk-photo-no-photo-list",
+        progress.noPhotoActors || [],
+        "Geen TMDB-foto gevonden"
+    );
+    renderBulkPhotoIssueList(
+        "bulk-photo-failed-list",
+        progress.failedActors || [],
+        "Mislukt"
+    );
+}
+
+function renderBulkPhotoIssueList(id, items, label) {
+    let container = document.getElementById(id);
+
+    /*
+    Extra robuust: als een oudere index.html nog in de browsercache zit,
+    maakt het script het lijstvak zelf aan. Zo zijn we niet afhankelijk
+    van de HTML-versie om de namen te kunnen tonen.
+    */
+    if (!container) {
+        const progressPanel = document.getElementById("bulk-score-photos-progress");
+        if (!progressPanel) return;
+
+        container = document.createElement("div");
+        container.id = id;
+        container.hidden = true;
+        container.style.marginTop = "12px";
+        container.style.padding = "12px 14px";
+        container.style.border = "1px solid rgba(218,171,69,.28)";
+        container.style.borderRadius = "10px";
+        container.style.background = "rgba(0,0,0,.16)";
+        container.style.color = "var(--text-muted)";
+        container.style.fontSize = "13px";
+        progressPanel.appendChild(container);
+    }
+
+    if (!Array.isArray(items) || !items.length) {
+        container.hidden = true;
+        container.innerHTML = "";
+        return;
+    }
+
+    container.hidden = false;
+    container.innerHTML = "";
+
+    const heading = document.createElement("strong");
+    heading.textContent = label + " (" + items.length + ")";
+    heading.style.display = "block";
+    heading.style.marginBottom = "8px";
+    heading.style.color = "var(--gold)";
+    container.appendChild(heading);
+
+    const list = document.createElement("ul");
+    list.style.margin = "0";
+    list.style.paddingLeft = "20px";
+    list.style.display = "grid";
+    list.style.gap = "5px";
+
+    items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent =
+            String(item.name || "Onbekende acteur") +
+            " · score " + Number(item.score || 0);
+        list.appendChild(li);
+    });
+
+    container.appendChild(list);
 }
 
 function setBulkPhotoStat(id, value) {
@@ -1413,14 +2320,18 @@ function setBulkPhotoStat(id, value) {
     if (element) element.textContent = Number(value || 0).toLocaleString("nl-NL");
 }
 
-function makeInitialBulkPhotoProgress(total) {
+function makeInitialBulkPhotoProgress(total, range) {
     return {
         total,
+        minScore: range.min,
+        maxScore: range.max,
         nextIndex: 0,
         downloaded: 0,
         existing: 0,
         noPhoto: 0,
         failed: 0,
+        noPhotoActors: [],
+        failedActors: [],
         currentActor: "",
         currentScore: null,
         completed: false,
@@ -1694,10 +2605,13 @@ async function downloadMissingScoreBandActorPhotos() {
         return;
     }
 
+    const range = getBulkPhotoScoreRange();
+    saveBulkPhotoScoreRange(range);
+
     const actors = calculateStudioActorScores(buildStudioActorMetrics())
         .filter((actor) =>
-            actor.fameScore >= BULK_PHOTO_MIN_SCORE &&
-            actor.fameScore <= BULK_PHOTO_MAX_SCORE
+            actor.fameScore >= range.min &&
+            actor.fameScore <= range.max
         )
         .sort((a, b) => {
             if (b.fameScore !== a.fameScore) return b.fameScore - a.fameScore;
@@ -1705,7 +2619,11 @@ async function downloadMissingScoreBandActorPhotos() {
         });
 
     if (!actors.length) {
-        showToast("Geen speelbare acteurs met score 50–69 gevonden.", "error");
+        showToast(
+            "Geen speelbare acteurs met score " +
+            range.min + "–" + range.max + " gevonden.",
+            "error"
+        );
         return;
     }
 
@@ -1720,10 +2638,19 @@ async function downloadMissingScoreBandActorPhotos() {
         !progress ||
         progress.completed ||
         Number(progress.total) !== actors.length ||
+        Number(progress.minScore) !== range.min ||
+        Number(progress.maxScore) !== range.max ||
         Number(progress.nextIndex) < 0 ||
         Number(progress.nextIndex) > actors.length
     ) {
-        progress = makeInitialBulkPhotoProgress(actors.length);
+        progress = makeInitialBulkPhotoProgress(actors.length, range);
+    }
+
+    if (!Array.isArray(progress.noPhotoActors)) {
+        progress.noPhotoActors = [];
+    }
+    if (!Array.isArray(progress.failedActors)) {
+        progress.failedActors = [];
     }
 
     bulkScorePhotoRunActive = true;
@@ -1738,7 +2665,9 @@ async function downloadMissingScoreBandActorPhotos() {
     const isResume = progress.nextIndex > 0;
 
     addActivityLog(
-        (isResume ? "Bulkfoto's 50–69 hervat bij " : "Bulkfoto's 50–69 gestart voor ") +
+        (isResume
+            ? "Bulkfoto's " + range.min + "–" + range.max + " hervat bij "
+            : "Bulkfoto's " + range.min + "–" + range.max + " gestart voor ") +
         (isResume
             ? (progress.nextIndex + "/" + actors.length + ".")
             : (actors.length.toLocaleString("nl-NL") + " acteurs.")),
@@ -1780,12 +2709,24 @@ async function downloadMissingScoreBandActorPhotos() {
                         progress.downloaded += 1;
                     } else if (result.status === "no-photo") {
                         progress.noPhoto += 1;
+                        if (!progress.noPhotoActors.some((item) => item.name === actor.name)) {
+                            progress.noPhotoActors.push({
+                                name: actor.name,
+                                score: actor.fameScore
+                            });
+                        }
                     } else {
                         progress.existing += 1;
                     }
                 }
             } catch (error) {
                 progress.failed += 1;
+                if (!progress.failedActors.some((item) => item.name === actor.name)) {
+                    progress.failedActors.push({
+                        name: actor.name,
+                        score: actor.fameScore
+                    });
+                }
                 console.warn(
                     "Bulkfoto mislukt voor " + actor.name + ":",
                     error
@@ -1822,7 +2763,7 @@ async function downloadMissingScoreBandActorPhotos() {
             progress.failed + " mislukt.";
 
         addActivityLog(
-            "Bulkfoto's 50–69: " + summary,
+            "Bulkfoto's " + range.min + "–" + range.max + ": " + summary,
             progress.failed ? "warning" : "success"
         );
 
@@ -1833,6 +2774,18 @@ async function downloadMissingScoreBandActorPhotos() {
 
         updateBulkScorePhotoUi(summary);
 
+        /* Zet de namen na afloop nogmaals expliciet zichtbaar. */
+        renderBulkPhotoIssueList(
+            "bulk-photo-no-photo-list",
+            progress.noPhotoActors || [],
+            "Geen TMDB-foto gevonden"
+        );
+        renderBulkPhotoIssueList(
+            "bulk-photo-failed-list",
+            progress.failedActors || [],
+            "Mislukt"
+        );
+
         /*
         De eindstand blijft zichtbaar in het voortgangsblok. Bij een
         volgende klik start een volledig nieuwe controle, maar bestaande
@@ -1841,8 +2794,7 @@ async function downloadMissingScoreBandActorPhotos() {
     } finally {
         bulkScorePhotoRunActive = false;
         button.disabled = false;
-        button.textContent =
-            "📸 Ontbrekende foto's 50–69 aanvullen";
+        updateBulkScorePhotoUi();
     }
 }
 
@@ -1993,7 +2945,11 @@ async function requestSavedActorsFolderPermission() {
 }
 
 function updateActorsFolderUi(stateName) {
-    window.setTimeout(() => updateBulkScorePhotoUi(), 0);
+    window.setTimeout(() => {
+        updateBulkScorePhotoUi();
+        updateBulkPosterUi();
+        updateBulkCastUi();
+    }, 0);
     const connectButton =
         document.getElementById("connect-actors-folder-button");
     const reconnectButton =
@@ -2129,9 +3085,32 @@ function initialiseMaintenance() {
     const card = document.getElementById("maintenance-card");
     const toggle = document.getElementById("maintenance-toggle");
 
+    if (!card || !toggle) return;
+
+    const wasOpen =
+        localStorage.getItem(MAINTENANCE_OPEN_STORAGE_KEY) === "true";
+
+    card.classList.toggle("is-collapsed", !wasOpen);
+    toggle.setAttribute("aria-expanded", String(wasOpen));
+
+    if (wasOpen) {
+        window.setTimeout(() => {
+            card.scrollIntoView({
+                behavior: "auto",
+                block: "start"
+            });
+        }, 80);
+    }
+
     toggle.addEventListener("click", () => {
         const collapsed = card.classList.toggle("is-collapsed");
-        toggle.setAttribute("aria-expanded", String(!collapsed));
+        const open = !collapsed;
+
+        toggle.setAttribute("aria-expanded", String(open));
+        localStorage.setItem(
+            MAINTENANCE_OPEN_STORAGE_KEY,
+            String(open)
+        );
     });
 }
 
@@ -2430,7 +3409,11 @@ async function testDatabaseWriteAccess() {
 }
 
 function updateDatabaseConnectionUi(stateName) {
-    window.setTimeout(() => updateBulkScorePhotoUi(), 0);
+    window.setTimeout(() => {
+        updateBulkScorePhotoUi();
+        updateBulkPosterUi();
+        updateBulkCastUi();
+    }, 0);
     const chip = document.getElementById("database-chip");
     const title = document.getElementById("database-chip-title");
     const text = document.getElementById("database-chip-text");
@@ -2659,7 +3642,7 @@ function createTitleRecordForType(details, mediaType) {
     const cast =
         details.credits &&
         Array.isArray(details.credits.cast)
-            ? details.credits.cast.slice(0, 8)
+            ? details.credits.cast.slice(0, BULK_CAST_LIMIT)
             : [];
     const crew =
         details.credits &&

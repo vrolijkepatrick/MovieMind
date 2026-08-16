@@ -5,6 +5,8 @@ const MOVIEMIND_API_KEY =
 
 const ACTOR_ALIAS_CACHE_KEY = "moviemindAnalyzerActorAliases";
 const ACTOR_POPULARITY_CACHE_KEY = "moviemindAnalyzerActorPopularity";
+const ACTOR_POPULARITY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const ACTOR_POPULARITY_BATCH_DELAY_MS = 80;
 const ACTOR_SCORE_ADJUSTMENT_KEY = "moviemindAnalyzerActorScoreAdjustments";
 
 const state = {
@@ -49,6 +51,16 @@ function initialiseButtons() {
     document
         .getElementById("analyze-actors-button")
         .addEventListener("click", analyzeActors);
+
+    const popularityButton =
+        document.getElementById("refresh-popularity-button");
+
+    if (popularityButton) {
+        popularityButton.addEventListener(
+            "click",
+            refreshActorPopularityBulk
+        );
+    }
 }
 
 async function connectDatabase() {
@@ -166,6 +178,14 @@ async function loadDatabaseFromHandle(handle) {
     updateDatabaseStatus(file);
 
     document.getElementById("analyze-actors-button").disabled = false;
+
+    const popularityButton =
+        document.getElementById("refresh-popularity-button");
+    if (popularityButton) {
+        popularityButton.disabled = false;
+    }
+
+    updatePopularityMaintenanceStatus();
 }
 
 function extractRecords(database) {
@@ -523,50 +543,275 @@ function calculateActorFameScores(actors) {
     const maxRawScore = Math.max(...actors.map((actor) => actor.rawScore), 1);
     const maxTitles = Math.max(...actors.map((actor) => actor.titleCount), 1);
     const maxCoActors = Math.max(...actors.map((actor) => actor.coActorCount), 1);
+    const currentYear = new Date().getFullYear();
 
-    return actors.map((actor) => {
+    const careerValues = actors.map((actor) => {
+        const cached = state.analysis.popularity[
+            createActorPopularityCacheKey(actor)
+        ];
+        return cached ? Number(cached.careerRecognition || 0) : 0;
+    });
+    const maxCareerRecognition = Math.max(...careerValues, 1);
+
+    const provisional = actors.map((actor) => {
         const popularityCache = state.analysis.popularity[
             createActorPopularityCacheKey(actor)
         ];
+
         const tmdbPopularity = popularityCache
             ? Number(popularityCache.popularity || 0)
             : 0;
 
-        const databaseComponent = clamp(
-            Math.log1p(actor.rawScore) / Math.log1p(maxRawScore) * 50,
-            0,
-            50
-        );
-        const titleComponent = clamp(
-            Math.log1p(actor.titleCount) / Math.log1p(maxTitles) * 25,
-            0,
-            25
-        );
-        const networkComponent = clamp(
-            Math.log1p(actor.coActorCount) / Math.log1p(maxCoActors) * 15,
-            0,
-            15
-        );
-        const popularityComponent = tmdbPopularity > 0
-            ? clamp(Math.log1p(tmdbPopularity) / Math.log1p(250) * 10, 0, 10)
+        const careerRecognition = popularityCache
+            ? Number(popularityCache.careerRecognition || 0)
             : 0;
 
-        const cacheKey = createActorScoreAdjustmentKey(actor);
-        const adjustment = Number(state.analysis.adjustments[cacheKey] || 0);
-        const automaticScore = Math.round(
-            databaseComponent + titleComponent + networkComponent + popularityComponent
+        /*
+        Bekendheid moet vooral voortkomen uit herkenbare grote rollen.
+        Databasevolume telt nog mee, maar veel kleine rollen kunnen een
+        acteur niet meer automatisch naar de top duwen.
+        */
+        const careerComponent = clamp(
+            Math.log1p(careerRecognition) /
+                Math.log1p(maxCareerRecognition) * 45,
+            0,
+            45
         );
-        const fameScore = clamp(automaticScore + adjustment, 0, 100);
+
+        const popularityComponent = tmdbPopularity > 0
+            ? clamp(
+                Math.log1p(tmdbPopularity) /
+                    Math.log1p(250) * 15,
+                0,
+                15
+            )
+            : 0;
+
+        const databaseComponent = clamp(
+            Math.log1p(actor.rawScore) /
+                Math.log1p(maxRawScore) * 12,
+            0,
+            12
+        );
+
+        const titleComponent = clamp(
+            Math.log1p(actor.titleCount) /
+                Math.log1p(maxTitles) * 7,
+            0,
+            7
+        );
+
+        const networkComponent = clamp(
+            Math.log1p(actor.coActorCount) /
+                Math.log1p(maxCoActors) * 5,
+            0,
+            5
+        );
+
+        const recencyComponent = calculateActorRecencyScore(
+            actor.titles,
+            currentYear
+        );
+
+        const coreScore =
+            careerComponent +
+            popularityComponent +
+            databaseComponent +
+            titleComponent +
+            networkComponent +
+            recencyComponent;
 
         return {
             ...actor,
             tmdbPopularity,
+            careerRecognition,
+            coreScore
+        };
+    });
+
+    /*
+    Zet de onderlinge rangorde om naar een begrijpelijke 0–100 schaal:
+    top 10% = 75–100 (Makkelijk)
+    volgende 25% = 50–74 (Gemiddeld)
+    rest = 0–49 (Moeilijk)
+
+    Zo kan een score 44 nooit meer het predikaat Makkelijk krijgen.
+    */
+    const sortedPlayable = provisional
+        .filter((actor) => actor.titleCount >= 2)
+        .sort((a, b) =>
+            b.coreScore - a.coreScore ||
+            b.rawScore - a.rawScore
+        );
+
+    const automaticScores = new Map();
+
+    sortedPlayable.forEach((actor, index) => {
+        const percentile = sortedPlayable.length <= 1
+            ? 0
+            : index / (sortedPlayable.length - 1);
+
+        automaticScores.set(
+            createActorScoreAdjustmentKey(actor),
+            calibrateActorFameScore(percentile)
+        );
+    });
+
+    return provisional.map((actor) => {
+        const cacheKey = createActorScoreAdjustmentKey(actor);
+        const adjustment =
+            Number(state.analysis.adjustments[cacheKey] || 0);
+
+        const automaticScore = automaticScores.has(cacheKey)
+            ? automaticScores.get(cacheKey)
+            : Math.min(49, Math.round(actor.coreScore));
+
+        const fameScore = clamp(
+            automaticScore + adjustment,
+            0,
+            100
+        );
+
+        return {
+            ...actor,
             automaticScore,
             adjustment,
             fameScore,
             tier: getActorTier(fameScore)
         };
     });
+}
+
+function calibrateActorFameScore(percentile) {
+    const p = clamp(percentile, 0, 1);
+
+    if (p <= 0.01) {
+        return Math.round(100 - (p / 0.01) * 5);
+    }
+
+    if (p <= 0.10) {
+        return Math.round(
+            94 - ((p - 0.01) / 0.09) * 19
+        );
+    }
+
+    if (p <= 0.35) {
+        return Math.round(
+            74 - ((p - 0.10) / 0.25) * 24
+        );
+    }
+
+    return Math.round(
+        49 - ((p - 0.35) / 0.65) * 44
+    );
+}
+
+function calculateActorRecencyScore(titles, currentYear) {
+    if (!Array.isArray(titles) || !titles.length) return 0;
+
+    /*
+    Maximaal 16 punten. Recent werk helpt, maar is nadrukkelijk niet
+    belangrijker dan een sterke carrière. Daardoor blijft bijvoorbeeld
+    een grote klassieke acteur hoog staan, ook zonder recente film.
+    */
+    const weights = titles
+        .map((title) => Number(title.year || 0))
+        .filter((year) => year > 1900 && year <= currentYear + 1)
+        .map((year) => {
+            const age = Math.max(0, currentYear - year);
+
+            if (age <= 1) return 1.00;
+            if (age <= 3) return 0.85;
+            if (age <= 5) return 0.65;
+            if (age <= 8) return 0.42;
+            if (age <= 12) return 0.22;
+            return 0.08;
+        })
+        .sort((a, b) => b - a)
+        .slice(0, 8);
+
+    if (!weights.length) return 0;
+
+    const weightedRecentTitles =
+        weights.reduce((sum, weight) => sum + weight, 0);
+
+    return clamp(
+        Math.log1p(weightedRecentTitles) /
+            Math.log1p(5) * 16,
+        0,
+        16
+    );
+}
+
+function calculateCareerRecognition(details) {
+    const credits =
+        details &&
+        details.combined_credits &&
+        Array.isArray(details.combined_credits.cast)
+            ? details.combined_credits.cast
+            : [];
+
+    if (!credits.length) return 0;
+
+    const seen = new Set();
+
+    const scoredCredits = credits
+        .filter((credit) => {
+            const id = credit.id;
+            const mediaType = credit.media_type || "";
+            const key = mediaType + ":" + id;
+
+            if (!id || seen.has(key)) return false;
+            seen.add(key);
+
+            return Number(credit.vote_count || 0) >= 25;
+        })
+        .map((credit) => {
+            const voteCount = Number(credit.vote_count || 0);
+            const popularity = Number(credit.popularity || 0);
+            const order = Number(credit.order);
+
+            /*
+            Hoofdrollen en grote bijrollen wegen veel zwaarder dan
+            cameo's of kleine stemrollen. Bij TV ontbreekt 'order'
+            regelmatig; die krijgt dan een neutrale rolweging.
+            */
+            let roleWeight = 0.70;
+
+            if (Number.isFinite(order)) {
+                if (order <= 2) roleWeight = 1.00;
+                else if (order <= 5) roleWeight = 0.82;
+                else if (order <= 10) roleWeight = 0.58;
+                else roleWeight = 0.32;
+            }
+
+            const audienceWeight =
+                clamp(
+                    Math.log1p(voteCount) /
+                        Math.log1p(30000),
+                    0,
+                    1
+                ) * 0.78 +
+                clamp(
+                    Math.log1p(popularity) /
+                        Math.log1p(200),
+                    0,
+                    1
+                ) * 0.22;
+
+            return audienceWeight * roleWeight;
+        })
+        .sort((a, b) => b - a)
+        .slice(0, 10);
+
+    const diminishingWeights =
+        [1.00, 0.88, 0.76, 0.66, 0.57, 0.49, 0.42, 0.36, 0.31, 0.27];
+
+    return scoredCredits.reduce(
+        (sum, value, index) =>
+            sum + value * diminishingWeights[index],
+        0
+    );
 }
 
 function clamp(value, minimum, maximum) {
@@ -904,7 +1149,11 @@ function renderActorAnalysisPage() {
 
     updateAnalysisPagination();
     resolveVisibleActorAliases(shown);
-    resolveVisibleActorPopularity(shown);
+    /*
+    TMDB-populariteit wordt bewust NIET meer automatisch opgehaald.
+    De tabel gebruikt alleen de cache; vernieuwen gebeurt via de
+    aparte onderhoudsknop.
+    */
 
     const emptyState =
         document.getElementById("analysis-empty");
@@ -982,18 +1231,7 @@ function renderScoreBands(container, actors) {
 }
 
 function calculateSuggestedDifficultyThresholds(actors) {
-    if (!actors.length) return { easyMinimum: 75, mediumMinimum: 50 };
-
-    const scores = actors.map((actor) => actor.fameScore).sort((a, b) => b - a);
-    const easyIndex = Math.min(scores.length - 1, Math.max(0, Math.ceil(scores.length * 0.20) - 1));
-    const mediumIndex = Math.min(scores.length - 1, Math.max(0, Math.ceil(scores.length * 0.55) - 1));
-
-    const easyMinimum = scores[easyIndex];
-    let mediumMinimum = scores[mediumIndex];
-
-    if (mediumMinimum >= easyMinimum) mediumMinimum = Math.max(0, easyMinimum - 1);
-
-    return { easyMinimum, mediumMinimum };
+    return { easyMinimum: 75, mediumMinimum: 50 };
 }
 
 function updatePlayableTierDistribution(actors, thresholds) {
@@ -1449,7 +1687,7 @@ async function fetchTmdbPersonDetailsForAlias(actorId) {
             encodeURIComponent(actorId) +
             "?api_key=" +
             encodeURIComponent(MOVIEMIND_API_KEY) +
-            "&language=en-US"
+            "&language=en-US&append_to_response=combined_credits"
     );
 
     if (!response.ok) {
@@ -1472,7 +1710,7 @@ function getActorPopularityDisplay(actor) {
     const cached = state.analysis.popularity[cacheKey];
 
     if (!cached || !Number.isFinite(Number(cached.popularity))) {
-        return "Wordt opgehaald...";
+        return "—";
     }
 
     return Number(cached.popularity).toLocaleString("nl-NL", {
@@ -1480,6 +1718,300 @@ function getActorPopularityDisplay(actor) {
         maximumFractionDigits: 1
     });
 }
+
+function isActorPopularityCacheFresh(actor) {
+    const cacheKey = createActorPopularityCacheKey(actor);
+    const cached = state.analysis.popularity[cacheKey];
+
+    if (
+        !cached ||
+        !Number.isFinite(Number(cached.popularity)) ||
+        !Number.isFinite(Number(cached.careerRecognition))
+    ) {
+        return false;
+    }
+
+    const fetchedAt = Date.parse(cached.fetchedAt || "");
+    if (!Number.isFinite(fetchedAt)) {
+        return false;
+    }
+
+    return Date.now() - fetchedAt < ACTOR_POPULARITY_MAX_AGE_MS;
+}
+
+function getPopularityCacheStatus() {
+    const actors = state.analysis.ranking.length
+        ? state.analysis.ranking
+        : Array.from(buildActorAnalysis(state.records).values())
+            .map(finaliseActorStatistics);
+
+    let fresh = 0;
+    let stale = 0;
+    let missing = 0;
+    let newest = 0;
+
+    actors.forEach((actor) => {
+        const cacheKey = createActorPopularityCacheKey(actor);
+        const cached = state.analysis.popularity[cacheKey];
+
+        if (!cached || !Number.isFinite(Number(cached.popularity))) {
+            missing++;
+            return;
+        }
+
+        const timestamp = Date.parse(cached.fetchedAt || "");
+        if (Number.isFinite(timestamp)) {
+            newest = Math.max(newest, timestamp);
+        }
+
+        if (isActorPopularityCacheFresh(actor)) {
+            fresh++;
+        } else {
+            stale++;
+        }
+    });
+
+    return { total: actors.length, fresh, stale, missing, newest };
+}
+
+function updatePopularityMaintenanceStatus() {
+    const statusElement =
+        document.getElementById("popularity-maintenance-status");
+
+    if (!statusElement || !state.records.length) return;
+
+    const status = getPopularityCacheStatus();
+    const dateText = status.newest
+        ? new Intl.DateTimeFormat("nl-NL", {
+            dateStyle: "medium"
+        }).format(new Date(status.newest))
+        : "nog nooit";
+
+    statusElement.textContent =
+        "Cache: " +
+        status.fresh.toLocaleString("nl-NL") +
+        " actueel · " +
+        status.stale.toLocaleString("nl-NL") +
+        " ouder dan 30 dagen · " +
+        status.missing.toLocaleString("nl-NL") +
+        " ontbrekend · laatste update " +
+        dateText;
+}
+
+function updatePopularityProgress({
+    processed,
+    total,
+    actorName,
+    updated,
+    skipped,
+    failed
+}) {
+    const block = document.getElementById("popularity-progress");
+    const bar = document.getElementById("popularity-progress-bar");
+    const count = document.getElementById("popularity-progress-count");
+    const current = document.getElementById("popularity-progress-current");
+    const stats = document.getElementById("popularity-progress-stats");
+
+    if (block) block.hidden = false;
+
+    const percentage = total
+        ? Math.round(processed / total * 100)
+        : 0;
+
+    if (bar) {
+        bar.style.width = percentage + "%";
+        bar.setAttribute("aria-valuenow", String(percentage));
+    }
+
+    if (count) {
+        count.textContent =
+            processed.toLocaleString("nl-NL") +
+            " / " +
+            total.toLocaleString("nl-NL") +
+            " acteurs · " +
+            percentage +
+            "%";
+    }
+
+    if (current) {
+        current.textContent = actorName
+            ? "Nu bezig: " + actorName
+            : "Voorbereiden…";
+    }
+
+    if (stats) {
+        stats.textContent =
+            "Bijgewerkt: " +
+            updated.toLocaleString("nl-NL") +
+            " · Cache geldig: " +
+            skipped.toLocaleString("nl-NL") +
+            " · Mislukt: " +
+            failed.toLocaleString("nl-NL");
+    }
+}
+
+async function refreshActorPopularityBulk() {
+    if (!state.records.length) {
+        showToast("Koppel eerst de MovieMind-database.", "error");
+        return;
+    }
+
+    if (!MOVIEMIND_API_KEY) {
+        showToast("Geen TMDB_API_KEY beschikbaar.", "error");
+        return;
+    }
+
+    const button =
+        document.getElementById("refresh-popularity-button");
+    if (button) {
+        button.disabled = true;
+        button.textContent = "⏳ TMDB-populariteit vernieuwen…";
+    }
+
+    try {
+        /*
+        Als er nog geen analyse is uitgevoerd, bouwen we alleen voor deze
+        onderhoudsactie de acteurslijst. Er worden geen scores gewijzigd.
+        */
+        const actors = state.analysis.ranking.length
+            ? [...state.analysis.ranking]
+            : Array.from(buildActorAnalysis(state.records).values())
+                .map(finaliseActorStatistics);
+
+        let updated = 0;
+        let skipped = 0;
+        let failed = 0;
+
+        updatePopularityProgress({
+            processed: 0,
+            total: actors.length,
+            actorName: "",
+            updated,
+            skipped,
+            failed
+        });
+
+        for (let index = 0; index < actors.length; index++) {
+            const actor = actors[index];
+
+            if (isActorPopularityCacheFresh(actor)) {
+                skipped++;
+            } else {
+                try {
+                    const details = await fetchActorTmdbDetails(
+                        actor.id,
+                        actor.name
+                    );
+
+                    if (!details) {
+                        failed++;
+                    } else {
+                        const cacheKey =
+                            createActorPopularityCacheKey(actor);
+
+                        state.analysis.popularity[cacheKey] = {
+                            tmdbId: details.id || actor.id || null,
+                            popularity: Number(details.popularity || 0),
+                            careerRecognition: calculateCareerRecognition(details),
+                            name: details.name || actor.name,
+                            fetchedAt: new Date().toISOString()
+                        };
+
+                        updated++;
+
+                        /*
+                        Niet na iedere acteur de hele ranking opnieuw tekenen.
+                        Dat maakte de oude aanpak onnodig zwaar.
+                        */
+                        if (updated % 25 === 0) {
+                            saveActorPopularityCache();
+                        }
+                    }
+                } catch (error) {
+                    failed++;
+                    console.warn(
+                        "TMDB-populariteit ophalen mislukt voor " +
+                            actor.name + ":",
+                        error
+                    );
+                }
+
+                await new Promise((resolve) =>
+                    window.setTimeout(
+                        resolve,
+                        ACTOR_POPULARITY_BATCH_DELAY_MS
+                    )
+                );
+            }
+
+            updatePopularityProgress({
+                processed: index + 1,
+                total: actors.length,
+                actorName: actor.name,
+                updated,
+                skipped,
+                failed
+            });
+
+            /*
+            Geef de browser af en toe ruimte om de voortgang zichtbaar
+            te tekenen, ook wanneer veel acteurs uit de cache komen.
+            */
+            if ((index + 1) % 50 === 0) {
+                await new Promise((resolve) =>
+                    window.setTimeout(resolve, 0)
+                );
+            }
+        }
+
+        saveActorPopularityCache();
+        updatePopularityMaintenanceStatus();
+
+        /*
+        Na een bulkupdate één keer de bekendheidsscores herberekenen.
+        */
+        if (state.analysis.ranking.length) {
+            state.analysis.ranking =
+                calculateActorFameScores(state.analysis.ranking)
+                    .sort((a, b) =>
+                        b.fameScore - a.fameScore ||
+                        b.rawScore - a.rawScore
+                    );
+            applyAnalysisView();
+        }
+
+        updatePopularityProgress({
+            processed: actors.length,
+            total: actors.length,
+            actorName: "Klaar",
+            updated,
+            skipped,
+            failed
+        });
+
+        showToast(
+            "TMDB-populariteit klaar: " +
+                updated.toLocaleString("nl-NL") +
+                " bijgewerkt, " +
+                skipped.toLocaleString("nl-NL") +
+                " uit geldige cache.",
+            failed ? "warning" : "success"
+        );
+    } catch (error) {
+        console.error(error);
+        showToast(
+            "Populariteitsupdate is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "🔄 TMDB-populariteit vernieuwen";
+        }
+    }
+}
+
 
 async function resolveVisibleActorPopularity(actors) {
     if (!MOVIEMIND_API_KEY) {
@@ -1507,6 +2039,7 @@ async function resolveVisibleActorPopularity(actors) {
             state.analysis.popularity[cacheKey] = {
                 tmdbId: details.id || actor.id || null,
                 popularity: Number(details.popularity || 0),
+                careerRecognition: calculateCareerRecognition(details),
                 name: details.name || actor.name,
                 fetchedAt: new Date().toISOString()
             };
@@ -1559,7 +2092,18 @@ async function fetchActorTmdbDetails(actorId, actorName) {
         normaliseActorKey(actorName)
     );
 
-    return exact || results[0];
+    const found = exact || results[0];
+
+    if (found && found.id) {
+        const fullDetails =
+            await fetchTmdbPersonDetailsForAlias(found.id);
+
+        if (fullDetails) {
+            return fullDetails;
+        }
+    }
+
+    return found;
 }
 
 function createActorPopularityCacheKey(actor) {
