@@ -807,8 +807,13 @@ function getAnswerDifficultyDistance(actor, category, profile) {
     return Math.abs(answerCount - limits.target);
 }
 
-loadDatabase();
 initializeTokenPickersSafely();
+
+/* Start de database-load pas nadat het volledige script is geïnitialiseerd.
+   Zo zijn o.a. LOADING_ICONS en alle laadschermfuncties al beschikbaar. */
+window.setTimeout(function () {
+    loadDatabase();
+}, 0);
 
 function initializeTokenPickersSafely() {
     try {
@@ -890,28 +895,229 @@ function updateTokenPickerState() {
    DATABASE LADEN
 ========================================= */
 
-async function loadDatabase() {
-    startBtn.disabled = true;
-    startBtn.textContent = "Database laden...";
+let databaseProgressDisplayed = 0;
+let databaseProgressTarget = 0;
+let databaseProgressAnimationFrame = null;
+let databaseProgressLastTime = 0;
 
-    try {
-        const response = await fetch("../data/moviemind_database.json");
+function renderDatabaseLoadingProgress(percent) {
+    if (!startBtn) {
+        return;
+    }
 
-        if (!response.ok) {
-            throw new Error(
-                "MovieMind-database niet gevonden (HTTP " +
-                response.status +
-                ")."
-            );
+    const safePercent = Math.max(0, Math.min(100, percent));
+    const roundedPercent = Math.round(safePercent);
+
+    startBtn.classList.add("database-loading-progress");
+    startBtn.style.setProperty("--database-progress", safePercent.toFixed(2) + "%");
+    startBtn.setAttribute("aria-valuemin", "0");
+    startBtn.setAttribute("aria-valuemax", "100");
+    startBtn.setAttribute("aria-valuenow", String(roundedPercent));
+
+    if (safePercent >= 99.95) {
+        startBtn.textContent = "Klaar · Start spel";
+        startBtn.classList.add("database-loading-complete");
+    } else {
+        startBtn.textContent = "Filmarchief laden · " + roundedPercent + "%";
+        startBtn.classList.remove("database-loading-complete");
+    }
+}
+
+function animateDatabaseLoadingProgress(timestamp) {
+    if (!databaseProgressLastTime) {
+        databaseProgressLastTime = timestamp;
+    }
+
+    const elapsedSeconds = Math.min(
+        0.1,
+        Math.max(0, (timestamp - databaseProgressLastTime) / 1000)
+    );
+    databaseProgressLastTime = timestamp;
+
+    const remaining = databaseProgressTarget - databaseProgressDisplayed;
+
+    if (remaining > 0.01) {
+        /*
+        De zichtbare balk loopt bewust rustig en vloeiend.
+        Echte laadstappen bepalen alleen hoe ver hij maximaal mag gaan.
+        Daardoor ontstaan geen sprongen naar bijvoorbeeld 86%.
+        */
+        let speed = 10;
+
+        if (databaseProgressTarget >= 100) {
+            speed = 16;
+        } else if (remaining < 8) {
+            speed = 6;
         }
 
-        const combinedData = await response.json();
+        databaseProgressDisplayed = Math.min(
+            databaseProgressTarget,
+            databaseProgressDisplayed + speed * elapsedSeconds
+        );
+
+        renderDatabaseLoadingProgress(databaseProgressDisplayed);
+    }
+
+    if (
+        databaseProgressDisplayed < databaseProgressTarget - 0.01 ||
+        databaseProgressTarget < 100
+    ) {
+        databaseProgressAnimationFrame = window.requestAnimationFrame(
+            animateDatabaseLoadingProgress
+        );
+    } else {
+        databaseProgressDisplayed = databaseProgressTarget;
+        renderDatabaseLoadingProgress(databaseProgressDisplayed);
+        databaseProgressAnimationFrame = null;
+        databaseProgressLastTime = 0;
+    }
+}
+
+function setDatabaseLoadingProgress(percent, message, hint) {
+    if (!startBtn) {
+        return;
+    }
+
+    databaseProgressTarget = Math.max(
+        databaseProgressTarget,
+        Math.max(0, Math.min(100, Number(percent) || 0))
+    );
+
+    if (!databaseProgressAnimationFrame) {
+        databaseProgressAnimationFrame = window.requestAnimationFrame(
+            animateDatabaseLoadingProgress
+        );
+    }
+}
+
+function waitForDatabaseProgress(percent) {
+    const target = Math.max(0, Math.min(100, Number(percent) || 0));
+
+    return new Promise(function (resolve) {
+        function checkProgress() {
+            if (databaseProgressDisplayed >= target - 0.05) {
+                resolve();
+                return;
+            }
+
+            window.requestAnimationFrame(checkProgress);
+        }
+
+        checkProgress();
+    });
+}
+
+function clearDatabaseLoadingProgress() {
+    if (!startBtn) {
+        return;
+    }
+
+    if (databaseProgressAnimationFrame) {
+        window.cancelAnimationFrame(databaseProgressAnimationFrame);
+        databaseProgressAnimationFrame = null;
+    }
+
+    databaseProgressDisplayed = 0;
+    databaseProgressTarget = 0;
+    databaseProgressLastTime = 0;
+
+    startBtn.classList.remove(
+        "database-loading-progress",
+        "database-loading-complete"
+    );
+    startBtn.style.removeProperty("--database-progress");
+    startBtn.removeAttribute("aria-valuemin");
+    startBtn.removeAttribute("aria-valuemax");
+    startBtn.removeAttribute("aria-valuenow");
+}
+
+async function fetchDatabaseWithProgress(url) {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            "MovieMind-database niet gevonden (HTTP " +
+            response.status +
+            ")."
+        );
+    }
+
+    if (!response.body || typeof response.body.getReader !== "function") {
+        setDatabaseLoadingProgress(58, "Filmcollectie wordt ingelezen…");
+        const text = await response.text();
+        setDatabaseLoadingProgress(68, "Filmcollectie ontvangen");
+        return text;
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    const contentLength = Number(response.headers.get("content-length")) || 0;
+    let receivedLength = 0;
+
+    while (true) {
+        const result = await reader.read();
+
+        if (result.done) {
+            break;
+        }
+
+        chunks.push(result.value);
+        receivedLength += result.value.length;
+
+        let downloadProgress;
+
+        if (contentLength > 0) {
+            downloadProgress = 4 + (receivedLength / contentLength) * 62;
+        } else {
+            /* Zonder Content-Length loopt de balk geloofwaardig richting 66%,
+               maar bereikt hij 100% pas wanneer de database echt klaar is. */
+            const estimated = 1 - Math.exp(-receivedLength / 2400000);
+            downloadProgress = 4 + estimated * 62;
+        }
+
+        setDatabaseLoadingProgress(
+            Math.min(66, downloadProgress),
+            "De filmarchieven worden geopend…",
+            "Films, series en acteurs worden binnengehaald"
+        );
+    }
+
+    const merged = new Uint8Array(receivedLength);
+    let offset = 0;
+
+    chunks.forEach(function (chunk) {
+        merged.set(chunk, offset);
+        offset += chunk.length;
+    });
+
+    setDatabaseLoadingProgress(68, "Filmcollectie ontvangen");
+    return new TextDecoder("utf-8").decode(merged);
+}
+
+async function loadDatabase() {
+    startBtn.disabled = true;
+    setDatabaseLoadingProgress(2);
+
+    try {
+        await waitForPaint();
+
+        const databaseText = await fetchDatabaseWithProgress(
+            "../data/moviemind_database.json"
+        );
+
+        setDatabaseLoadingProgress(72, "De filmrollen worden gesorteerd…");
+        await waitForPaint();
+
+        const combinedData = JSON.parse(databaseText);
 
         if (!combinedData || !Array.isArray(combinedData.films)) {
             throw new Error(
                 "moviemind_database.json bevat geen geldige films-lijst."
             );
         }
+
+        setDatabaseLoadingProgress(78, "Titels worden klaargezet…");
+        await waitForPaint();
 
         const normalizedTitles = combinedData.films.map(function (item) {
             return normalizeMediaItem(
@@ -932,9 +1138,19 @@ async function loadDatabase() {
             return item.media_type === "tv";
         }).length;
 
+        setDatabaseLoadingProgress(86, "Acteurs en categorieën worden gekoppeld…");
+        await waitForPaint();
+
         buildLookupCaches();
 
+        setDatabaseLoadingProgress(98, "De projector wordt gecontroleerd…");
+        await waitForPaint();
+
         databaseLoaded = true;
+        setDatabaseLoadingProgress(100);
+        await waitForDatabaseProgress(100);
+        await delay(260);
+        clearDatabaseLoadingProgress();
         startBtn.disabled = false;
         startBtn.textContent = "Start spel";
 
@@ -952,6 +1168,8 @@ async function loadDatabase() {
         databaseLoaded = false;
         startBtn.disabled = true;
         startBtn.textContent = "Database niet gevonden";
+
+        clearDatabaseLoadingProgress();
 
         alert(
             "De MovieMind-database kon niet worden geladen.\n\n" +

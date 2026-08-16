@@ -5373,4 +5373,405 @@ body.cinema-transition-settled .screen-frame::after {
     }
 }
 
-\n\n/* =========================================================\n   MOVIEMIND – WINNAARSCHERM V1\n   De gekozen spelpion is de trofee van de winnaar.\n========================================================= */\n\n.winner-award {\n    min-height: clamp(108px, 10vw, 180px);\n    margin: 1% 0 0;\n}\n\n.winner-award::before {\n    width: 58%;\n    background: radial-gradient(circle, rgba(245, 209, 112, 0.20), transparent 69%);\n}\n\n.winner-popcorn-image {\n    max-width: 58%;\n    max-height: clamp(104px, 9.6vw, 174px);\n    animation: winnerTokenRise 1.05s cubic-bezier(.18,.78,.22,1) both;\n    transform-origin: 50% 88%;\n}\n\n.winner-overlay.winner-blue .winner-popcorn-image {\n    filter:\n        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))\n        drop-shadow(0 0 9px rgba(58, 155, 210, 0.78))\n        drop-shadow(0 0 24px rgba(23, 111, 159, 0.52));\n}\n\n.winner-overlay.winner-orange .winner-popcorn-image {\n    filter:\n        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))\n        drop-shadow(0 0 9px rgba(196, 54, 48, 0.82))\n        drop-shadow(0 0 24px rgba(123, 24, 22, 0.58));\n}\n\n.winner-overlay.winner-blue .winner-overlay-text {\n    color: #9edcff;\n    text-shadow: 0 1px 0 #174b69, 0 0 12px rgba(58,155,210,.42), 0 3px 9px rgba(20,1,1,.72);\n}\n\n.winner-overlay.winner-orange .winner-overlay-text {\n    color: #ffb0a8;\n    text-shadow: 0 1px 0 #6e1c18, 0 0 12px rgba(196,54,48,.38), 0 3px 9px rgba(20,1,1,.72);\n}\n\n.winner-overlay.show .winner-kicker {\n    position: relative;\n    overflow: hidden;\n}\n\n.winner-overlay.show .winner-kicker::after {\n    content: "";\n    position: absolute;\n    top: -40%;\n    bottom: -40%;\n    width: 18%;\n    left: -28%;\n    transform: skewX(-20deg);\n    background: linear-gradient(90deg, transparent, rgba(255,239,181,.72), transparent);\n    animation: winnerGoldSweep 1.05s ease .82s both;\n}\n\n@keyframes winnerTokenRise {\n    0% { opacity: 0; transform: translateY(22px) scale(.82); }\n    58% { opacity: 1; transform: translateY(-3px) scale(1.035); }\n    100% { opacity: 1; transform: translateY(0) scale(1); }\n}\n\n@keyframes winnerGoldSweep {\n    from { left: -28%; opacity: 0; }\n    20% { opacity: 1; }\n    to { left: 112%; opacity: 0; }\n}\n\n@media (prefers-reduced-motion: reduce) {\n    .winner-popcorn-image,\n    .winner-overlay.show .winner-kicker::after { animation: none; }\n}\n
+
+
+/* =========================================================
+   MOVIEMIND – WINNAARSCHERM V1
+   De gekozen spelpion is de trofee van de winnaar.
+========================================================= */
+
+.winner-award {
+    min-height: clamp(108px, 10vw, 180px);
+    margin: 1% 0 0;
+}
+
+.winner-award::before {
+    width: 58%;
+    background: radial-gradient(circle, rgba(245, 209, 112, 0.20), transparent 69%);
+}
+
+.winner-popcorn-image {
+    max-width: 58%;
+    max-height: clamp(104px, 9.6vw, 174px);
+    animation: winnerTokenRise 1.05s cubic-bezier(.18,.78,.22,1) both;
+    transform-origin: 50% 88%;
+}
+
+.winner-overlay.winner-blue .winner-popcorn-image {
+    filter:
+        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))
+        drop-shadow(0 0 9px rgba(58, 155, 210, 0.78))
+        drop-shadow(0 0 24px rgba(23, 111, 159, 0.52));
+}
+
+.winner-overlay.winner-orange .winner-popcorn-image {
+    filter:
+        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))
+        drop-shadow(0 0 9px rgba(196, 54, 48, 0.82))
+        drop-shadow(0 0 24px rgba(123, 24, 22, 0.58));
+}
+
+.winner-overlay.winner-blue .winner-overlay-text {
+    color: #9edcff;
+    text-shadow: 0 1px 0 #174b69, 0 0 12px rgba(58,155,210,.42), 0 3px 9px rgba(20,1,1,.72);
+}
+
+.winner-overlay.winner-orange .winner-overlay-text {
+    color: #ffb0a8;
+    text-shadow: 0 1px 0 #6e1c18, 0 0 12px rgba(196,54,48,.38), 0 3px 9px rgba(20,1,1,.72);
+}
+
+.winner-overlay.show .winner-kicker {
+    position: relative;
+    overflow: hidden;
+}
+
+.winner-overlay.show .winner-kicker::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    width: 18%;
+    left: -28%;
+    transform: skewX(-20deg);
+    background: linear-gradient(90deg, transparent, rgba(255,239,181,.72), transparent);
+    animation: winnerGoldSweep 1.05s ease .82s both;
+}
+
+@keyframes winnerTokenRise {
+    0% { opacity: 0; transform: translateY(22px) scale(.82); }
+    58% { opacity: 1; transform: translateY(-3px) scale(1.035); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes winnerGoldSweep {
+    from { left: -28%; opacity: 0; }
+    20% { opacity: 1; }
+    to { left: 112%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .winner-popcorn-image,
+    .winner-overlay.show .winner-kicker::after { animation: none; }
+}
+
+/* =========================================================
+   MOVIEMIND – EERSTE DATABASE-LOAD V1
+   Een echte voortgangsbalk in klassieke filmarchiefstijl.
+========================================================= */
+
+body.database-loading .loading-screen {
+    background:
+        radial-gradient(circle at 50% 36%, rgba(111, 24, 17, 0.10), transparent 34%),
+        rgba(0, 0, 0, 0.80);
+}
+
+body.database-loading .projection-content {
+    border: 1px solid rgba(204, 157, 54, 0.48);
+    background:
+        radial-gradient(circle at 50% 34%, rgba(118, 31, 24, 0.22), transparent 52%),
+        linear-gradient(180deg, rgba(39, 8, 8, 0.97), rgba(10, 3, 3, 0.995));
+    box-shadow:
+        inset 0 0 0 1px rgba(247, 211, 117, 0.07),
+        inset 0 0 50px rgba(0, 0, 0, 0.72),
+        0 0 24px rgba(207, 160, 55, 0.08);
+}
+
+body.database-loading .projection-brand {
+    color: #e0bb5e;
+}
+
+body.database-loading .projection-icon {
+    margin-bottom: 1.7%;
+}
+
+body.database-loading .loading-message {
+    margin-bottom: 1.7%;
+}
+
+.database-progress {
+    --database-progress: 0%;
+    position: relative;
+    z-index: 15;
+    width: min(78%, 560px);
+    margin: 0 auto;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.database-progress-title {
+    margin: 0 0 1.2%;
+    color: rgba(239, 207, 128, 0.78);
+    font-size: clamp(5px, 0.46vw, 9px);
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+}
+
+.database-progress-track {
+    position: relative;
+    height: clamp(11px, 1vw, 18px);
+    overflow: hidden;
+    border: 1px solid rgba(224, 182, 79, 0.72);
+    border-radius: 3px;
+    background:
+        linear-gradient(180deg, #160808, #070303);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 228, 155, 0.055),
+        inset 0 2px 6px rgba(0, 0, 0, 0.90),
+        0 0 8px rgba(213, 171, 65, 0.08);
+}
+
+/* De gaatjes boven en onder maken van de balk een kleine filmstrook. */
+.database-progress-track::before,
+.database-progress-track::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    z-index: 4;
+    height: 2px;
+    opacity: 0.70;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            rgba(255, 224, 142, 0.76) 0 5px,
+            transparent 5px 10px
+        );
+}
+
+.database-progress-track::before { top: 1px; }
+.database-progress-track::after { bottom: 1px; }
+
+.database-progress-fill {
+    position: absolute;
+    inset: 3px auto 3px 3px;
+    width: calc(var(--database-progress) - 6px);
+    min-width: 0;
+    max-width: calc(100% - 6px);
+    border-radius: 1px;
+    background:
+        linear-gradient(
+            90deg,
+            #7b1717 0%,
+            #a52a22 28%,
+            #d5a83e 72%,
+            #f0ce72 100%
+        );
+    box-shadow:
+        0 0 8px rgba(225, 181, 72, 0.30),
+        inset 0 1px 0 rgba(255, 239, 187, 0.32);
+    transition: width 0.24s ease-out;
+}
+
+.database-progress-fill::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: clamp(12px, 1.8vw, 34px);
+    opacity: 0.72;
+    background: linear-gradient(90deg, transparent, rgba(255, 243, 196, 0.72));
+    animation: databaseProgressGlow 1.15s ease-in-out infinite alternate;
+}
+
+.database-progress-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4%;
+    margin-top: 1.5%;
+}
+
+.database-progress-hint {
+    overflow: hidden;
+    color: rgba(224, 209, 169, 0.60);
+    font-size: clamp(4px, 0.40vw, 8px);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.database-progress-percent {
+    flex: 0 0 auto;
+    min-width: 3.1em;
+    color: #efcf78;
+    font-size: clamp(7px, 0.65vw, 12px);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-align: right;
+    text-shadow: 0 0 7px rgba(229, 185, 75, 0.20);
+}
+
+.database-progress.is-complete .database-progress-track {
+    border-color: rgba(246, 209, 111, 0.95);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 237, 178, 0.09),
+        0 0 12px rgba(222, 179, 69, 0.20);
+}
+
+.database-progress.is-complete .database-progress-percent {
+    color: #ffe6a0;
+}
+
+.database-progress-legacy-hidden {
+    display: none !important;
+}
+
+@keyframes databaseProgressGlow {
+    from { opacity: 0.28; }
+    to { opacity: 0.82; }
+}
+
+@media (max-width: 760px) {
+    .database-progress {
+        width: 84%;
+    }
+
+    .database-progress-meta {
+        margin-top: 2%;
+    }
+
+    .database-progress-hint {
+        max-width: 78%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .database-progress-fill,
+    .database-progress-fill::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – DATABASE LOADER V2
+   Fix: de echte voortgangsbalk staat altijd zichtbaar op het projectiedoek.
+========================================================= */
+
+body.database-loading .projection-content {
+    padding-bottom: 12% !important;
+}
+
+body.database-loading .database-progress {
+    position: absolute !important;
+    left: 10% !important;
+    right: 10% !important;
+    bottom: 7.5% !important;
+    z-index: 30 !important;
+    display: block !important;
+    width: auto !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body.database-loading .database-progress-title {
+    margin: 0 0 5px !important;
+    font-size: clamp(7px, 0.58vw, 11px) !important;
+}
+
+body.database-loading .database-progress-track {
+    display: block !important;
+    width: 100% !important;
+    height: clamp(14px, 1.15vw, 21px) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    border-color: rgba(239, 199, 96, 0.92) !important;
+    background: linear-gradient(180deg, #1a0909, #050202) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 233, 168, 0.08),
+        inset 0 2px 7px rgba(0, 0, 0, 0.92),
+        0 0 10px rgba(218, 173, 62, 0.18) !important;
+}
+
+body.database-loading .database-progress-fill {
+    top: 3px !important;
+    bottom: 3px !important;
+    left: 3px !important;
+    right: auto !important;
+    width: var(--database-progress) !important;
+    max-width: calc(100% - 6px) !important;
+    min-width: 0 !important;
+    transition: width 0.22s ease-out !important;
+}
+
+body.database-loading .database-progress-meta {
+    margin-top: 5px !important;
+}
+
+body.database-loading .database-progress-percent {
+    font-size: clamp(9px, 0.78vw, 14px) !important;
+}
+
+body.database-loading .database-progress-hint {
+    font-size: clamp(6px, 0.48vw, 9px) !important;
+}
+
+@media (max-width: 760px) {
+    body.database-loading .database-progress {
+        left: 8% !important;
+        right: 8% !important;
+        bottom: 6.5% !important;
+    }
+}
+
+
+/* =========================================================
+   MOVIEMIND – DATABASEVOORTGANG IN DE STARTKNOP
+   Geen extra laadscherm: de bestaande START SPEL-knop loopt vol.
+========================================================= */
+
+#startBtn.database-loading-progress {
+    --database-progress: 0%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    cursor: wait;
+    color: #fff0bd;
+    border-color: #e1b64f;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(225, 174, 50, 0.82) 0%,
+            rgba(178, 112, 13, 0.86) var(--database-progress),
+            rgba(91, 20, 18, 0.96) var(--database-progress),
+            rgba(58, 8, 9, 0.98) 100%
+        );
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 230, 160, 0.20),
+        inset 0 -10px 18px rgba(30, 2, 3, 0.22),
+        0 0 12px rgba(215, 167, 44, 0.18),
+        0 6px 13px rgba(45, 10, 3, 0.32);
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.18s ease;
+}
+
+#startBtn.database-loading-progress::before {
+    z-index: 2;
+}
+
+#startBtn.database-loading-progress::after {
+    z-index: 1;
+    opacity: 0.24;
+}
+
+#startBtn.database-loading-progress.database-loading-complete {
+    color: #2b1904;
+    border-color: #f3cf71;
+    background: linear-gradient(180deg, #f4d66e, #d09a21 62%, #ad7309);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.48),
+        0 0 18px rgba(243, 207, 113, 0.38),
+        0 7px 15px rgba(66, 44, 3, 0.34);
+}
+
+#startBtn.database-loading-progress:disabled {
+    opacity: 1;
+    filter: none;
+}
