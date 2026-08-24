@@ -467913,5 +467913,2067 @@
       "fullDetails": true,
       "media_type": "person"
     }
-  ]
+  ],
+  "actorDifficultyOverrides": {
+    "alan tudyk": {
+      "actorName": "Alan Tudyk",
+      "tmdbId": 21088,
+      "tier": "Moeilijk"
+    },
+    "chiwetel ejiofor": {
+      "actorName": "Chiwetel Ejiofor",
+      "tmdbId": 5294,
+      "tier": "Gemiddeld"
+    },
+    "stellan skarsgård": {
+      "actorName": "Stellan Skarsgård",
+      "tmdbId": 1640,
+      "tier": "Gemiddeld"
+    },
+    "stephen graham": {
+      "actorName": "Stephen Graham",
+      "tmdbId": 1115,
+      "tier": "Gemiddeld"
+    },
+    "michelle monaghan": {
+      "actorName": "Michelle Monaghan",
+      "tmdbId": 11705,
+      "tier": "Gemiddeld"
+    },
+    "patrick wilson": {
+      "actorName": "Patrick Wilson",
+      "tmdbId": 17178,
+      "tier": "Gemiddeld"
+    },
+    "eddie marsan": {
+      "actorName": "Eddie Marsan",
+      "tmdbId": 1665,
+      "tier": "Gemiddeld"
+    },
+    "jim broadbent": {
+      "actorName": "Jim Broadbent",
+      "tmdbId": 388,
+      "tier": "Gemiddeld"
+    },
+    "bonnie hunt": {
+      "actorName": "Bonnie Hunt",
+      "tmdbId": 5149,
+      "tier": "Gemiddeld"
+    },
+    "cliff curtis": {
+      "actorName": "Cliff Curtis",
+      "tmdbId": 7248,
+      "tier": "Gemiddeld"
+    },
+    "tony goldwyn": {
+      "actorName": "Tony Goldwyn",
+      "tmdbId": 3417,
+      "tier": "Gemiddeld"
+    },
+    "benedict wong": {
+      "actorName": "Benedict Wong",
+      "tmdbId": 30082,
+      "tier": "Gemiddeld"
+    },
+    "sam worthington": {
+      "actorName": "Sam Worthington",
+      "tmdbId": 65731,
+      "tier": "Gemiddeld"
+    },
+    "timothy olyphant": {
+      "actorName": "Timothy Olyphant",
+      "tmdbId": 18082,
+      "tier": "Gemiddeld"
+    },
+    "bill skarsgård": {
+      "actorName": "Bill Skarsgård",
+      "tmdbId": 137905,
+      "tier": "Gemiddeld"
+    },
+    "john ratzenberger": {
+      "actorName": "John Ratzenberger",
+      "tmdbId": 7907,
+      "tier": "Gemiddeld"
+    },
+    "michael shannon": {
+      "actorName": "Michael Shannon",
+      "tmdbId": 335,
+      "tier": "Gemiddeld"
+    },
+    "shea whigham": {
+      "actorName": "Shea Whigham",
+      "tmdbId": 74242,
+      "tier": "Gemiddeld"
+    },
+    "steve coogan": {
+      "actorName": "Steve Coogan",
+      "tmdbId": 4581,
+      "tier": "Gemiddeld"
+    },
+    "walton goggins": {
+      "actorName": "Walton Goggins",
+      "tmdbId": 27740,
+      "tier": "Gemiddeld"
+    },
+    "titus welliver": {
+      "actorName": "Titus Welliver",
+      "tmdbId": 39389,
+      "tier": "Gemiddeld"
+    },
+    "juno temple": {
+      "actorName": "Juno Temple",
+      "tmdbId": 36594,
+      "tier": "Gemiddeld"
+    },
+    "ralph ineson": {
+      "actorName": "Ralph Ineson",
+      "tmdbId": 202032,
+      "tier": "Gemiddeld"
+    },
+    "jason isaacs": {
+      "actorName": "Jason Isaacs",
+      "tmdbId": 11355,
+      "tier": "Gemiddeld"
+    },
+    "marton csokas": {
+      "actorName": "Marton Csokas",
+      "tmdbId": 20982,
+      "tier": "Moeilijk"
+    },
+    "michael kelly": {
+      "actorName": "Michael Kelly",
+      "tmdbId": 50217,
+      "tier": "Gemiddeld"
+    },
+    "cole hauser": {
+      "actorName": "Cole Hauser",
+      "tmdbId": 6614,
+      "tier": "Gemiddeld"
+    },
+    "bill camp": {
+      "actorName": "Bill Camp",
+      "tmdbId": 121718,
+      "tier": "Gemiddeld"
+    },
+    "alexander ludwig": {
+      "actorName": "Alexander Ludwig",
+      "tmdbId": 23498,
+      "tier": "Gemiddeld"
+    },
+    "jesse plemons": {
+      "actorName": "Jesse Plemons",
+      "tmdbId": 88124,
+      "tier": "Gemiddeld"
+    },
+    "david dastmalchian": {
+      "actorName": "David Dastmalchian",
+      "tmdbId": 83854,
+      "tier": "Gemiddeld"
+    },
+    "natasha rothwell": {
+      "actorName": "Natasha Rothwell",
+      "tmdbId": 1546282,
+      "tier": "Gemiddeld"
+    },
+    "randall park": {
+      "actorName": "Randall Park",
+      "tmdbId": 79082,
+      "tier": "Gemiddeld"
+    },
+    "sam rockwell": {
+      "actorName": "Sam Rockwell",
+      "tmdbId": 6807,
+      "tier": "Gemiddeld"
+    },
+    "paul bettany": {
+      "actorName": "Paul Bettany",
+      "tmdbId": 6162,
+      "tier": "Gemiddeld"
+    },
+    "casey affleck": {
+      "actorName": "Casey Affleck",
+      "tmdbId": 1893,
+      "tier": "Gemiddeld"
+    },
+    "common": {
+      "actorName": "Common",
+      "tmdbId": 4238,
+      "tier": "Gemiddeld"
+    },
+    "giovanni ribisi": {
+      "actorName": "Giovanni Ribisi",
+      "tmdbId": 1771,
+      "tier": "Gemiddeld"
+    },
+    "jemaine clement": {
+      "actorName": "Jemaine Clement",
+      "tmdbId": 55936,
+      "tier": "Gemiddeld"
+    },
+    "scott eastwood": {
+      "actorName": "Scott Eastwood",
+      "tmdbId": 928572,
+      "tier": "Gemiddeld"
+    },
+    "pierre coffin": {
+      "actorName": "Pierre Coffin",
+      "tmdbId": 124747,
+      "tier": "Moeilijk"
+    },
+    "edie falco": {
+      "actorName": "Edie Falco",
+      "tmdbId": 36190,
+      "tier": "Gemiddeld"
+    },
+    "keith david": {
+      "actorName": "Keith David",
+      "tmdbId": 65827,
+      "tier": "Gemiddeld"
+    },
+    "peter stormare": {
+      "actorName": "Peter Stormare",
+      "tmdbId": 53,
+      "tier": "Gemiddeld"
+    },
+    "kelly macdonald": {
+      "actorName": "Kelly Macdonald",
+      "tmdbId": 9015,
+      "tier": "Gemiddeld"
+    },
+    "imelda staunton": {
+      "actorName": "Imelda Staunton",
+      "tmdbId": 11356,
+      "tier": "Gemiddeld"
+    },
+    "ray winstone": {
+      "actorName": "Ray Winstone",
+      "tmdbId": 5538,
+      "tier": "Gemiddeld"
+    },
+    "djimon hounsou": {
+      "actorName": "Djimon Hounsou",
+      "tmdbId": 938,
+      "tier": "Gemiddeld"
+    },
+    "will arnett": {
+      "actorName": "Will Arnett",
+      "tmdbId": 21200,
+      "tier": "Gemiddeld"
+    },
+    "catherine keener": {
+      "actorName": "Catherine Keener",
+      "tmdbId": 2229,
+      "tier": "Gemiddeld"
+    },
+    "ron perlman": {
+      "actorName": "Ron Perlman",
+      "tmdbId": 2372,
+      "tier": "Gemiddeld"
+    },
+    "temuera morrison": {
+      "actorName": "Temuera Morrison",
+      "tmdbId": 7242,
+      "tier": "Gemiddeld"
+    },
+    "nick offerman": {
+      "actorName": "Nick Offerman",
+      "tmdbId": 17039,
+      "tier": "Gemiddeld"
+    },
+    "holt mccallany": {
+      "actorName": "Holt McCallany",
+      "tmdbId": 7497,
+      "tier": "Gemiddeld"
+    },
+    "ed skrein": {
+      "actorName": "Ed Skrein",
+      "tmdbId": 1047649,
+      "tier": "Gemiddeld"
+    },
+    "josh hutcherson": {
+      "actorName": "Josh Hutcherson",
+      "tmdbId": 27972,
+      "tier": "Gemiddeld"
+    },
+    "morena baccarin": {
+      "actorName": "Morena Baccarin",
+      "tmdbId": 54882,
+      "tier": "Gemiddeld"
+    },
+    "john slattery": {
+      "actorName": "John Slattery",
+      "tmdbId": 21134,
+      "tier": "Gemiddeld"
+    },
+    "jonathan pryce": {
+      "actorName": "Jonathan Pryce",
+      "tmdbId": 378,
+      "tier": "Gemiddeld"
+    },
+    "ben whishaw": {
+      "actorName": "Ben Whishaw",
+      "tmdbId": 17064,
+      "tier": "Gemiddeld"
+    },
+    "julie walters": {
+      "actorName": "Julie Walters",
+      "tmdbId": 477,
+      "tier": "Gemiddeld"
+    },
+    "andy serkis": {
+      "actorName": "Andy Serkis",
+      "tmdbId": 1333,
+      "tier": "Gemiddeld"
+    },
+    "richard e. grant": {
+      "actorName": "Richard E. Grant",
+      "tmdbId": 20766,
+      "tier": "Gemiddeld"
+    },
+    "sung kang": {
+      "actorName": "Sung Kang",
+      "tmdbId": 61697,
+      "tier": "Gemiddeld"
+    },
+    "stephen lang": {
+      "actorName": "Stephen Lang",
+      "tmdbId": 32747,
+      "tier": "Gemiddeld"
+    },
+    "cobie smulders": {
+      "actorName": "Cobie Smulders",
+      "tmdbId": 71189,
+      "tier": "Gemiddeld"
+    },
+    "tessa thompson": {
+      "actorName": "Tessa Thompson",
+      "tmdbId": 62561,
+      "tier": "Gemiddeld"
+    },
+    "alex wolff": {
+      "actorName": "Alex Wolff",
+      "tmdbId": 934281,
+      "tier": "Gemiddeld"
+    },
+    "yahya abdul-mateen ii": {
+      "actorName": "Yahya Abdul-Mateen II",
+      "tmdbId": 1639847,
+      "tier": "Gemiddeld"
+    },
+    "zazie beetz": {
+      "actorName": "Zazie Beetz",
+      "tmdbId": 1545693,
+      "tier": "Gemiddeld"
+    },
+    "colman domingo": {
+      "actorName": "Colman Domingo",
+      "tmdbId": 91671,
+      "tier": "Gemiddeld"
+    },
+    "joseph quinn": {
+      "actorName": "Joseph Quinn",
+      "tmdbId": 1597365,
+      "tier": "Gemiddeld"
+    },
+    "ariana grande": {
+      "actorName": "Ariana Grande",
+      "tmdbId": 226001,
+      "tier": "Gemiddeld"
+    },
+    "mia goth": {
+      "actorName": "Mia Goth",
+      "tmdbId": 1137824,
+      "tier": "Gemiddeld"
+    },
+    "ciarán hinds": {
+      "actorName": "Ciarán Hinds",
+      "tmdbId": 8785,
+      "tier": "Gemiddeld"
+    },
+    "bruce greenwood": {
+      "actorName": "Bruce Greenwood",
+      "tmdbId": 21089,
+      "tier": "Gemiddeld"
+    },
+    "terry crews": {
+      "actorName": "Terry Crews",
+      "tmdbId": 53256,
+      "tier": "Gemiddeld"
+    },
+    "william fichtner": {
+      "actorName": "William Fichtner",
+      "tmdbId": 886,
+      "tier": "Gemiddeld"
+    },
+    "john turturro": {
+      "actorName": "John Turturro",
+      "tmdbId": 1241,
+      "tier": "Gemiddeld"
+    },
+    "famke janssen": {
+      "actorName": "Famke Janssen",
+      "tmdbId": 10696,
+      "tier": "Gemiddeld"
+    },
+    "tilda swinton": {
+      "actorName": "Tilda Swinton",
+      "tmdbId": 3063,
+      "tier": "Gemiddeld"
+    },
+    "wallace shawn": {
+      "actorName": "Wallace Shawn",
+      "tmdbId": 12900,
+      "tier": "Gemiddeld"
+    },
+    "ian mcshane": {
+      "actorName": "Ian McShane",
+      "tmdbId": 6972,
+      "tier": "Gemiddeld"
+    },
+    "cary elwes": {
+      "actorName": "Cary Elwes",
+      "tmdbId": 2130,
+      "tier": "Gemiddeld"
+    },
+    "rosario dawson": {
+      "actorName": "Rosario Dawson",
+      "tmdbId": 5916,
+      "tier": "Gemiddeld"
+    },
+    "michael stuhlbarg": {
+      "actorName": "Michael Stuhlbarg",
+      "tmdbId": 72873,
+      "tier": "Gemiddeld"
+    },
+    "maya rudolph": {
+      "actorName": "Maya Rudolph",
+      "tmdbId": 52792,
+      "tier": "Gemiddeld"
+    },
+    "adam scott": {
+      "actorName": "Adam Scott",
+      "tmdbId": 36801,
+      "tier": "Gemiddeld"
+    },
+    "frank grillo": {
+      "actorName": "Frank Grillo",
+      "tmdbId": 81685,
+      "tier": "Gemiddeld"
+    },
+    "joey king": {
+      "actorName": "Joey King",
+      "tmdbId": 125025,
+      "tier": "Gemiddeld"
+    },
+    "shirley henderson": {
+      "actorName": "Shirley Henderson",
+      "tmdbId": 1834,
+      "tier": "Gemiddeld"
+    },
+    "jim carter": {
+      "actorName": "Jim Carter",
+      "tmdbId": 20070,
+      "tier": "Gemiddeld"
+    },
+    "hugh bonneville": {
+      "actorName": "Hugh Bonneville",
+      "tmdbId": 19923,
+      "tier": "Gemiddeld"
+    },
+    "connie nielsen": {
+      "actorName": "Connie Nielsen",
+      "tmdbId": 935,
+      "tier": "Gemiddeld"
+    },
+    "jack huston": {
+      "actorName": "Jack Huston",
+      "tmdbId": 54738,
+      "tier": "Moeilijk"
+    },
+    "ebon moss-bachrach": {
+      "actorName": "Ebon Moss-Bachrach",
+      "tmdbId": 21042,
+      "tier": "Gemiddeld"
+    },
+    "alan ritchson": {
+      "actorName": "Alan Ritchson",
+      "tmdbId": 64295,
+      "tier": "Gemiddeld"
+    },
+    "jon voight": {
+      "actorName": "Jon Voight",
+      "tmdbId": 10127,
+      "tier": "Gemiddeld"
+    },
+    "john c. reilly": {
+      "actorName": "John C. Reilly",
+      "tmdbId": 4764,
+      "tier": "Gemiddeld"
+    },
+    "hugo weaving": {
+      "actorName": "Hugo Weaving",
+      "tmdbId": 1331,
+      "tier": "Gemiddeld"
+    },
+    "ving rhames": {
+      "actorName": "Ving Rhames",
+      "tmdbId": 10182,
+      "tier": "Gemiddeld"
+    },
+    "stephen root": {
+      "actorName": "Stephen Root",
+      "tmdbId": 17401,
+      "tier": "Gemiddeld"
+    },
+    "toby jones": {
+      "actorName": "Toby Jones",
+      "tmdbId": 13014,
+      "tier": "Gemiddeld"
+    },
+    "john lithgow": {
+      "actorName": "John Lithgow",
+      "tmdbId": 12074,
+      "tier": "Gemiddeld"
+    },
+    "joe pantoliano": {
+      "actorName": "Joe Pantoliano",
+      "tmdbId": 532,
+      "tier": "Moeilijk"
+    },
+    "marion cotillard": {
+      "actorName": "Marion Cotillard",
+      "tmdbId": 8293,
+      "tier": "Gemiddeld"
+    },
+    "benicio del toro": {
+      "actorName": "Benicio del Toro",
+      "tmdbId": 1121,
+      "tier": "Gemiddeld"
+    },
+    "tim roth": {
+      "actorName": "Tim Roth",
+      "tmdbId": 3129,
+      "tier": "Gemiddeld"
+    },
+    "peter sarsgaard": {
+      "actorName": "Peter Sarsgaard",
+      "tmdbId": 133,
+      "tier": "Gemiddeld"
+    },
+    "ben mendelsohn": {
+      "actorName": "Ben Mendelsohn",
+      "tmdbId": 77335,
+      "tier": "Gemiddeld"
+    },
+    "rufus sewell": {
+      "actorName": "Rufus Sewell",
+      "tmdbId": 17328,
+      "tier": "Gemiddeld"
+    },
+    "rosamund pike": {
+      "actorName": "Rosamund Pike",
+      "tmdbId": 10882,
+      "tier": "Gemiddeld"
+    },
+    "joseph gordon-levitt": {
+      "actorName": "Joseph Gordon-Levitt",
+      "tmdbId": 24045,
+      "tier": "Gemiddeld"
+    },
+    "carlos alazraqui": {
+      "actorName": "Carlos Alazraqui",
+      "tmdbId": 59784,
+      "tier": "Moeilijk"
+    },
+    "jay hernandez": {
+      "actorName": "Jay Hernandez",
+      "tmdbId": 19487,
+      "tier": "Gemiddeld"
+    },
+    "evangeline lilly": {
+      "actorName": "Evangeline Lilly",
+      "tmdbId": 19034,
+      "tier": "Gemiddeld"
+    },
+    "mary elizabeth winstead": {
+      "actorName": "Mary Elizabeth Winstead",
+      "tmdbId": 17628,
+      "tier": "Gemiddeld"
+    },
+    "jenny slate": {
+      "actorName": "Jenny Slate",
+      "tmdbId": 213001,
+      "tier": "Gemiddeld"
+    },
+    "patrick warburton": {
+      "actorName": "Patrick Warburton",
+      "tmdbId": 9657,
+      "tier": "Gemiddeld"
+    },
+    "peter jacobson": {
+      "actorName": "Peter Jacobson",
+      "tmdbId": 31514,
+      "tier": "Moeilijk"
+    },
+    "carla gugino": {
+      "actorName": "Carla Gugino",
+      "tmdbId": 17832,
+      "tier": "Gemiddeld"
+    },
+    "lee pace": {
+      "actorName": "Lee Pace",
+      "tmdbId": 72095,
+      "tier": "Gemiddeld"
+    },
+    "50 cent": {
+      "actorName": "50 Cent",
+      "tmdbId": 62644,
+      "tier": "Gemiddeld"
+    },
+    "sacha baron cohen": {
+      "actorName": "Sacha Baron Cohen",
+      "tmdbId": 6730,
+      "tier": "Gemiddeld"
+    },
+    "ray mckinnon": {
+      "actorName": "Ray McKinnon",
+      "tmdbId": 1472,
+      "tier": "Gemiddeld"
+    },
+    "cch pounder": {
+      "actorName": "CCH Pounder",
+      "tmdbId": 30485,
+      "tier": "Gemiddeld"
+    },
+    "liam hemsworth": {
+      "actorName": "Liam Hemsworth",
+      "tmdbId": 96066,
+      "tier": "Gemiddeld"
+    },
+    "amy ryan": {
+      "actorName": "Amy Ryan",
+      "tmdbId": 39388,
+      "tier": "Gemiddeld"
+    },
+    "jennifer garner": {
+      "actorName": "Jennifer Garner",
+      "tmdbId": 9278,
+      "tier": "Gemiddeld"
+    },
+    "linda cardellini": {
+      "actorName": "Linda Cardellini",
+      "tmdbId": 1817,
+      "tier": "Gemiddeld"
+    },
+    "diego luna": {
+      "actorName": "Diego Luna",
+      "tmdbId": 8688,
+      "tier": "Gemiddeld"
+    },
+    "matthew macfadyen": {
+      "actorName": "Matthew Macfadyen",
+      "tmdbId": 15576,
+      "tier": "Gemiddeld"
+    },
+    "brie larson": {
+      "actorName": "Brie Larson",
+      "tmdbId": 60073,
+      "tier": "Gemiddeld"
+    },
+    "mahershala ali": {
+      "actorName": "Mahershala Ali",
+      "tmdbId": 932967,
+      "tier": "Gemiddeld"
+    },
+    "hayley atwell": {
+      "actorName": "Hayley Atwell",
+      "tmdbId": 39459,
+      "tier": "Gemiddeld"
+    },
+    "martin scorsese": {
+      "actorName": "Martin Scorsese",
+      "tmdbId": 1032,
+      "tier": "Gemiddeld"
+    },
+    "jacob scipio": {
+      "actorName": "Jacob Scipio",
+      "tmdbId": 2256312,
+      "tier": "Moeilijk"
+    },
+    "margaret qualley": {
+      "actorName": "Margaret Qualley",
+      "tmdbId": 1392137,
+      "tier": "Gemiddeld"
+    },
+    "awkwafina": {
+      "actorName": "Awkwafina",
+      "tmdbId": 1625558,
+      "tier": "Gemiddeld"
+    },
+    "jacob batalon": {
+      "actorName": "Jacob Batalon",
+      "tmdbId": 1649152,
+      "tier": "Gemiddeld"
+    },
+    "james cromwell": {
+      "actorName": "James Cromwell",
+      "tmdbId": 2505,
+      "tier": "Gemiddeld"
+    },
+    "liev schreiber": {
+      "actorName": "Liev Schreiber",
+      "tmdbId": 23626,
+      "tier": "Gemiddeld"
+    },
+    "james hong": {
+      "actorName": "James Hong",
+      "tmdbId": 20904,
+      "tier": "Gemiddeld"
+    },
+    "emily watson": {
+      "actorName": "Emily Watson",
+      "tmdbId": 1639,
+      "tier": "Gemiddeld"
+    },
+    "bd wong": {
+      "actorName": "BD Wong",
+      "tmdbId": 14592,
+      "tier": "Gemiddeld"
+    },
+    "dominic west": {
+      "actorName": "Dominic West",
+      "tmdbId": 17287,
+      "tier": "Gemiddeld"
+    },
+    "domenick lombardozzi": {
+      "actorName": "Domenick Lombardozzi",
+      "tmdbId": 17941,
+      "tier": "Gemiddeld"
+    },
+    "t.j. miller": {
+      "actorName": "T.J. Miller",
+      "tmdbId": 51990,
+      "tier": "Gemiddeld"
+    },
+    "ludacris": {
+      "actorName": "Ludacris",
+      "tmdbId": 8171,
+      "tier": "Gemiddeld"
+    },
+    "topher grace": {
+      "actorName": "Topher Grace",
+      "tmdbId": 17052,
+      "tier": "Gemiddeld"
+    },
+    "patton oswalt": {
+      "actorName": "Patton Oswalt",
+      "tmdbId": 10872,
+      "tier": "Gemiddeld"
+    },
+    "luke evans": {
+      "actorName": "Luke Evans",
+      "tmdbId": 114019,
+      "tier": "Gemiddeld"
+    },
+    "kristen schaal": {
+      "actorName": "Kristen Schaal",
+      "tmdbId": 109869,
+      "tier": "Gemiddeld"
+    },
+    "steve coulter": {
+      "actorName": "Steve Coulter",
+      "tmdbId": 80619,
+      "tier": "Moeilijk"
+    },
+    "penelope wilton": {
+      "actorName": "Penelope Wilton",
+      "tmdbId": 1249,
+      "tier": "Gemiddeld"
+    },
+    "dave franco": {
+      "actorName": "Dave Franco",
+      "tmdbId": 54697,
+      "tier": "Gemiddeld"
+    },
+    "ke huy quan": {
+      "actorName": "Ke Huy Quan",
+      "tmdbId": 690,
+      "tier": "Gemiddeld"
+    },
+    "john dimaggio": {
+      "actorName": "John DiMaggio",
+      "tmdbId": 31531,
+      "tier": "Moeilijk"
+    },
+    "himesh patel": {
+      "actorName": "Himesh Patel",
+      "tmdbId": 1227717,
+      "tier": "Moeilijk"
+    },
+    "wyatt russell": {
+      "actorName": "Wyatt Russell",
+      "tmdbId": 986808,
+      "tier": "Gemiddeld"
+    },
+    "christopher plummer": {
+      "actorName": "Christopher Plummer",
+      "tmdbId": 290,
+      "tier": "Gemiddeld"
+    },
+    "david morse": {
+      "actorName": "David Morse",
+      "tmdbId": 52,
+      "tier": "Gemiddeld"
+    },
+    "kathryn hahn": {
+      "actorName": "Kathryn Hahn",
+      "tmdbId": 17696,
+      "tier": "Gemiddeld"
+    },
+    "jada pinkett smith": {
+      "actorName": "Jada Pinkett Smith",
+      "tmdbId": 9575,
+      "tier": "Gemiddeld"
+    },
+    "željko ivanek": {
+      "actorName": "Željko Ivanek",
+      "tmdbId": 6752,
+      "tier": "Gemiddeld"
+    },
+    "leslie mann": {
+      "actorName": "Leslie Mann",
+      "tmdbId": 41087,
+      "tier": "Gemiddeld"
+    },
+    "karl urban": {
+      "actorName": "Karl Urban",
+      "tmdbId": 1372,
+      "tier": "Gemiddeld"
+    },
+    "naomie harris": {
+      "actorName": "Naomie Harris",
+      "tmdbId": 2038,
+      "tier": "Gemiddeld"
+    },
+    "f. murray abraham": {
+      "actorName": "F. Murray Abraham",
+      "tmdbId": 1164,
+      "tier": "Gemiddeld"
+    },
+    "hiroyuki sanada": {
+      "actorName": "Hiroyuki Sanada",
+      "tmdbId": 9195,
+      "tier": "Gemiddeld"
+    },
+    "wendell pierce": {
+      "actorName": "Wendell Pierce",
+      "tmdbId": 17859,
+      "tier": "Gemiddeld"
+    },
+    "clancy brown": {
+      "actorName": "Clancy Brown",
+      "tmdbId": 6574,
+      "tier": "Gemiddeld"
+    },
+    "kevin corrigan": {
+      "actorName": "Kevin Corrigan",
+      "tmdbId": 18472,
+      "tier": "Moeilijk"
+    },
+    "marwan kenzari": {
+      "actorName": "Marwan Kenzari",
+      "tmdbId": 935235,
+      "tier": "Gemiddeld"
+    },
+    "matt dillon": {
+      "actorName": "Matt Dillon",
+      "tmdbId": 2876,
+      "tier": "Gemiddeld"
+    },
+    "chris pine": {
+      "actorName": "Chris Pine",
+      "tmdbId": 62064,
+      "tier": "Gemiddeld"
+    },
+    "alessandro nivola": {
+      "actorName": "Alessandro Nivola",
+      "tmdbId": 4941,
+      "tier": "Moeilijk"
+    },
+    "jon hamm": {
+      "actorName": "Jon Hamm",
+      "tmdbId": 65717,
+      "tier": "Gemiddeld"
+    },
+    "wesley snipes": {
+      "actorName": "Wesley Snipes",
+      "tmdbId": 10814,
+      "tier": "Gemiddeld"
+    },
+    "tyrese gibson": {
+      "actorName": "Tyrese Gibson",
+      "tmdbId": 8169,
+      "tier": "Gemiddeld"
+    },
+    "mark gatiss": {
+      "actorName": "Mark Gatiss",
+      "tmdbId": 34546,
+      "tier": "Gemiddeld"
+    },
+    "franco nero": {
+      "actorName": "Franco Nero",
+      "tmdbId": 22383,
+      "tier": "Gemiddeld"
+    },
+    "léa seydoux": {
+      "actorName": "Léa Seydoux",
+      "tmdbId": 121529,
+      "tier": "Gemiddeld"
+    },
+    "lamorne morris": {
+      "actorName": "Lamorne Morris",
+      "tmdbId": 1181327,
+      "tier": "Moeilijk"
+    },
+    "regina hall": {
+      "actorName": "Regina Hall",
+      "tmdbId": 35705,
+      "tier": "Gemiddeld"
+    },
+    "hailee steinfeld": {
+      "actorName": "Hailee Steinfeld",
+      "tmdbId": 130640,
+      "tier": "Gemiddeld"
+    },
+    "stephanie beatriz": {
+      "actorName": "Stephanie Beatriz",
+      "tmdbId": 968367,
+      "tier": "Gemiddeld"
+    },
+    "chris cooper": {
+      "actorName": "Chris Cooper",
+      "tmdbId": 2955,
+      "tier": "Gemiddeld"
+    },
+    "ben foster": {
+      "actorName": "Ben Foster",
+      "tmdbId": 11107,
+      "tier": "Gemiddeld"
+    },
+    "ray liotta": {
+      "actorName": "Ray Liotta",
+      "tmdbId": 11477,
+      "tier": "Gemiddeld"
+    },
+    "ben kingsley": {
+      "actorName": "Ben Kingsley",
+      "tmdbId": 2282,
+      "tier": "Gemiddeld"
+    },
+    "clive owen": {
+      "actorName": "Clive Owen",
+      "tmdbId": 2296,
+      "tier": "Gemiddeld"
+    },
+    "william hurt": {
+      "actorName": "William Hurt",
+      "tmdbId": 227,
+      "tier": "Gemiddeld"
+    },
+    "tom hollander": {
+      "actorName": "Tom Hollander",
+      "tmdbId": 2441,
+      "tier": "Gemiddeld"
+    },
+    "john carroll lynch": {
+      "actorName": "John Carroll Lynch",
+      "tmdbId": 3911,
+      "tier": "Moeilijk"
+    },
+    "michael fassbender": {
+      "actorName": "Michael Fassbender",
+      "tmdbId": 17288,
+      "tier": "Gemiddeld"
+    },
+    "ray romano": {
+      "actorName": "Ray Romano",
+      "tmdbId": 15757,
+      "tier": "Gemiddeld"
+    },
+    "david bradley": {
+      "actorName": "David Bradley",
+      "tmdbId": 11180,
+      "tier": "Gemiddeld"
+    },
+    "bruce campbell": {
+      "actorName": "Bruce Campbell",
+      "tmdbId": 11357,
+      "tier": "Gemiddeld"
+    },
+    "neil patrick harris": {
+      "actorName": "Neil Patrick Harris",
+      "tmdbId": 41686,
+      "tier": "Gemiddeld"
+    },
+    "ken leung": {
+      "actorName": "Ken Leung",
+      "tmdbId": 2131,
+      "tier": "Moeilijk"
+    },
+    "pilou asbæk": {
+      "actorName": "Pilou Asbæk",
+      "tmdbId": 90060,
+      "tier": "Gemiddeld"
+    },
+    "omar sy": {
+      "actorName": "Omar Sy",
+      "tmdbId": 78423,
+      "tier": "Gemiddeld"
+    },
+    "will poulter": {
+      "actorName": "Will Poulter",
+      "tmdbId": 93491,
+      "tier": "Gemiddeld"
+    },
+    "manuel garcía-rulfo": {
+      "actorName": "Manuel García-Rulfo",
+      "tmdbId": 1168097,
+      "tier": "Moeilijk"
+    },
+    "taika waititi": {
+      "actorName": "Taika Waititi",
+      "tmdbId": 55934,
+      "tier": "Gemiddeld"
+    },
+    "rhys darby": {
+      "actorName": "Rhys Darby",
+      "tmdbId": 82666,
+      "tier": "Gemiddeld"
+    },
+    "gemma chan": {
+      "actorName": "Gemma Chan",
+      "tmdbId": 97576,
+      "tier": "Gemiddeld"
+    },
+    "burn gorman": {
+      "actorName": "Burn Gorman",
+      "tmdbId": 39659,
+      "tier": "Gemiddeld"
+    },
+    "wunmi mosaku": {
+      "actorName": "Wunmi Mosaku",
+      "tmdbId": 134774,
+      "tier": "Moeilijk"
+    },
+    "babs olusanmokun": {
+      "actorName": "Babs Olusanmokun",
+      "tmdbId": 205923,
+      "tier": "Gemiddeld"
+    },
+    "frank welker": {
+      "actorName": "Frank Welker",
+      "tmdbId": 15831,
+      "tier": "Gemiddeld"
+    },
+    "kevin dunn": {
+      "actorName": "Kevin Dunn",
+      "tmdbId": 14721,
+      "tier": "Moeilijk"
+    },
+    "robert duvall": {
+      "actorName": "Robert Duvall",
+      "tmdbId": 3087,
+      "tier": "Gemiddeld"
+    },
+    "catherine zeta-jones": {
+      "actorName": "Catherine Zeta-Jones",
+      "tmdbId": 1922,
+      "tier": "Gemiddeld"
+    },
+    "queen latifah": {
+      "actorName": "Queen Latifah",
+      "tmdbId": 15758,
+      "tier": "Gemiddeld"
+    },
+    "steve zahn": {
+      "actorName": "Steve Zahn",
+      "tmdbId": 18324,
+      "tier": "Gemiddeld"
+    },
+    "jason flemyng": {
+      "actorName": "Jason Flemyng",
+      "tmdbId": 973,
+      "tier": "Moeilijk"
+    },
+    "david wenham": {
+      "actorName": "David Wenham",
+      "tmdbId": 1371,
+      "tier": "Gemiddeld"
+    },
+    "thomas kretschmann": {
+      "actorName": "Thomas Kretschmann",
+      "tmdbId": 3491,
+      "tier": "Gemiddeld"
+    },
+    "julia stiles": {
+      "actorName": "Julia Stiles",
+      "tmdbId": 12041,
+      "tier": "Gemiddeld"
+    },
+    "derek jacobi": {
+      "actorName": "Derek Jacobi",
+      "tmdbId": 937,
+      "tier": "Gemiddeld"
+    },
+    "aaron eckhart": {
+      "actorName": "Aaron Eckhart",
+      "tmdbId": 6383,
+      "tier": "Gemiddeld"
+    },
+    "blake clark": {
+      "actorName": "Blake Clark",
+      "tmdbId": 21485,
+      "tier": "Moeilijk"
+    },
+    "jonathan banks": {
+      "actorName": "Jonathan Banks",
+      "tmdbId": 783,
+      "tier": "Gemiddeld"
+    },
+    "mary steenburgen": {
+      "actorName": "Mary Steenburgen",
+      "tmdbId": 2453,
+      "tier": "Gemiddeld"
+    },
+    "paul reiser": {
+      "actorName": "Paul Reiser",
+      "tmdbId": 781,
+      "tier": "Gemiddeld"
+    },
+    "jared harris": {
+      "actorName": "Jared Harris",
+      "tmdbId": 15440,
+      "tier": "Gemiddeld"
+    },
+    "joan cusack": {
+      "actorName": "Joan Cusack",
+      "tmdbId": 3234,
+      "tier": "Gemiddeld"
+    },
+    "nick kroll": {
+      "actorName": "Nick Kroll",
+      "tmdbId": 208519,
+      "tier": "Gemiddeld"
+    },
+    "evan peters": {
+      "actorName": "Evan Peters",
+      "tmdbId": 55089,
+      "tier": "Gemiddeld"
+    },
+    "hong chau": {
+      "actorName": "Hong Chau",
+      "tmdbId": 1360317,
+      "tier": "Moeilijk"
+    },
+    "eiza gonzález": {
+      "actorName": "Eiza González",
+      "tmdbId": 1222992,
+      "tier": "Gemiddeld"
+    },
+    "barry keoghan": {
+      "actorName": "Barry Keoghan",
+      "tmdbId": 1290466,
+      "tier": "Gemiddeld"
+    },
+    "jonathan bailey": {
+      "actorName": "Jonathan Bailey",
+      "tmdbId": 80860,
+      "tier": "Gemiddeld"
+    },
+    "vincent d'onofrio": {
+      "actorName": "Vincent D'Onofrio",
+      "tmdbId": 7132,
+      "tier": "Gemiddeld"
+    },
+    "nick nolte": {
+      "actorName": "Nick Nolte",
+      "tmdbId": 1733,
+      "tier": "Gemiddeld"
+    },
+    "melissa leo": {
+      "actorName": "Melissa Leo",
+      "tmdbId": 6832,
+      "tier": "Gemiddeld"
+    },
+    "rene russo": {
+      "actorName": "Rene Russo",
+      "tmdbId": 14343,
+      "tier": "Gemiddeld"
+    },
+    "toby kebbell": {
+      "actorName": "Toby Kebbell",
+      "tmdbId": 20286,
+      "tier": "Gemiddeld"
+    },
+    "delroy lindo": {
+      "actorName": "Delroy Lindo",
+      "tmdbId": 18792,
+      "tier": "Gemiddeld"
+    },
+    "ray stevenson": {
+      "actorName": "Ray Stevenson",
+      "tmdbId": 56614,
+      "tier": "Gemiddeld"
+    },
+    "kevin kline": {
+      "actorName": "Kevin Kline",
+      "tmdbId": 8945,
+      "tier": "Gemiddeld"
+    },
+    "jason sudeikis": {
+      "actorName": "Jason Sudeikis",
+      "tmdbId": 58224,
+      "tier": "Gemiddeld"
+    },
+    "michael rooker": {
+      "actorName": "Michael Rooker",
+      "tmdbId": 12132,
+      "tier": "Gemiddeld"
+    },
+    "diane lane": {
+      "actorName": "Diane Lane",
+      "tmdbId": 2882,
+      "tier": "Gemiddeld"
+    },
+    "ólafur darri ólafsson": {
+      "actorName": "Ólafur Darri Ólafsson",
+      "tmdbId": 110902,
+      "tier": "Gemiddeld"
+    },
+    "charlie hunnam": {
+      "actorName": "Charlie Hunnam",
+      "tmdbId": 56365,
+      "tier": "Gemiddeld"
+    },
+    "tobias menzies": {
+      "actorName": "Tobias Menzies",
+      "tmdbId": 10920,
+      "tier": "Gemiddeld"
+    },
+    "abbie cornish": {
+      "actorName": "Abbie Cornish",
+      "tmdbId": 37260,
+      "tier": "Moeilijk"
+    },
+    "leslie bibb": {
+      "actorName": "Leslie Bibb",
+      "tmdbId": 57451,
+      "tier": "Moeilijk"
+    },
+    "annie potts": {
+      "actorName": "Annie Potts",
+      "tmdbId": 8873,
+      "tier": "Gemiddeld"
+    },
+    "lori alan": {
+      "actorName": "Lori Alan",
+      "tmdbId": 24358,
+      "tier": "Moeilijk"
+    },
+    "noah jupe": {
+      "actorName": "Noah Jupe",
+      "tmdbId": 1590759,
+      "tier": "Moeilijk"
+    },
+    "alexandra shipp": {
+      "actorName": "Alexandra Shipp",
+      "tmdbId": 1253199,
+      "tier": "Moeilijk"
+    },
+    "karan soni": {
+      "actorName": "Karan Soni",
+      "tmdbId": 1109702,
+      "tier": "Moeilijk"
+    },
+    "rupert friend": {
+      "actorName": "Rupert Friend",
+      "tmdbId": 36669,
+      "tier": "Gemiddeld"
+    },
+    "harvey guillén": {
+      "actorName": "Harvey Guillén",
+      "tmdbId": 210172,
+      "tier": "Moeilijk"
+    },
+    "hamish linklater": {
+      "actorName": "Hamish Linklater",
+      "tmdbId": 184581,
+      "tier": "Moeilijk"
+    },
+    "ariana greenblatt": {
+      "actorName": "Ariana Greenblatt",
+      "tmdbId": 1767250,
+      "tier": "Moeilijk"
+    },
+    "teyana taylor": {
+      "actorName": "Teyana Taylor",
+      "tmdbId": 964679,
+      "tier": "Moeilijk"
+    },
+    "richard jenkins": {
+      "actorName": "Richard Jenkins",
+      "tmdbId": 28633,
+      "tier": "Gemiddeld"
+    },
+    "jeffrey tambor": {
+      "actorName": "Jeffrey Tambor",
+      "tmdbId": 4175,
+      "tier": "Gemiddeld"
+    },
+    "rob schneider": {
+      "actorName": "Rob Schneider",
+      "tmdbId": 60949,
+      "tier": "Gemiddeld"
+    },
+    "elizabeth banks": {
+      "actorName": "Elizabeth Banks",
+      "tmdbId": 9281,
+      "tier": "Gemiddeld"
+    },
+    "robert patrick": {
+      "actorName": "Robert Patrick",
+      "tmdbId": 418,
+      "tier": "Gemiddeld"
+    },
+    "bill pullman": {
+      "actorName": "Bill Pullman",
+      "tmdbId": 8984,
+      "tier": "Gemiddeld"
+    },
+    "martin freeman": {
+      "actorName": "Martin Freeman",
+      "tmdbId": 7060,
+      "tier": "Gemiddeld"
+    },
+    "amy sedaris": {
+      "actorName": "Amy Sedaris",
+      "tmdbId": 12110,
+      "tier": "Moeilijk"
+    },
+    "bokeem woodbine": {
+      "actorName": "Bokeem Woodbine",
+      "tmdbId": 71913,
+      "tier": "Moeilijk"
+    },
+    "joel edgerton": {
+      "actorName": "Joel Edgerton",
+      "tmdbId": 33192,
+      "tier": "Gemiddeld"
+    },
+    "lisa kudrow": {
+      "actorName": "Lisa Kudrow",
+      "tmdbId": 14406,
+      "tier": "Gemiddeld"
+    },
+    "christopher mcdonald": {
+      "actorName": "Christopher McDonald",
+      "tmdbId": 4443,
+      "tier": "Gemiddeld"
+    },
+    "kyle chandler": {
+      "actorName": "Kyle Chandler",
+      "tmdbId": 3497,
+      "tier": "Gemiddeld"
+    },
+    "masi oka": {
+      "actorName": "Masi Oka",
+      "tmdbId": 17273,
+      "tier": "Moeilijk"
+    },
+    "shohreh aghdashloo": {
+      "actorName": "Shohreh Aghdashloo",
+      "tmdbId": 21041,
+      "tier": "Moeilijk"
+    },
+    "andy nyman": {
+      "actorName": "Andy Nyman",
+      "tmdbId": 22810,
+      "tier": "Moeilijk"
+    },
+    "kate mara": {
+      "actorName": "Kate Mara",
+      "tmdbId": 51072,
+      "tier": "Gemiddeld"
+    },
+    "anson mount": {
+      "actorName": "Anson Mount",
+      "tmdbId": 56675,
+      "tier": "Moeilijk"
+    },
+    "ben schwartz": {
+      "actorName": "Ben Schwartz",
+      "tmdbId": 222121,
+      "tier": "Gemiddeld"
+    },
+    "tony revolori": {
+      "actorName": "Tony Revolori",
+      "tmdbId": 1291350,
+      "tier": "Moeilijk"
+    },
+    "keegan-michael key": {
+      "actorName": "Keegan-Michael Key",
+      "tmdbId": 298410,
+      "tier": "Gemiddeld"
+    },
+    "dichen lachman": {
+      "actorName": "Dichen Lachman",
+      "tmdbId": 94797,
+      "tier": "Moeilijk"
+    },
+    "frank oz": {
+      "actorName": "Frank Oz",
+      "tmdbId": 7908,
+      "tier": "Gemiddeld"
+    },
+    "robin wright": {
+      "actorName": "Robin Wright",
+      "tmdbId": 32,
+      "tier": "Gemiddeld"
+    },
+    "matt craven": {
+      "actorName": "Matt Craven",
+      "tmdbId": 13525,
+      "tier": "Moeilijk"
+    },
+    "noah taylor": {
+      "actorName": "Noah Taylor",
+      "tmdbId": 1284,
+      "tier": "Gemiddeld"
+    },
+    "pruitt taylor vince": {
+      "actorName": "Pruitt Taylor Vince",
+      "tmdbId": 3201,
+      "tier": "Moeilijk"
+    },
+    "richard kind": {
+      "actorName": "Richard Kind",
+      "tmdbId": 21125,
+      "tier": "Gemiddeld"
+    },
+    "bryce dallas howard": {
+      "actorName": "Bryce Dallas Howard",
+      "tmdbId": 18997,
+      "tier": "Gemiddeld"
+    },
+    "josh hartnett": {
+      "actorName": "Josh Hartnett",
+      "tmdbId": 2299,
+      "tier": "Gemiddeld"
+    },
+    "adrien brody": {
+      "actorName": "Adrien Brody",
+      "tmdbId": 3490,
+      "tier": "Gemiddeld"
+    },
+    "david gyasi": {
+      "actorName": "David Gyasi",
+      "tmdbId": 55411,
+      "tier": "Moeilijk"
+    },
+    "michelle williams": {
+      "actorName": "Michelle Williams",
+      "tmdbId": 1812,
+      "tier": "Gemiddeld"
+    },
+    "david tennant": {
+      "actorName": "David Tennant",
+      "tmdbId": 20049,
+      "tier": "Gemiddeld"
+    },
+    "wood harris": {
+      "actorName": "Wood Harris",
+      "tmdbId": 65829,
+      "tier": "Moeilijk"
+    },
+    "fred armisen": {
+      "actorName": "Fred Armisen",
+      "tmdbId": 61110,
+      "tier": "Gemiddeld"
+    },
+    "sally phillips": {
+      "actorName": "Sally Phillips",
+      "tmdbId": 9144,
+      "tier": "Moeilijk"
+    },
+    "miranda cosgrove": {
+      "actorName": "Miranda Cosgrove",
+      "tmdbId": 17743,
+      "tier": "Gemiddeld"
+    },
+    "jordana brewster": {
+      "actorName": "Jordana Brewster",
+      "tmdbId": 22123,
+      "tier": "Gemiddeld"
+    },
+    "meadow williams": {
+      "actorName": "Meadow Williams",
+      "tmdbId": 956385,
+      "tier": "Moeilijk"
+    },
+    "genesis rodriguez": {
+      "actorName": "Genesis Rodriguez",
+      "tmdbId": 589162,
+      "tier": "Moeilijk"
+    },
+    "john ortiz": {
+      "actorName": "John Ortiz",
+      "tmdbId": 40543,
+      "tier": "Moeilijk"
+    },
+    "greg kinnear": {
+      "actorName": "Greg Kinnear",
+      "tmdbId": 17141,
+      "tier": "Gemiddeld"
+    },
+    "geoffrey rush": {
+      "actorName": "Geoffrey Rush",
+      "tmdbId": 118,
+      "tier": "Gemiddeld"
+    },
+    "corey johnson": {
+      "actorName": "Corey Johnson",
+      "tmdbId": 17199,
+      "tier": "Moeilijk"
+    },
+    "anna paquin": {
+      "actorName": "Anna Paquin",
+      "tmdbId": 10690,
+      "tier": "Gemiddeld"
+    },
+    "adewale akinnuoye-agbaje": {
+      "actorName": "Adewale Akinnuoye-Agbaje",
+      "tmdbId": 31164,
+      "tier": "Moeilijk"
+    },
+    "neal mcdonough": {
+      "actorName": "Neal McDonough",
+      "tmdbId": 2203,
+      "tier": "Moeilijk"
+    },
+    "justin long": {
+      "actorName": "Justin Long",
+      "tmdbId": 15033,
+      "tier": "Gemiddeld"
+    },
+    "michael sheen": {
+      "actorName": "Michael Sheen",
+      "tmdbId": 3968,
+      "tier": "Gemiddeld"
+    },
+    "julian rhind-tutt": {
+      "actorName": "Julian Rhind-Tutt",
+      "tmdbId": 7031,
+      "tier": "Moeilijk"
+    },
+    "hope davis": {
+      "actorName": "Hope Davis",
+      "tmdbId": 15250,
+      "tier": "Moeilijk"
+    },
+    "zoë kravitz": {
+      "actorName": "Zoë Kravitz",
+      "tmdbId": 37153,
+      "tier": "Gemiddeld"
+    },
+    "carmen ejogo": {
+      "actorName": "Carmen Ejogo",
+      "tmdbId": 37158,
+      "tier": "Moeilijk"
+    },
+    "jeremy strong": {
+      "actorName": "Jeremy Strong",
+      "tmdbId": 239271,
+      "tier": "Gemiddeld"
+    },
+    "jonas bloquet": {
+      "actorName": "Jonas Bloquet",
+      "tmdbId": 566080,
+      "tier": "Moeilijk"
+    },
+    "annabelle wallis": {
+      "actorName": "Annabelle Wallis",
+      "tmdbId": 82809,
+      "tier": "Moeilijk"
+    },
+    "scott adkins": {
+      "actorName": "Scott Adkins",
+      "tmdbId": 78110,
+      "tier": "Gemiddeld"
+    },
+    "chukwudi iwuji": {
+      "actorName": "Chukwudi Iwuji",
+      "tmdbId": 105238,
+      "tier": "Moeilijk"
+    },
+    "kobna holdbrook-smith": {
+      "actorName": "Kobna Holdbrook-Smith",
+      "tmdbId": 202775,
+      "tier": "Moeilijk"
+    },
+    "brandon sklenar": {
+      "actorName": "Brandon Sklenar",
+      "tmdbId": 1855143,
+      "tier": "Moeilijk"
+    },
+    "charlotte rampling": {
+      "actorName": "Charlotte Rampling",
+      "tmdbId": 44079,
+      "tier": "Gemiddeld"
+    },
+    "benjamin bratt": {
+      "actorName": "Benjamin Bratt",
+      "tmdbId": 4589,
+      "tier": "Gemiddeld"
+    },
+    "conrad vernon": {
+      "actorName": "Conrad Vernon",
+      "tmdbId": 12080,
+      "tier": "Moeilijk"
+    },
+    "billy bob thornton": {
+      "actorName": "Billy Bob Thornton",
+      "tmdbId": 879,
+      "tier": "Gemiddeld"
+    },
+    "edgar ramírez": {
+      "actorName": "Edgar Ramírez",
+      "tmdbId": 25616,
+      "tier": "Gemiddeld"
+    },
+    "aunjanue ellis-taylor": {
+      "actorName": "Aunjanue Ellis-Taylor",
+      "tmdbId": 53923,
+      "tier": "Moeilijk"
+    },
+    "rebecca romijn": {
+      "actorName": "Rebecca Romijn",
+      "tmdbId": 11008,
+      "tier": "Gemiddeld"
+    },
+    "rainn wilson": {
+      "actorName": "Rainn Wilson",
+      "tmdbId": 11678,
+      "tier": "Gemiddeld"
+    },
+    "mark pellegrino": {
+      "actorName": "Mark Pellegrino",
+      "tmdbId": 1236,
+      "tier": "Moeilijk"
+    },
+    "mads mikkelsen": {
+      "actorName": "Mads Mikkelsen",
+      "tmdbId": 1019,
+      "tier": "Gemiddeld"
+    },
+    "matt lucas": {
+      "actorName": "Matt Lucas",
+      "tmdbId": 26209,
+      "tier": "Gemiddeld"
+    },
+    "chris renaud": {
+      "actorName": "Chris Renaud",
+      "tmdbId": 124748,
+      "tier": "Moeilijk"
+    },
+    "brett goldstein": {
+      "actorName": "Brett Goldstein",
+      "tmdbId": 21422,
+      "tier": "Gemiddeld"
+    },
+    "cynthia erivo": {
+      "actorName": "Cynthia Erivo",
+      "tmdbId": 1765068,
+      "tier": "Gemiddeld"
+    },
+    "daniel craig": {
+      "actorName": "Daniel Craig",
+      "tmdbId": 8784,
+      "tier": "Makkelijk"
+    },
+    "whoopi goldberg": {
+      "actorName": "Whoopi Goldberg",
+      "tmdbId": 2395,
+      "tier": "Makkelijk"
+    },
+    "zac efron": {
+      "actorName": "Zac Efron",
+      "tmdbId": 29222,
+      "tier": "Makkelijk"
+    },
+    "alan rickman": {
+      "actorName": "Alan Rickman",
+      "tmdbId": 4566,
+      "tier": "Makkelijk"
+    },
+    "kathy bates": {
+      "actorName": "Kathy Bates",
+      "tmdbId": 8534,
+      "tier": "Makkelijk"
+    },
+    "bill paxton": {
+      "actorName": "Bill Paxton",
+      "tmdbId": 2053,
+      "tier": "Makkelijk"
+    },
+    "jean reno": {
+      "actorName": "Jean Reno",
+      "tmdbId": 1003,
+      "tier": "Makkelijk"
+    },
+    "liv tyler": {
+      "actorName": "Liv Tyler",
+      "tmdbId": 882,
+      "tier": "Makkelijk"
+    },
+    "steve martin": {
+      "actorName": "Steve Martin",
+      "tmdbId": 67773,
+      "tier": "Makkelijk"
+    },
+    "john cleese": {
+      "actorName": "John Cleese",
+      "tmdbId": 8930,
+      "tier": "Makkelijk"
+    },
+    "kiefer sutherland": {
+      "actorName": "Kiefer Sutherland",
+      "tmdbId": 2628,
+      "tier": "Makkelijk"
+    },
+    "sharon stone": {
+      "actorName": "Sharon Stone",
+      "tmdbId": 4430,
+      "tier": "Makkelijk"
+    },
+    "bill nighy": {
+      "actorName": "Bill Nighy",
+      "tmdbId": 2440,
+      "tier": "Makkelijk"
+    },
+    "elijah wood": {
+      "actorName": "Elijah Wood",
+      "tmdbId": 109,
+      "tier": "Makkelijk"
+    },
+    "gene hackman": {
+      "actorName": "Gene Hackman",
+      "tmdbId": 193,
+      "tier": "Makkelijk"
+    },
+    "christopher lee": {
+      "actorName": "Christopher Lee",
+      "tmdbId": 113,
+      "tier": "Makkelijk"
+    },
+    "judi dench": {
+      "actorName": "Judi Dench",
+      "tmdbId": 5309,
+      "tier": "Makkelijk"
+    },
+    "brendan fraser": {
+      "actorName": "Brendan Fraser",
+      "tmdbId": 18269,
+      "tier": "Makkelijk"
+    },
+    "james gandolfini": {
+      "actorName": "James Gandolfini",
+      "tmdbId": 4691,
+      "tier": "Makkelijk"
+    },
+    "mickey rourke": {
+      "actorName": "Mickey Rourke",
+      "tmdbId": 2295,
+      "tier": "Makkelijk"
+    },
+    "simon pegg": {
+      "actorName": "Simon Pegg",
+      "tmdbId": 11108,
+      "tier": "Makkelijk"
+    },
+    "jenna ortega": {
+      "actorName": "Jenna Ortega",
+      "tmdbId": 974169,
+      "tier": "Makkelijk"
+    },
+    "jeroen krabbé": {
+      "actorName": "Jeroen Krabbé",
+      "tmdbId": 1924,
+      "tier": "Makkelijk"
+    },
+    "michael clarke duncan": {
+      "actorName": "Michael Clarke Duncan",
+      "tmdbId": 61981,
+      "tier": "Makkelijk"
+    },
+    "stephen fry": {
+      "actorName": "Stephen Fry",
+      "tmdbId": 11275,
+      "tier": "Makkelijk"
+    },
+    "eric bana": {
+      "actorName": "Eric Bana",
+      "tmdbId": 8783,
+      "tier": "Makkelijk"
+    },
+    "michael j. fox": {
+      "actorName": "Michael J. Fox",
+      "tmdbId": 521,
+      "tier": "Makkelijk"
+    },
+    "rebel wilson": {
+      "actorName": "Rebel Wilson",
+      "tmdbId": 221581,
+      "tier": "Makkelijk"
+    },
+    "laura linney": {
+      "actorName": "Laura Linney",
+      "tmdbId": 350,
+      "tier": "Makkelijk"
+    },
+    "timothy dalton": {
+      "actorName": "Timothy Dalton",
+      "tmdbId": 10669,
+      "tier": "Makkelijk"
+    },
+    "carey mulligan": {
+      "actorName": "Carey Mulligan",
+      "tmdbId": 36662,
+      "tier": "Makkelijk"
+    },
+    "glen powell": {
+      "actorName": "Glen Powell",
+      "tmdbId": 83271,
+      "tier": "Makkelijk"
+    },
+    "giancarlo esposito": {
+      "actorName": "Giancarlo Esposito",
+      "tmdbId": 4808,
+      "tier": "Makkelijk"
+    },
+    "billy crystal": {
+      "actorName": "Billy Crystal",
+      "tmdbId": 7904,
+      "tier": "Makkelijk"
+    },
+    "maggie smith": {
+      "actorName": "Maggie Smith",
+      "tmdbId": 10978,
+      "tier": "Makkelijk"
+    },
+    "anjelica huston": {
+      "actorName": "Anjelica Huston",
+      "tmdbId": 5657,
+      "tier": "Makkelijk"
+    },
+    "kelsey grammer": {
+      "actorName": "Kelsey Grammer",
+      "tmdbId": 7090,
+      "tier": "Makkelijk"
+    },
+    "justin timberlake": {
+      "actorName": "Justin Timberlake",
+      "tmdbId": 12111,
+      "tier": "Makkelijk"
+    },
+    "christopher lloyd": {
+      "actorName": "Christopher Lloyd",
+      "tmdbId": 1062,
+      "tier": "Makkelijk"
+    },
+    "kim cattrall": {
+      "actorName": "Kim Cattrall",
+      "tmdbId": 2109,
+      "tier": "Makkelijk"
+    },
+    "robbie coltrane": {
+      "actorName": "Robbie Coltrane",
+      "tmdbId": 1923,
+      "tier": "Makkelijk"
+    },
+    "james caan": {
+      "actorName": "James Caan",
+      "tmdbId": 3085,
+      "tier": "Makkelijk"
+    },
+    "ed helms": {
+      "actorName": "Ed Helms",
+      "tmdbId": 27105,
+      "tier": "Makkelijk"
+    },
+    "luke wilson": {
+      "actorName": "Luke Wilson",
+      "tmdbId": 36422,
+      "tier": "Makkelijk"
+    },
+    "kristen bell": {
+      "actorName": "Kristen Bell",
+      "tmdbId": 40462,
+      "tier": "Makkelijk"
+    },
+    "kit harington": {
+      "actorName": "Kit Harington",
+      "tmdbId": 239019,
+      "tier": "Makkelijk"
+    },
+    "natasha lyonne": {
+      "actorName": "Natasha Lyonne",
+      "tmdbId": 10871,
+      "tier": "Makkelijk"
+    },
+    "matthew broderick": {
+      "actorName": "Matthew Broderick",
+      "tmdbId": 4756,
+      "tier": "Makkelijk"
+    },
+    "martin sheen": {
+      "actorName": "Martin Sheen",
+      "tmdbId": 8349,
+      "tier": "Makkelijk"
+    },
+    "richard gere": {
+      "actorName": "Richard Gere",
+      "tmdbId": 1205,
+      "tier": "Makkelijk"
+    },
+    "sean astin": {
+      "actorName": "Sean Astin",
+      "tmdbId": 1328,
+      "tier": "Makkelijk"
+    },
+    "kevin costner": {
+      "actorName": "Kevin Costner",
+      "tmdbId": 1269,
+      "tier": "Makkelijk"
+    },
+    "dave chappelle": {
+      "actorName": "Dave Chappelle",
+      "tmdbId": 4169,
+      "tier": "Makkelijk"
+    },
+    "rupert grint": {
+      "actorName": "Rupert Grint",
+      "tmdbId": 10989,
+      "tier": "Makkelijk"
+    },
+    "sofía vergara": {
+      "actorName": "Sofía Vergara",
+      "tmdbId": 63522,
+      "tier": "Makkelijk"
+    },
+    "guy pearce": {
+      "actorName": "Guy Pearce",
+      "tmdbId": 529,
+      "tier": "Makkelijk"
+    },
+    "zach galifianakis": {
+      "actorName": "Zach Galifianakis",
+      "tmdbId": 58225,
+      "tier": "Makkelijk"
+    },
+    "eva green": {
+      "actorName": "Eva Green",
+      "tmdbId": 10912,
+      "tier": "Makkelijk"
+    },
+    "chadwick boseman": {
+      "actorName": "Chadwick Boseman",
+      "tmdbId": 172069,
+      "tier": "Makkelijk"
+    },
+    "amy poehler": {
+      "actorName": "Amy Poehler",
+      "tmdbId": 56322,
+      "tier": "Makkelijk"
+    },
+    "shirley maclaine": {
+      "actorName": "Shirley MacLaine",
+      "tmdbId": 4090,
+      "tier": "Makkelijk"
+    },
+    "zooey deschanel": {
+      "actorName": "Zooey Deschanel",
+      "tmdbId": 11664,
+      "tier": "Makkelijk"
+    },
+    "christina ricci": {
+      "actorName": "Christina Ricci",
+      "tmdbId": 6886,
+      "tier": "Makkelijk"
+    },
+    "bob odenkirk": {
+      "actorName": "Bob Odenkirk",
+      "tmdbId": 59410,
+      "tier": "Makkelijk"
+    },
+    "donald glover": {
+      "actorName": "Donald Glover",
+      "tmdbId": 119589,
+      "tier": "Makkelijk"
+    },
+    "robert redford": {
+      "actorName": "Robert Redford",
+      "tmdbId": 4135,
+      "tier": "Makkelijk"
+    },
+    "angela lansbury": {
+      "actorName": "Angela Lansbury",
+      "tmdbId": 14730,
+      "tier": "Makkelijk"
+    },
+    "meg ryan": {
+      "actorName": "Meg Ryan",
+      "tmdbId": 5344,
+      "tier": "Makkelijk"
+    },
+    "jeff bridges": {
+      "actorName": "Jeff Bridges",
+      "tmdbId": 1229,
+      "tier": "Makkelijk"
+    },
+    "clint eastwood": {
+      "actorName": "Clint Eastwood",
+      "tmdbId": 190,
+      "tier": "Makkelijk"
+    },
+    "glenn close": {
+      "actorName": "Glenn Close",
+      "tmdbId": 515,
+      "tier": "Makkelijk"
+    },
+    "sally field": {
+      "actorName": "Sally Field",
+      "tmdbId": 35,
+      "tier": "Makkelijk"
+    },
+    "heath ledger": {
+      "actorName": "Heath Ledger",
+      "tmdbId": 1810,
+      "tier": "Makkelijk"
+    },
+    "bruce lee": {
+      "actorName": "Bruce Lee",
+      "tmdbId": 19429,
+      "tier": "Makkelijk"
+    },
+    "carrie fisher": {
+      "actorName": "Carrie Fisher",
+      "tmdbId": 4,
+      "tier": "Makkelijk"
+    }
+  },
+  "actorDifficultyOverridesMeta": {
+    "version": 1,
+    "updatedAt": "2026-08-24T10:23:06.221Z",
+    "count": 411
+  }
 }
