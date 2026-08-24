@@ -8,6 +8,7 @@ const ACTOR_POPULARITY_CACHE_KEY = "moviemindAnalyzerActorPopularity";
 const ACTOR_POPULARITY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const ACTOR_POPULARITY_BATCH_DELAY_MS = 80;
 const ACTOR_SCORE_ADJUSTMENT_KEY = "moviemindAnalyzerActorScoreAdjustments";
+const ACTOR_TIER_OVERRIDE_KEY = "moviemindAnalyzerActorTierOverrides";
 
 const state = {
     database: null,
@@ -19,6 +20,7 @@ const state = {
         aliases: loadActorAliasCache(),
         popularity: loadActorPopularityCache(),
         adjustments: loadActorScoreAdjustments(),
+        tierOverrides: loadActorTierOverrides(),
         selectedActorKey: null,
         filtered: [],
         page: 1,
@@ -672,12 +674,19 @@ function calculateActorFameScores(actors) {
             100
         );
 
+        const automaticTier = getActorTier(fameScore);
+        const tierOverride = normaliseTierOverride(
+            state.analysis.tierOverrides[cacheKey]
+        );
+
         return {
             ...actor,
             automaticScore,
             adjustment,
             fameScore,
-            tier: getActorTier(fameScore)
+            automaticTier,
+            tierOverride,
+            tier: tierOverride || automaticTier
         };
     });
 }
@@ -846,6 +855,345 @@ function saveActorScoreAdjustments() {
     );
 }
 
+function normaliseTierOverride(value) {
+    return ["Makkelijk", "Gemiddeld", "Moeilijk"].includes(value)
+        ? value
+        : null;
+}
+
+function loadActorTierOverrides() {
+    try {
+        const value = localStorage.getItem(ACTOR_TIER_OVERRIDE_KEY);
+        const parsed = value ? JSON.parse(value) : {};
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function saveActorTierOverrides() {
+    localStorage.setItem(
+        ACTOR_TIER_OVERRIDE_KEY,
+        JSON.stringify(state.analysis.tierOverrides)
+    );
+}
+
+function setSelectedActorTierOverride(tier) {
+    const key = state.analysis.selectedActorKey;
+    if (!key) return;
+
+    const actor = state.analysis.ranking.find(
+        (item) => createActorScoreAdjustmentKey(item) === key
+    );
+    if (!actor) return;
+
+    const normalised = normaliseTierOverride(tier);
+    if (normalised) {
+        state.analysis.tierOverrides[key] = normalised;
+    } else {
+        delete state.analysis.tierOverrides[key];
+    }
+
+    saveActorTierOverrides();
+    refreshActorScores(actor);
+}
+
+
+
+async function saveActorTierOverridesToDatabase() {
+    if (!state.databaseHandle || !state.database) {
+        showToast("Koppel eerst de MovieMind-database.", "error");
+        return;
+    }
+
+    if (Array.isArray(state.database)) {
+        showToast(
+            "Deze database heeft geen objectstructuur waarin overrides veilig kunnen worden opgeslagen.",
+            "error"
+        );
+        return;
+    }
+
+    const overrides = {};
+
+    state.analysis.ranking.forEach((actor) => {
+        const key = createActorScoreAdjustmentKey(actor);
+        const tier = normaliseTierOverride(
+            state.analysis.tierOverrides[key]
+        );
+
+        if (!tier) return;
+
+        const normalizedName = normaliseActorKey(
+            getActorDisplayName(actor) || actor.name
+        );
+
+        if (!normalizedName) return;
+
+        overrides[normalizedName] = {
+            actorName: getActorDisplayName(actor) || actor.name,
+            tmdbId: actor.id || null,
+            tier: tier
+        };
+    });
+
+    const overrideCount = Object.keys(overrides).length;
+
+    if (!overrideCount) {
+        showToast(
+            "Er zijn geen handmatige niveau-overrides om op te slaan.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        const permission = await ensureWritePermission(
+            state.databaseHandle,
+            true
+        );
+
+        if (!permission) {
+            throw new Error("Geen schrijfrechten voor de database gekregen.");
+        }
+
+        state.database.actorDifficultyOverrides = overrides;
+        state.database.actorDifficultyOverridesMeta = {
+            version: 1,
+            updatedAt: new Date().toISOString(),
+            count: overrideCount
+        };
+
+        const writable = await state.databaseHandle.createWritable();
+        await writable.write(
+            JSON.stringify(state.database, null, 2) + "\n"
+        );
+        await writable.close();
+
+        const file = await state.databaseHandle.getFile();
+        updateDatabaseStatus(file);
+
+        showToast(
+            overrideCount.toLocaleString("nl-NL") +
+                " acteur-overrides naar moviemind_database.json geschreven.",
+            "success"
+        );
+    } catch (error) {
+        console.error(error);
+        showToast(
+            "Overrides opslaan in de database is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    }
+}
+
+async function ensureWritePermission(handle, requestPermission) {
+    const options = { mode: "readwrite" };
+
+    if (!handle || !handle.queryPermission) return true;
+
+    let permission = await handle.queryPermission(options);
+
+    if (permission === "granted") return true;
+
+    if (requestPermission && handle.requestPermission) {
+        permission = await handle.requestPermission(options);
+        return permission === "granted";
+    }
+
+    return false;
+}
+
+function importActorTierOverridesFromFile() {
+    const fileInput = document.getElementById("import-overrides-file");
+    if (!fileInput) return;
+
+    fileInput.value = "";
+    fileInput.click();
+}
+
+async function handleActorTierOverridesFile(event) {
+    const input = event.target;
+    const file = input && input.files ? input.files[0] : null;
+    if (!file) return;
+
+    try {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+
+        if (
+            !payload ||
+            payload.format !== "MovieMindActorTierOverrides" ||
+            !Array.isArray(payload.overrides)
+        ) {
+            throw new Error("Dit is geen geldig MovieMind override-bestand.");
+        }
+
+        const rankingById = new Map();
+        const rankingByName = new Map();
+
+        state.analysis.ranking.forEach((actor) => {
+            if (actor.id) rankingById.set(String(actor.id), actor);
+            rankingByName.set(normaliseActorKey(actor.name), actor);
+            rankingByName.set(
+                normaliseActorKey(getActorDisplayName(actor)),
+                actor
+            );
+        });
+
+        let applied = 0;
+        let unchanged = 0;
+        let missing = 0;
+        let invalid = 0;
+
+        payload.overrides.forEach((override) => {
+            const targetTier = normaliseTierOverride(
+                override && override.targetTier
+            );
+
+            if (!targetTier) {
+                invalid += 1;
+                return;
+            }
+
+            let actor = null;
+
+            if (
+                override.tmdbId !== null &&
+                override.tmdbId !== undefined &&
+                override.tmdbId !== ""
+            ) {
+                actor = rankingById.get(String(override.tmdbId)) || null;
+            }
+
+            if (!actor && override.actorName) {
+                actor =
+                    rankingByName.get(
+                        normaliseActorKey(override.actorName)
+                    ) || null;
+            }
+
+            if (!actor) {
+                missing += 1;
+                return;
+            }
+
+            const key = createActorScoreAdjustmentKey(actor);
+            const current = normaliseTierOverride(
+                state.analysis.tierOverrides[key]
+            );
+
+            if (current === targetTier) {
+                unchanged += 1;
+                return;
+            }
+
+            state.analysis.tierOverrides[key] = targetTier;
+            applied += 1;
+        });
+
+        saveActorTierOverrides();
+
+        if (state.analysis.ranking.length) {
+            refreshActorScores();
+        }
+
+        showToast(
+            applied.toLocaleString("nl-NL") +
+                " overrides toegepast" +
+                (unchanged ? " · " + unchanged + " al gelijk" : "") +
+                (missing ? " · " + missing + " acteur(s) niet gevonden" : "") +
+                (invalid ? " · " + invalid + " ongeldig" : "") +
+                ".",
+            missing || invalid ? "error" : "success"
+        );
+    } catch (error) {
+        console.error(error);
+        showToast(
+            "Overrides importeren is mislukt: " +
+                (error.message || "onbekende fout"),
+            "error"
+        );
+    } finally {
+        if (input) input.value = "";
+    }
+}
+
+function exportActorAnalysisCsv() {
+    if (!state.analysis.ranking.length) {
+        showToast("Voer eerst de acteursanalyse uit.", "error");
+        return;
+    }
+
+    const rows = [[
+        "Rang",
+        "Acteur",
+        "TMDB ID",
+        "Titels",
+        "Genres",
+        "Medespelers",
+        "Mogelijke antwoorden",
+        "TMDB-populariteit",
+        "Databasescore",
+        "Automatische bekendheid",
+        "Scorecorrectie",
+        "Eindscore",
+        "Automatisch niveau",
+        "Handmatig niveau",
+        "Definitief niveau"
+    ]];
+
+    state.analysis.ranking.forEach((actor, index) => {
+        rows.push([
+            index + 1,
+            getActorDisplayName(actor),
+            actor.id || "",
+            actor.titleCount,
+            actor.genreCount,
+            actor.coActorCount,
+            actor.answerCount,
+            actor.tmdbPopularity || "",
+            actor.rawScore,
+            actor.automaticScore,
+            actor.adjustment || 0,
+            actor.fameScore,
+            actor.automaticTier || getActorTier(actor.fameScore),
+            actor.tierOverride || "",
+            actor.tier
+        ]);
+    });
+
+    const csv = rows
+        .map((row) => row.map(csvCell).join(";"))
+        .join("\r\n");
+
+    const blob = new Blob(["\ufeff" + csv], {
+        type: "text/csv;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    link.href = url;
+    link.download = "MovieMind-acteursanalyse-" + stamp + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    showToast(
+        state.analysis.ranking.length.toLocaleString("nl-NL") +
+            " acteurs geëxporteerd.",
+        "success"
+    );
+}
+
+function csvCell(value) {
+    const text = String(value ?? "");
+    return '"' + text.replaceAll('"', '""') + '"';
+}
+
 function adjustSelectedActorScore(delta) {
     const key = state.analysis.selectedActorKey;
     if (!key) return;
@@ -902,6 +1250,14 @@ function initialiseAnalysisControls() {
     const scoreMinusButton = document.getElementById("actor-score-minus");
     const scorePlusButton = document.getElementById("actor-score-plus");
     const scoreResetButton = document.getElementById("actor-score-reset");
+    const tierEasyButton = document.getElementById("actor-tier-easy");
+    const tierMediumButton = document.getElementById("actor-tier-medium");
+    const tierHardButton = document.getElementById("actor-tier-hard");
+    const tierAutoButton = document.getElementById("actor-tier-auto");
+    const importButton = document.getElementById("import-overrides-button");
+    const importFileInput = document.getElementById("import-overrides-file");
+    const saveOverridesButton = document.getElementById("save-overrides-database-button");
+    const exportButton = document.getElementById("export-actors-button");
 
     if (searchInput) {
         searchInput.addEventListener("input", () => {
@@ -958,6 +1314,41 @@ function initialiseAnalysisControls() {
     if (scoreResetButton && !scoreResetButton.dataset.bound) {
         scoreResetButton.dataset.bound = "true";
         scoreResetButton.addEventListener("click", resetSelectedActorScore);
+    }
+    if (tierEasyButton && !tierEasyButton.dataset.bound) {
+        tierEasyButton.dataset.bound = "true";
+        tierEasyButton.addEventListener("click", () => setSelectedActorTierOverride("Makkelijk"));
+    }
+    if (tierMediumButton && !tierMediumButton.dataset.bound) {
+        tierMediumButton.dataset.bound = "true";
+        tierMediumButton.addEventListener("click", () => setSelectedActorTierOverride("Gemiddeld"));
+    }
+    if (tierHardButton && !tierHardButton.dataset.bound) {
+        tierHardButton.dataset.bound = "true";
+        tierHardButton.addEventListener("click", () => setSelectedActorTierOverride("Moeilijk"));
+    }
+    if (tierAutoButton && !tierAutoButton.dataset.bound) {
+        tierAutoButton.dataset.bound = "true";
+        tierAutoButton.addEventListener("click", () => setSelectedActorTierOverride(null));
+    }
+    if (importButton && !importButton.dataset.bound) {
+        importButton.dataset.bound = "true";
+        importButton.addEventListener("click", importActorTierOverridesFromFile);
+    }
+    if (importFileInput && !importFileInput.dataset.bound) {
+        importFileInput.dataset.bound = "true";
+        importFileInput.addEventListener("change", handleActorTierOverridesFile);
+    }
+    if (saveOverridesButton && !saveOverridesButton.dataset.bound) {
+        saveOverridesButton.dataset.bound = "true";
+        saveOverridesButton.addEventListener(
+            "click",
+            saveActorTierOverridesToDatabase
+        );
+    }
+    if (exportButton && !exportButton.dataset.bound) {
+        exportButton.dataset.bound = "true";
+        exportButton.addEventListener("click", exportActorAnalysisCsv);
     }
 }
 
@@ -1240,11 +1631,9 @@ function updatePlayableTierDistribution(actors, thresholds) {
     const mediumMinimum = thresholds.mediumMinimum;
 
     const counts = {
-        makkelijk: actors.filter((actor) => actor.fameScore >= easyMinimum).length,
-        gemiddeld: actors.filter((actor) =>
-            actor.fameScore >= mediumMinimum && actor.fameScore < easyMinimum
-        ).length,
-        moeilijk: actors.filter((actor) => actor.fameScore < mediumMinimum).length
+        makkelijk: actors.filter((actor) => actor.tier === "Makkelijk").length,
+        gemiddeld: actors.filter((actor) => actor.tier === "Gemiddeld").length,
+        moeilijk: actors.filter((actor) => actor.tier === "Moeilijk").length
     };
 
     setText("suggested-thresholds-text",
@@ -1330,6 +1719,7 @@ function openActorDetail(actor, scrollIntoView = true) {
         "actor-score-adjustment",
         actor.adjustment > 0 ? "+" + actor.adjustment : actor.adjustment
     );
+    updateActorTierOverrideUi(actor);
 
     if (originalName) {
         originalName.hidden = displayName === actor.name;
@@ -1349,6 +1739,32 @@ function openActorDetail(actor, scrollIntoView = true) {
             behavior: "smooth",
             block: "start"
         });
+    }
+}
+
+function updateActorTierOverrideUi(actor) {
+    const status = document.getElementById("actor-tier-override-status");
+    const choices = {
+        Makkelijk: document.getElementById("actor-tier-easy"),
+        Gemiddeld: document.getElementById("actor-tier-medium"),
+        Moeilijk: document.getElementById("actor-tier-hard")
+    };
+
+    Object.entries(choices).forEach(([tier, button]) => {
+        if (!button) return;
+        button.classList.toggle("is-active", actor.tierOverride === tier);
+    });
+
+    const autoButton = document.getElementById("actor-tier-auto");
+    if (autoButton) {
+        autoButton.classList.toggle("is-active", !actor.tierOverride);
+    }
+
+    if (status) {
+        status.textContent = actor.tierOverride
+            ? "Handmatig vastgezet op " + actor.tierOverride +
+                " · automatisch zou dit " + actor.automaticTier + " zijn."
+            : "Automatisch niveau actief: " + actor.automaticTier + ".";
     }
 }
 
@@ -1487,6 +1903,7 @@ function ensureAnalysisResultsMarkup() {
                     '<option value="coactors-desc">Medespelers: meeste eerst</option>' +
                     '<option value="name-asc">Naam: A–Z</option>' +
                 '</select>' +
+                '<button id="export-actors-button" class="secondary-button export-button" type="button">📤 Acteurslijst exporteren</button>' +
             '</div>' +
             '<div class="analysis-table-wrap">' +
                 '<table class="analysis-table">' +

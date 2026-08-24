@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind Analyzer</title>
-    <link rel="stylesheet" href="style.css?v=1.8.0">
+    <link rel="stylesheet" href="style.css?v=2.1.0">
 </head>
 <body>
     <div class="analyzer-shell">
@@ -213,6 +213,19 @@
                                 <option value="coactors-desc">Medespelers: meeste eerst</option>
                                 <option value="name-asc">Naam: A–Z</option>
                             </select>
+
+                            <button id="import-overrides-button" class="secondary-button import-button" type="button">
+                                📥 Overrides importeren
+                            </button>
+                            <input id="import-overrides-file" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+
+                            <button id="save-overrides-database-button" class="primary-button save-overrides-button" type="button">
+                                💾 Overrides naar database
+                            </button>
+
+                            <button id="export-actors-button" class="secondary-button export-button" type="button">
+                                📤 Acteurslijst exporteren
+                            </button>
                         </div>
 
                         <div class="analysis-table-wrap">
@@ -271,8 +284,8 @@
 
                             <div class="actor-score-controls">
                                 <div>
-                                    <strong>Handmatige correctie</strong>
-                                    <small>Alleen gebruiken als de automatische score duidelijk niet klopt.</small>
+                                    <strong>Handmatige scorecorrectie</strong>
+                                    <small>Gebruik −5 / +5 voor een kleine correctie van de bekendheidsscore.</small>
                                 </div>
                                 <div class="score-adjust-buttons">
                                     <button id="actor-score-minus" class="secondary-button" type="button">−5</button>
@@ -280,6 +293,20 @@
                                     <button id="actor-score-plus" class="secondary-button" type="button">+5</button>
                                     <button id="actor-score-reset" class="secondary-button" type="button">Reset</button>
                                 </div>
+                            </div>
+
+                            <div class="actor-tier-controls">
+                                <div>
+                                    <strong>Niveau handmatig vastzetten</strong>
+                                    <small>Jouw keuze gaat vóór het automatisch berekende niveau. De score zelf blijft ongewijzigd.</small>
+                                </div>
+                                <div class="tier-override-buttons">
+                                    <button id="actor-tier-easy" class="secondary-button tier-choice tier-choice-makkelijk" type="button">Makkelijk</button>
+                                    <button id="actor-tier-medium" class="secondary-button tier-choice tier-choice-gemiddeld" type="button">Gemiddeld</button>
+                                    <button id="actor-tier-hard" class="secondary-button tier-choice tier-choice-moeilijk" type="button">Moeilijk</button>
+                                    <button id="actor-tier-auto" class="secondary-button" type="button">Automatisch</button>
+                                </div>
+                                <small id="actor-tier-override-status" class="tier-override-status">Automatisch niveau actief.</small>
                             </div>
 
                             <div class="actor-detail-columns">
@@ -306,6 +333,6 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="script.js?v=1.8.0"></script>
+    <script src="script.js?v=2.1.0"></script>
 </body>
 </html>

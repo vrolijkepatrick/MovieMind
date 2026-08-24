@@ -218,6 +218,7 @@ al TMDb-populariteit heeft opgehaald, wordt die bonus ook meegenomen.
 */
 let actorFameScoreIndex = new Map();
 let actorTitleCountIndex = new Map();
+let actorDifficultyOverrideIndex = new Map();
 
 const ACTOR_HISTORY_STORAGE_KEY = "moviemindRecentGridActorsV1";
 const ACTOR_HISTORY_LIMIT = 45;
@@ -1116,6 +1117,10 @@ async function loadDatabase() {
             );
         }
 
+        buildActorDifficultyOverrideIndex(
+            combinedData.actorDifficultyOverrides
+        );
+
         setDatabaseLoadingProgress(78, "Titels worden klaargezet…");
         await waitForPaint();
 
@@ -1486,19 +1491,94 @@ function buildLookupCaches() {
         "Bekendheidspools:",
         "Makkelijk",
         eligibleActorsCache.filter(function (actor) {
-            const score = getActorFameScore(actor);
-            return score >= 54;
+            return isActorInDifficultyFameRange(
+                actor,
+                DIFFICULTY_PROFILES.moviehouse
+            );
         }).length,
         "| Gemiddeld",
         eligibleActorsCache.filter(function (actor) {
-            const score = getActorFameScore(actor);
-            return score >= 50 && score <= 70;
+            return isActorInDifficultyFameRange(
+                actor,
+                DIFFICULTY_PROFILES.blockbuster
+            );
         }).length,
         "| Moeilijk",
         eligibleActorsCache.filter(function (actor) {
-            return getActorFameScore(actor) <= 53;
+            return isActorInDifficultyFameRange(
+                actor,
+                DIFFICULTY_PROFILES.oscarnight
+            );
         }).length
     );
+}
+
+
+
+/* =========================================
+   HANDMATIGE ACTEURSMOEILIJKHEID
+========================================= */
+
+function buildActorDifficultyOverrideIndex(source) {
+    actorDifficultyOverrideIndex = new Map();
+
+    if (!source || typeof source !== "object") {
+        return;
+    }
+
+    Object.entries(source).forEach(function ([sourceKey, value]) {
+        const tier =
+            typeof value === "string"
+                ? value
+                : value && value.tier;
+
+        const actorName =
+            value && typeof value === "object" && value.actorName
+                ? value.actorName
+                : sourceKey;
+
+        if (
+            tier !== "Makkelijk" &&
+            tier !== "Gemiddeld" &&
+            tier !== "Moeilijk"
+        ) {
+            return;
+        }
+
+        const normalizedActor = normalizeText(actorName);
+        const normalizedSourceKey = normalizeText(sourceKey);
+
+        if (normalizedActor) {
+            actorDifficultyOverrideIndex.set(normalizedActor, tier);
+        }
+
+        if (normalizedSourceKey) {
+            actorDifficultyOverrideIndex.set(normalizedSourceKey, tier);
+        }
+    });
+
+    console.log(
+        "Handmatige acteursniveaus geladen:",
+        actorDifficultyOverrideIndex.size
+    );
+}
+
+function getActorDifficultyOverride(actor) {
+    return (
+        actorDifficultyOverrideIndex.get(
+            normalizeText(actor)
+        ) || null
+    );
+}
+
+function doesActorOverrideMatchProfile(actor, profile) {
+    const override = getActorDifficultyOverride(actor);
+
+    if (!override) {
+        return null;
+    }
+
+    return override === profile.label;
 }
 
 
@@ -1676,6 +1756,13 @@ function isActorInDifficultyFameRange(
     actor,
     profile = getDifficultyProfile()
 ) {
+    const overrideMatch =
+        doesActorOverrideMatchProfile(actor, profile);
+
+    if (overrideMatch !== null) {
+        return overrideMatch;
+    }
+
     const score = getActorFameScore(actor);
     const range = profile.fame;
 
