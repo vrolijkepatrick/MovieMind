@@ -20,184 +20,6 @@ let usedMediaKeys = [];
 let usedCoStarNames = [];
 let selectedSuggestionKey = null;
 
-/* =========================================
-   SPELSTATISTIEKEN
-========================================= */
-
-/*
-Lokale statistieken werken direct en zijn handig om de metingen te testen.
-Voor gezamenlijke statistieken van alle online spelers kan MovieMind ook
-GoatCounter gebruiken. Vul daarvoor later alleen MOVIEMIND_GOATCOUNTER_CODE
-in, bijvoorbeeld "moviemind" voor moviemind.goatcounter.com.
-*/
-const MOVIEMIND_STATS_STORAGE_KEY = "moviemindGameStatsV1";
-const MOVIEMIND_GOATCOUNTER_CODE = "moviemind";
-
-let currentGameStatsActive = false;
-let currentGameStatsFinished = false;
-let pendingAnalyticsEvents = [];
-
-function createEmptyMovieMindStats() {
-    return {
-        pageViews: 0,
-        gameStarts: 0,
-        completedGames: 0,
-        wins: 0,
-        draws: 0,
-        difficulty: {
-            moviehouse: 0,
-            blockbuster: 0,
-            oscarnight: 0
-        },
-        firstVisit: null,
-        lastVisit: null
-    };
-}
-
-function loadMovieMindStats() {
-    try {
-        const raw = localStorage.getItem(MOVIEMIND_STATS_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : {};
-        const empty = createEmptyMovieMindStats();
-
-        return {
-            ...empty,
-            ...parsed,
-            difficulty: {
-                ...empty.difficulty,
-                ...(parsed.difficulty || {})
-            }
-        };
-    } catch (_) {
-        return createEmptyMovieMindStats();
-    }
-}
-
-function saveMovieMindStats(stats) {
-    try {
-        localStorage.setItem(
-            MOVIEMIND_STATS_STORAGE_KEY,
-            JSON.stringify(stats)
-        );
-    } catch (_) {
-        /* Statistieken mogen de game nooit blokkeren. */
-    }
-}
-
-function registerPageView() {
-    const stats = loadMovieMindStats();
-    const now = new Date().toISOString();
-
-    stats.pageViews += 1;
-    stats.firstVisit = stats.firstVisit || now;
-    stats.lastVisit = now;
-    saveMovieMindStats(stats);
-}
-
-function trackGameStarted() {
-    if (currentGameStatsActive) {
-        return;
-    }
-
-    currentGameStatsActive = true;
-    currentGameStatsFinished = false;
-
-    const stats = loadMovieMindStats();
-    stats.gameStarts += 1;
-
-    if (Object.prototype.hasOwnProperty.call(stats.difficulty, difficulty)) {
-        stats.difficulty[difficulty] += 1;
-    }
-
-    saveMovieMindStats(stats);
-    sendMovieMindAnalyticsEvent(
-        "/events/game-start/" + difficulty,
-        "Game gestart · " + getDifficultyLabel(difficulty)
-    );
-}
-
-function trackGameCompleted(result) {
-    if (!currentGameStatsActive || currentGameStatsFinished) {
-        return;
-    }
-
-    currentGameStatsFinished = true;
-    currentGameStatsActive = false;
-
-    const stats = loadMovieMindStats();
-    stats.completedGames += 1;
-
-    if (result === "win") {
-        stats.wins += 1;
-    } else if (result === "draw") {
-        stats.draws += 1;
-    }
-
-    saveMovieMindStats(stats);
-    sendMovieMindAnalyticsEvent(
-        "/events/game-complete/" + result + "/" + difficulty,
-        "Game uitgespeeld · " + result + " · " + getDifficultyLabel(difficulty)
-    );
-}
-
-function abandonCurrentGameStats() {
-    currentGameStatsActive = false;
-    currentGameStatsFinished = false;
-}
-
-function initializeMovieMindAnalytics() {
-    registerPageView();
-
-    if (!MOVIEMIND_GOATCOUNTER_CODE) {
-        return;
-    }
-
-    window.goatcounter = window.goatcounter || {};
-    window.goatcounter.endpoint =
-        "https://" + MOVIEMIND_GOATCOUNTER_CODE + ".goatcounter.com/count";
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = "https://gc.zgo.at/count.js";
-    script.dataset.goatcounter = window.goatcounter.endpoint;
-
-    script.addEventListener("load", flushPendingAnalyticsEvents);
-    document.head.appendChild(script);
-}
-
-function sendMovieMindAnalyticsEvent(path, title) {
-    if (!MOVIEMIND_GOATCOUNTER_CODE) {
-        return;
-    }
-
-    if (window.goatcounter && typeof window.goatcounter.count === "function") {
-        window.goatcounter.count({
-            path: path,
-            title: title,
-            event: true
-        });
-        return;
-    }
-
-    pendingAnalyticsEvents.push({ path: path, title: title });
-}
-
-function flushPendingAnalyticsEvents() {
-    if (!window.goatcounter || typeof window.goatcounter.count !== "function") {
-        return;
-    }
-
-    pendingAnalyticsEvents.splice(0).forEach(function (event) {
-        window.goatcounter.count({
-            path: event.path,
-            title: event.title,
-            event: true
-        });
-    });
-}
-
-initializeMovieMindAnalytics();
-
 /*
 Snelle zoekindexen voor de bordgenerator.
 Deze worden één keer opgebouwd nadat de databases zijn geladen.
@@ -209,6 +31,7 @@ let actorDisplayNamesIndex = new Map();
 let eligibleActorsCache = [];
 let allGenresCache = [];
 let allCategoriesCache = [];
+let allSoloCategoriesCache = [];
 
 /*
 Bekendheid + variatie.
@@ -318,6 +141,13 @@ const gameScreen = document.getElementById("gameScreen");
 const brandBlock = document.querySelector(".brand-block");
 
 const startBtn = document.getElementById("startBtn");
+const versusModeBtn = document.getElementById("versusModeBtn");
+const soloModeBtn = document.getElementById("soloModeBtn");
+const soloOverlay = document.getElementById("soloOverlay");
+const soloOverlayText = document.getElementById("soloOverlayText");
+const soloCorrectCount = document.getElementById("soloCorrectCount");
+const soloClaimedCount = document.getElementById("soloClaimedCount");
+const soloNewGameBtn = document.getElementById("soloNewGameBtn");
 const newRoundBtn = document.getElementById("newRoundBtn");
 
 const playerBlueInput = document.getElementById("playerBlueInput");
@@ -571,6 +401,9 @@ function updateGameHud() {
             ? turnIndicator.querySelector(".status-icon")
             : null;
 
+    const statusLabel = turnIndicator ? turnIndicator.querySelector(".status-label") : null;
+    if (statusLabel) statusLabel.textContent = gameMode === "solo" ? "Speeltijd" : "is aan de beurt";
+
     const activePlayer =
         currentPlayer === 1
             ? playerBlue
@@ -578,7 +411,7 @@ function updateGameHud() {
 
     if (playerText) {
         playerText.textContent =
-            activePlayer || "Speler";
+            gameMode === "solo" ? formatSoloTime(soloElapsedSeconds) : activePlayer || "Speler";
     }
 
     if (statusIcon) {
@@ -631,7 +464,9 @@ function updateGameHud() {
     const remaining = getRemainingCellCount();
 
     if (remainingText) {
-        if (remaining === 0) {
+        if (gameMode === "solo") {
+            remainingText.textContent = soloCorrectAnswers + " goed · " + remaining + " open";
+        } else if (remaining === 0) {
             remainingText.textContent = "Bord vol";
         } else if (remaining <= 3) {
             remainingText.textContent =
@@ -651,10 +486,10 @@ function updateGameHud() {
             remaining > 0 && remaining <= 3
         );
     }
+    updateSoloStopButton();
 }
 
 function returnToStartScreen() {
-    abandonCurrentGameStats();
     gameOver = true;
     consecutivePasses = 0;
     lastPassingPlayer = null;
@@ -1257,7 +1092,9 @@ function removeDuplicateMedia(item, index, array) {
 }
 
 function hasReadableText(text) {
-    return /^[\p{L}\p{N}\s:'".,!?\-&()]+$/u.test(text);
+    return typeof text === "string" &&
+        /[\p{L}\p{N}]/u.test(text) &&
+        /^[\p{L}\p{M}\p{N}\p{Zs}\p{P}+=]+$/u.test(text);
 }
 
 
@@ -1275,6 +1112,7 @@ function buildLookupCaches() {
     const actorGenreSets = new Map();
     const actorAnswerTotals = new Map();
     const activeGenres = new Set();
+    const activeSoloGenres = new Set();
 
     const allowedGenres = new Set([
         "Actie",
@@ -1330,31 +1168,34 @@ function buildLookupCaches() {
             );
         });
 
-        /*
-        TV-series is een eigen bordcategorie en geen genre.
-        Iedere serie telt daarom als antwoord voor acteur × TV-series,
-        ongeacht het genre van die serie.
-        */
-        if (item.media_type === "tv") {
-            activeGenres.add(TV_SERIES_CATEGORY);
-
-            uniqueActors.forEach(function (actorName, normalizedActor) {
-                const tvKey =
-                    normalizedActor +
-                    "|" +
-                    normalizeText(TV_SERIES_CATEGORY);
-
-                if (!actorGenreMediaIndex.has(tvKey)) {
-                    actorGenreMediaIndex.set(tvKey, []);
-                }
-
-                actorGenreMediaIndex.get(tvKey).push(item);
-            });
-        }
-
         const usableGenres = item.genre.filter(function (genre) {
             return allowedGenres.has(genre);
         });
+
+        /* Alle overige databasegenres worden uitsluitend voor solo
+           geïndexeerd, zodat de bestaande multiplayerselectie intact blijft. */
+        item.genre.forEach(function (genre) {
+            if (!genre || genre === "TV Movie" || genre === "TV Film") {
+                return;
+            }
+
+            activeSoloGenres.add(genre);
+
+            if (allowedGenres.has(genre)) {
+                return;
+            }
+
+            uniqueActors.forEach(function (_actorName, normalizedActor) {
+                const key = normalizedActor + "|" + normalizeText(genre);
+
+                if (!actorGenreMediaIndex.has(key)) {
+                    actorGenreMediaIndex.set(key, []);
+                }
+
+                actorGenreMediaIndex.get(key).push(item);
+            });
+        });
+
 
         usableGenres.forEach(function (genre) {
             activeGenres.add(genre);
@@ -1467,6 +1308,7 @@ function buildLookupCaches() {
     allGenresCache = Array.from(activeGenres);
 
     allCategoriesCache = [...allGenresCache];
+    allSoloCategoriesCache = Array.from(activeSoloGenres);
 
     const hasPlayedTogetherCategory =
         eligibleActorsCache.some(function (actor) {
@@ -1475,6 +1317,7 @@ function buildLookupCaches() {
 
     if (hasPlayedTogetherCategory) {
         allCategoriesCache.push(PLAYED_TOGETHER_CATEGORY);
+        allSoloCategoriesCache.push(PLAYED_TOGETHER_CATEGORY);
     }
 
     console.log(
@@ -1956,16 +1799,36 @@ function getActorVarietyTieBreaker() {
    SPEL STARTEN
 ========================================= */
 
+function selectGameMode(mode) {
+    gameMode = mode === "solo" ? "solo" : "versus";
+
+    if (versusModeBtn) {
+        versusModeBtn.classList.toggle("selected", gameMode === "versus");
+        versusModeBtn.setAttribute("aria-pressed", String(gameMode === "versus"));
+    }
+    if (soloModeBtn) {
+        soloModeBtn.classList.toggle("selected", gameMode === "solo");
+        soloModeBtn.setAttribute("aria-pressed", String(gameMode === "solo"));
+    }
+
+    document.body.classList.toggle("solo-setup", gameMode === "solo");
+    startBtn.textContent = gameMode === "solo" ? "Start solo challenge" : "Start spel";
+}
+
+versusModeBtn.addEventListener("click", function () { selectGameMode("versus"); });
+soloModeBtn.addEventListener("click", function () { selectGameMode("solo"); });
+soloNewGameBtn.addEventListener("click", returnToStartScreen);
+
 startBtn.addEventListener("click", async function () {
     if (!databaseLoaded) {
         alert("De database is nog niet geladen.");
         return;
     }
 
-    playerBlue = playerBlueInput.value.trim();
-    playerOrange = playerOrangeInput.value.trim();
+    playerBlue = gameMode === "solo" ? "Jij" : playerBlueInput.value.trim();
+    playerOrange = gameMode === "solo" ? "" : playerOrangeInput.value.trim();
 
-    if (playerBlue === "" || playerOrange === "") {
+    if (gameMode === "versus" && (playerBlue === "" || playerOrange === "")) {
         alert("Vul beide spelersnamen in.");
         return;
     }
@@ -2094,51 +1957,48 @@ async function startGameWithLoadingScreen() {
             screenFrame.classList.add("cinema-board-prelight");
         }
 
+    if (gameScreen) {
+        gameScreen.classList.add("hidden");
+    }
+
+    document.body.classList.add("loading-active");
+    showLoadingScreen("De zaal loopt vol...", "audience");
+
+    await waitForPaint();
+    await delay(450);
+    setLoadingPhase("Popcorn wordt klaargezet...", "popcorn");
+
+    await delay(450);
+    setLoadingPhase("De projector wordt opgestart...", "projector");
+
+    await delay(350);
+    setLoadingPhase("Het speelbord wordt samengesteld...", "board");
+
+    await waitForPaint();
+
+    try {
+        startRound();
+
+        setLoadingPhase("De voorstelling kan beginnen!", "curtain");
+        playSound("curtains", { volume: 0.66 });
+        await delay(400);
+
+        hideLoadingScreen();
+        document.body.classList.remove("loading-active");
+        document.body.classList.add("game-active");
+
+        if (screenFrame) {
+            screenFrame.classList.remove("hidden");
+            screenFrame.classList.add("screen-reveal");
+
+            window.setTimeout(function () {
+                screenFrame.classList.remove("screen-reveal");
+            }, 650);
+        }
+
         if (gameScreen) {
             gameScreen.classList.remove("hidden");
         }
-
-        /* Korte donkere projectorpauze, maar zonder een los zwart rechthoekig vlak. */
-        await delay(350);
-
-        if (transitionLayer) {
-            transitionLayer.classList.add("projector-on");
-        }
-
-        /* Nu pas groeit het echte bord vanuit het donkere doek naar volledig beeld. */
-        if (screenFrame) {
-            screenFrame.classList.remove("cinema-board-prelight");
-            void screenFrame.offsetWidth;
-            screenFrame.classList.add("cinema-board-reveal-v6");
-        }
-
-        playSound("curtains", { volume: 0.28 });
-        await delay(1420);
-
-        document.body.classList.remove("cinema-transitioning");
-        document.body.classList.add("cinema-transition-settled");
-
-        if (transitionLayer) {
-            transitionLayer.classList.add("transition-finished");
-        }
-
-        window.setTimeout(function () {
-            document.body.classList.remove("cinema-transition-settled");
-
-            if (screenFrame) {
-                screenFrame.classList.remove(
-                    "cinema-board-reveal-v6",
-                    "cinema-board-prelight"
-                );
-            }
-
-            if (transitionLayer) {
-                transitionLayer.classList.remove(
-                    "projector-on",
-                    "transition-finished"
-                );
-            }
-        }, 750);
     } catch (error) {
         console.error("Het speelbord kon niet worden gemaakt:", error);
         document.body.classList.remove(
@@ -2279,6 +2139,15 @@ function startNewGameFromWinner() {
 }
 
 function startRound() {
+    stopSoloTimer();
+    soloRunId += 1;
+    soloClaimPending = false;
+    soloElapsedSeconds = 0;
+    soloCorrectAnswers = 0;
+    removeSoloAnswerReview();
+    soloOverlay.classList.add("hidden");
+    soloOverlay.classList.remove("show");
+    document.body.classList.toggle("solo-active", gameMode === "solo");
     currentPlayer = 1;
     selectedCell = null;
     gameOver = false;
@@ -2320,11 +2189,6 @@ function startRound() {
     animateTurnIndicator();
 
     createSmartGrid();
-
-    if (columns.length === 3 && rows.length === 3 && cells.length === 9) {
-        trackGameStarted();
-    }
-
     updateGameHud();
 }
 
@@ -2355,6 +2219,18 @@ function getCategoryImage(category) {
         "speelde samen met...": "speelde-samen-met.png"
     };
 
+    if (gameMode === "solo") {
+        const soloImages = {
+            "animatie": "animatie.png", "animation": "animatie.png", "anime": "animatie.png",
+            "familie": "familie.png", "family": "familie.png",
+            "muziek": "muziek.png", "music": "muziek.png",
+            "misdaad": "misdaad.png", "crime": "misdaad.png",
+            "fantasie": "fantasie.png", "fantasy": "fantasie.png",
+            "historie": "historie.png", "geschiedenis": "historie.png", "history": "historie.png",
+            "thriller": "thriller-horror.png", "horror": "thriller-horror.png", "western": "western.png"
+        };
+        if (soloImages[normalizedCategory]) return soloImages[normalizedCategory];
+    }
     return categoryImages[normalizedCategory] || null;
 }
 
@@ -2976,6 +2852,7 @@ function shuffleArray(array) {
 function openAnswerPopup(cell) {
     if (
         gameOver ||
+        (gameMode === "solo" && (soloClaimPending || document.body.classList.contains("cinema-transitioning"))) ||
         cell.classList.contains("blue") ||
         cell.classList.contains("orange")
     ) {
@@ -3021,6 +2898,14 @@ function openAnswerPopup(cell) {
     popup.classList.toggle("player-blue", currentPlayer === 1);
     popup.classList.toggle("player-orange", currentPlayer === 2);
 
+    /*
+    Touch & feel: laat het antwoordpaneel meekleuren met de speler die aan zet is.
+    De MovieMind-goudaccenten blijven behouden; alleen de spelerskleur wisselt.
+    */
+    popup.classList.toggle("player-blue", currentPlayer === 1);
+    popup.classList.toggle("player-orange", currentPlayer === 2);
+
+    passBtn.classList.toggle("hidden", gameMode === "solo");
     popup.classList.remove("hidden");
     answerInput.focus();
 }
@@ -3325,10 +3210,14 @@ function submitAnswer() {
                     ? "Deze acteur staat niet in de MovieMind-database."
                     : "Deze film of serie staat niet in de MovieMind-database.",
             hint: "Dit antwoord kan daarom niet worden goedgekeurd.",
-            buttonText: "Oké, volgende speler",
+            buttonText: gameMode === "solo" ? "Verder spelen" : "Oké, volgende speler",
             onDismiss: function () {
-                closePopup();
-                switchPlayer();
+                if (gameMode === "solo") {
+                    handleSoloFailure();
+                } else {
+                    closePopup();
+                    switchPlayer();
+                }
             }
         });
         return;
@@ -3354,11 +3243,15 @@ function submitAnswer() {
                       " × " +
                       escapeHtml(categoryName) +
                       "</strong>.",
-            hint: "De beurt gaat naar de volgende speler.",
-            buttonText: "Oké, volgende speler",
+            hint: gameMode === "solo" ? "Probeer een ander antwoord." : "De beurt gaat naar de volgende speler.",
+            buttonText: gameMode === "solo" ? "Verder spelen" : "Oké, volgende speler",
             onDismiss: function () {
-                closePopup();
-                switchPlayer();
+                if (gameMode === "solo") {
+                    handleSoloFailure();
+                } else {
+                    closePopup();
+                    switchPlayer();
+                }
             }
         });
         return;
@@ -3373,10 +3266,14 @@ function submitAnswer() {
                     ? "Deze acteur is deze ronde al genoemd."
                     : "Deze film of serie is deze ronde al genoemd.",
             hint: "Ieder antwoord mag maar één keer worden gebruikt.",
-            buttonText: "Oké, volgende speler",
+            buttonText: gameMode === "solo" ? "Verder spelen" : "Oké, volgende speler",
             onDismiss: function () {
-                closePopup();
-                switchPlayer();
+                if (gameMode === "solo") {
+                    handleSoloFailure();
+                } else {
+                    closePopup();
+                    switchPlayer();
+                }
             }
         });
         return;
@@ -3485,12 +3382,6 @@ function checkMedia(title, rowIndex, columnIndex) {
 }
 
 function placeMedia(item) {
-    const targetCell = selectedCell;
-
-    if (!targetCell) {
-        return;
-    }
-
     let answerTitle = "";
 
     if (item.answer_type === "actor") {
@@ -3528,20 +3419,9 @@ function placeMedia(item) {
             ? playerBlue
             : playerOrange;
 
-    const selectedToken = claimingPlayer === 1
-        ? playerOneToken
-        : playerTwoToken;
-
-    consecutivePasses = 0;
-    lastPassingPlayer = null;
-
-    playSound("correct", { volume: 0.68 });
-    closePopup();
-
-    const finishClaim = function () {
-        targetCell.replaceChildren(
-            createClaimedCardForPlayer(answerTitle, ownerName, claimingPlayer)
-        );
+    selectedCell.replaceChildren(
+        createClaimedCard(answerTitle, ownerName)
+    );
 
         if (claimingPlayer === 1) {
             targetCell.classList.add("blue");
@@ -3554,7 +3434,10 @@ function placeMedia(item) {
         targetCell.classList.add("movie-placed");
 
         playSound("claim", { volume: 0.58 });
-        updateGameHud();
+    }, 120);
+
+    updateGameHud();
+    closePopup();
 
         const winner = checkWinner();
 
@@ -3568,138 +3451,7 @@ function placeMedia(item) {
             return;
         }
 
-        switchPlayer();
-    };
-
-    /*
-    Alleen film- en serie-antwoorden hebben een poster_path.
-    Bij acteurs-antwoorden of ontbrekende posters claimen we direct,
-    zodat de bestaande spelwerking altijd als fallback blijft werken.
-    */
-    if (
-        item.answer_type !== "actor" &&
-        item.poster_path
-    ) {
-        animatePosterToCell(
-            item,
-            targetCell,
-            selectedToken,
-            finishClaim
-        );
-    } else {
-        window.setTimeout(finishClaim, 120);
-    }
-}
-
-function createClaimedCardForPlayer(title, ownerName, playerNumber) {
-    const previousPlayer = currentPlayer;
-    currentPlayer = playerNumber;
-    const card = createClaimedCard(title, ownerName);
-    currentPlayer = previousPlayer;
-    return card;
-}
-
-function animatePosterToCell(item, targetCell, selectedToken, onComplete) {
-    const posterPath = String(item.poster_path || "").trim();
-
-    if (!posterPath) {
-        onComplete();
-        return;
-    }
-
-    const posterUrl = posterPath.startsWith("http")
-        ? posterPath
-        : "https://image.tmdb.org/t/p/w500" +
-          (posterPath.startsWith("/") ? posterPath : "/" + posterPath);
-
-    const tokenFilenames = {
-        projector: "projector-token.png",
-        clapperboard: "clapperboard-token.png",
-        "directors-chair": "directors-chair-token.png",
-        statuette: "statuette-token.png"
-    };
-
-    const overlay = document.createElement("div");
-    overlay.className = "poster-claim-overlay";
-
-    const posterFrame = document.createElement("div");
-    posterFrame.className = "poster-claim-frame";
-
-    const posterImage = document.createElement("img");
-    posterImage.className = "poster-claim-image";
-    posterImage.alt = "Poster van " + (item.title || "de gekozen titel");
-    posterImage.draggable = false;
-
-    const tokenImage = document.createElement("img");
-    tokenImage.className = "poster-claim-token";
-    tokenImage.src =
-        "images/tokens/" +
-        (tokenFilenames[selectedToken] || tokenFilenames.projector);
-    tokenImage.alt = "";
-    tokenImage.draggable = false;
-
-    posterFrame.appendChild(posterImage);
-    posterFrame.appendChild(tokenImage);
-    overlay.appendChild(posterFrame);
-    document.body.appendChild(overlay);
-
-    let completed = false;
-
-    const cleanupAndComplete = function () {
-        if (completed) {
-            return;
-        }
-
-        completed = true;
-        overlay.remove();
-        document.body.classList.remove("poster-claim-active");
-        onComplete();
-    };
-
-    posterImage.addEventListener("error", cleanupAndComplete, { once: true });
-
-    posterImage.addEventListener("load", function () {
-        document.body.classList.add("poster-claim-active");
-
-        requestAnimationFrame(function () {
-            overlay.classList.add("is-visible");
-            posterFrame.classList.add("is-presented");
-        });
-
-        window.setTimeout(function () {
-            if (completed || !targetCell.isConnected) {
-                cleanupAndComplete();
-                return;
-            }
-
-            const startRect = posterFrame.getBoundingClientRect();
-            const targetRect = targetCell.getBoundingClientRect();
-
-            const targetX =
-                targetRect.left + targetRect.width / 2 -
-                (startRect.left + startRect.width / 2);
-            const targetY =
-                targetRect.top + targetRect.height / 2 -
-                (startRect.top + startRect.height / 2);
-
-            const scaleX = Math.max(0.18, targetRect.width / startRect.width * 0.58);
-            const scaleY = Math.max(0.18, targetRect.height / startRect.height * 0.72);
-            const targetScale = Math.min(scaleX, scaleY, 0.48);
-
-            posterFrame.style.setProperty("--poster-target-x", targetX + "px");
-            posterFrame.style.setProperty("--poster-target-y", targetY + "px");
-            posterFrame.style.setProperty("--poster-target-scale", String(targetScale));
-            posterFrame.classList.add("is-flying");
-
-            window.setTimeout(function () {
-                posterFrame.classList.add("is-morphing");
-            }, 430);
-
-            window.setTimeout(cleanupAndComplete, 720);
-        }, 520);
-    }, { once: true });
-
-    posterImage.src = posterUrl;
+    switchPlayer();
 }
 
 function createClaimedCard(title, ownerName) {
@@ -3767,7 +3519,7 @@ function createClaimedCard(title, ownerName) {
 passBtn.addEventListener(
     "click",
     function () {
-        if (gameOver) {
+        if (gameOver || gameMode === "solo") {
             return;
         }
 
@@ -5044,3 +4796,517 @@ function normalizeText(text) {
             ""
         );
 }
+
+function formatSoloTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return minutes + ":" + String(remainder).padStart(2, "0");
+}
+
+function startSoloTimer() {
+    stopSoloTimer();
+    updateGameHud();
+
+    soloTimerId = window.setInterval(function () {
+        if (gameOver || gameMode !== "solo") {
+            stopSoloTimer();
+            return;
+        }
+
+        soloElapsedSeconds += 1;
+        updateGameHud();
+    }, 1000);
+}
+
+function stopSoloTimer() {
+    if (soloTimerId !== null) {
+        window.clearInterval(soloTimerId);
+        soloTimerId = null;
+    }
+}
+
+function handleSoloFailure() {
+    closePopup();
+    updateGameHud();
+}
+
+function removeSoloAnswerReview() {
+    const existing = document.getElementById("soloAnswerReview");
+    if (existing) existing.remove();
+}
+
+function renderSoloAnswerReview() {
+    if (!soloOverlay || !gameOver || gameMode !== "solo") return;
+
+    removeSoloAnswerReview();
+
+    const openCells = cells.filter(function (cell) {
+        return !isOccupiedCell(cell);
+    });
+
+    const review = document.createElement("div");
+    review.id = "soloAnswerReview";
+
+    Object.assign(review.style, {
+        width: "min(760px, 92vw)",
+        maxHeight: "48vh",
+        overflowY: "auto",
+        margin: "18px auto 72px",
+        padding: "16px 18px",
+        borderRadius: "14px",
+        border: "1px solid rgba(212,175,55,.35)",
+        background: "rgba(0,0,0,.28)",
+        textAlign: "left",
+        color: "#f6ecd0"
+    });
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Mogelijke antwoorden voor de open vakjes";
+    heading.style.margin = "0 0 12px";
+    heading.style.color = "#f4dc8a";
+    review.appendChild(heading);
+
+    if (openCells.length === 0) {
+        const done = document.createElement("p");
+        done.textContent = "Je hebt alle 25 vakjes uitgespeeld.";
+        review.appendChild(done);
+    } else {
+        openCells.forEach(function (cell) {
+            const rowIndex = Number(cell.dataset.row);
+            const columnIndex = Number(cell.dataset.column);
+            const actor = columns[columnIndex];
+            const category = rows[rowIndex];
+            const answers = getPassAnswerExamples(cell, 4);
+
+            const item = document.createElement("div");
+            item.style.padding = "9px 0";
+            item.style.borderBottom = "1px solid rgba(255,255,255,.08)";
+
+            const title = document.createElement("strong");
+            title.textContent =
+                actor + " × " + String(category).replace(/\.\.\.$/, "");
+            title.style.color = "#f4dc8a";
+
+            const examples = document.createElement("div");
+            examples.style.marginTop = "4px";
+            examples.style.opacity = ".95";
+            examples.style.color = "#f6ecd0";
+            examples.textContent = answers.length
+                ? answers.join(" · ")
+                : "Geen voorbeeldantwoord gevonden.";
+
+            item.appendChild(title);
+            item.appendChild(examples);
+            review.appendChild(item);
+        });
+    }
+
+    soloOverlay.appendChild(review);
+}
+
+function getAllSoloCategories() {
+    return [...allSoloCategoriesCache];
+}
+
+function getPassAnswerExamples(cell, limit = 6) {
+    if (!cell || gameMode !== "solo" || !gameOver) return [];
+
+    const rowIndex = Number(cell.dataset.row);
+    const columnIndex = Number(cell.dataset.column);
+    const actor = columns[columnIndex];
+    const category = rows[rowIndex];
+    const normalizedActor = normalizeText(actor);
+
+    if (category === PLAYED_TOGETHER_CATEGORY) {
+        const answers = [];
+
+        database.forEach(function (item) {
+            const hasRequiredActor = item.actors.some(function (name) {
+                return normalizeText(name) === normalizedActor;
+            });
+
+            if (!hasRequiredActor) return;
+
+            item.actors.forEach(function (name) {
+                if (normalizeText(name) !== normalizedActor) {
+                    answers.push(name);
+                }
+            });
+        });
+
+        return [...new Set(answers)]
+            .sort(function (a, b) {
+                return a.localeCompare(b, "nl", { sensitivity: "base" });
+            })
+            .slice(0, limit);
+    }
+
+    return database
+        .filter(function (item) {
+            const actorMatches = item.actors.some(function (name) {
+                return normalizeText(name) === normalizedActor;
+            });
+
+            const categoryMatches =
+                category === TV_SERIES_CATEGORY
+                    ? item.media_type === "tv"
+                    : item.genre.some(function (genre) {
+                        return normalizeText(genre) === normalizeText(category);
+                    });
+
+            return actorMatches && categoryMatches;
+        })
+        .map(function (item) {
+            return item.title;
+        })
+        .filter(function (title, index, array) {
+            return array.findIndex(function (otherTitle) {
+                return normalizeText(otherTitle) === normalizeText(title);
+            }) === index;
+        })
+        .slice(0, limit);
+}
+
+function createSoloGrid() {
+    board.innerHTML = "";
+    cells = [];
+
+    const soloGrid = findSoloGrid();
+
+    if (!soloGrid) {
+        winnerMessage.textContent = "Er kon geen speelbaar solo-bord worden gemaakt.";
+        newRoundBtn.classList.remove("hidden");
+        return;
+    }
+
+    columns = soloGrid.actors;
+    rows = soloGrid.genres;
+    rememberGridActors(columns);
+
+    const corner = document.createElement("div");
+    corner.className = "corner";
+    board.appendChild(corner);
+
+    columns.forEach(function (actor) {
+        board.appendChild(createActorHeader(actor));
+    });
+
+    rows.forEach(function (genre, rowIndex) {
+        board.appendChild(createCategorySide(genre));
+
+        columns.forEach(function (actor, columnIndex) {
+            const cell = document.createElement("button");
+            cell.className = "cell";
+            cell.dataset.row = rowIndex;
+            cell.dataset.column = columnIndex;
+            cell.title = actor + " + " + genre;
+            cell.addEventListener("click", function () {
+                openAnswerPopup(cell);
+            });
+            cells.push(cell);
+            board.appendChild(cell);
+        });
+    });
+}
+
+function findSoloGrid() {
+    const profile = getDifficultyProfile();
+    /*
+    In de solomodus mogen alle MovieMind-categorieën verschijnen.
+    Een vakje hoeft hier niet aan de strenge multiplayer-marge van
+    minimaal twee antwoorden te voldoen: één geldig antwoord maakt
+    het vakje al speelbaar.
+    */
+    const allCategories = getAllSoloCategories();
+    const easyCategories = new Set([
+        "Actie",
+        "Avontuur",
+        "Drama",
+        "Komedie",
+        "Romantiek",
+        "Familie",
+        "Muziek",
+        "TV-series",
+        "Anime",
+        "Animatie",
+        "Animation",
+        "Family",
+        "Music"
+    ]);
+    const categories = difficulty === "moviehouse"
+        ? allCategories.filter(function (category) {
+            return easyCategories.has(category);
+        })
+        : allCategories;
+    const actors = getEligibleActors();
+
+    if (categories.length < 5) {
+        categories.splice(0, categories.length, ...allCategories);
+    }
+
+    const soloAnswerCounts = new Map(actors.map(function (actor) {
+        return [actor, new Map(categories.map(function (genre) {
+            return [genre, getAnswerCount(actor, genre)];
+        }))];
+    }));
+    const soloMinimums = new Map(categories.map(function (genre) {
+        return [genre, getAnswerLimits(genre, profile).minimum];
+    }));
+
+    const categoryCombinations = [];
+    for (let first = 0; first < categories.length - 4; first++) {
+        for (let second = first + 1; second < categories.length - 3; second++) {
+            for (let third = second + 1; third < categories.length - 2; third++) {
+                for (let fourth = third + 1; fourth < categories.length - 1; fourth++) {
+                    for (let fifth = fourth + 1; fifth < categories.length; fifth++) {
+                        categoryCombinations.push([
+                            categories[first],
+                            categories[second],
+                            categories[third],
+                            categories[fourth],
+                            categories[fifth]
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+
+    const playableCombinations = categoryCombinations.map(function (genres) {
+        const possibleActors = actors.filter(function (actor) {
+            return genres.every(function (genre) {
+                const profileMinimum = soloMinimums.get(genre);
+                const minimum = difficulty === "moviehouse"
+                    ? Math.max(3, Math.floor(profileMinimum / 2))
+                    : Math.max(1, Math.floor(profileMinimum / 2));
+                return soloAnswerCounts.get(actor).get(genre) >= minimum;
+            });
+        });
+
+        const coverage = possibleActors.reduce(function (total, actor) {
+            return total + genres.reduce(function (subtotal, genre) {
+                return subtotal + soloAnswerCounts.get(actor).get(genre);
+            }, 0);
+        }, 0);
+
+        return {
+            genres: genres,
+            possibleActors: possibleActors,
+            coverage: coverage,
+            variation: Math.random()
+        };
+    }).filter(function (candidate) {
+        return candidate.possibleActors.length >= 5;
+    });
+
+    playableCombinations.sort(function (first, second) {
+        if (second.possibleActors.length !== first.possibleActors.length) {
+            return second.possibleActors.length - first.possibleActors.length;
+        }
+
+        if (second.coverage !== first.coverage) {
+            return second.coverage - first.coverage;
+        }
+
+        return first.variation - second.variation;
+    });
+
+    // Keep the existing category ranking and difficulty thresholds. Reject
+    // combinations that cannot provide a different answer for every square.
+    const answerOptionsCache = new Map();
+    const getAnswerOptions = function (actor, genre) {
+        const cacheKey = JSON.stringify([actor, genre]);
+        if (!answerOptionsCache.has(cacheKey)) {
+            const answerKeys = getMatchingAnswers(actor, genre).map(function (answer) {
+                return genre === PLAYED_TOGETHER_CATEGORY
+                    ? "actor:" + normalizeText(answer.name)
+                    : answer.game_key;
+            });
+            answerOptionsCache.set(cacheKey, [...new Set(answerKeys)]);
+        }
+        return answerOptionsCache.get(cacheKey);
+    };
+
+    for (const chosenCombination of playableCombinations) {
+        const targetPerCell = profile.normal.target;
+
+        const rankedActors = chosenCombination.possibleActors
+            .filter(function (actor) {
+                return hasDistinctSoloAnswers(chosenCombination.genres.map(function (genre) {
+                    return getAnswerOptions(actor, genre);
+                }));
+            })
+            .map(function (actor) {
+                const distance = chosenCombination.genres.reduce(function (sum, genre) {
+                    return sum + Math.abs(soloAnswerCounts.get(actor).get(genre) - targetPerCell);
+                }, 0);
+
+                return {
+                    actor: actor,
+                    distance: distance,
+                    repeatPenalty: getActorRepeatPenalty(actor),
+                    variation: Math.random()
+                };
+            })
+            .sort(function (first, second) {
+                if (first.repeatPenalty !== second.repeatPenalty) {
+                    return first.repeatPenalty - second.repeatPenalty;
+                }
+
+                if (first.distance !== second.distance) {
+                    return first.distance - second.distance;
+                }
+
+                return first.variation - second.variation;
+            });
+
+        /*
+        Neem niet telkens exact de vijf technisch "beste" acteurs.
+        Kies willekeurig uit een kleine, kwalitatief goede voorselectie,
+        waarbij recent gebruikte acteurs automatisch achteraan komen.
+        */
+        if (rankedActors.length < 5) continue;
+
+        const actorPoolSize = Math.min(
+            Math.max(8, Math.ceil(rankedActors.length * 0.35)),
+            rankedActors.length,
+            14
+        );
+
+        const actorPool = rankedActors
+            .slice(0, actorPoolSize)
+            .map(function (entry) {
+                return entry.actor;
+            });
+
+        const chosenActors = findSolvableSoloActors(
+            shuffleArray(actorPool),
+            chosenCombination.genres,
+            getAnswerOptions
+        );
+
+        if (!chosenActors) continue;
+
+        return {
+            actors: shuffleArray(chosenActors),
+            genres: shuffleArray(chosenCombination.genres)
+        };
+    }
+
+    return null;
+}
+
+function updateSoloStopButton() {
+    const button = document.getElementById("soloStopBtn");
+    if (!button) return;
+    const claimed = cells.filter(isOccupiedCell).length;
+    button.classList.toggle("hidden", gameMode !== "solo" || gameOver);
+    button.disabled = gameMode !== "solo" || gameOver || soloClaimPending || claimed < SOLO_MIN_FILLED_TO_STOP;
+    button.textContent = claimed < SOLO_MIN_FILLED_TO_STOP
+        ? "Stoppen vanaf 15 vakjes (" + claimed + "/15)"
+        : "Stoppen";
+}
+
+function ensureSoloStopButton() {
+    let button = document.getElementById("soloStopBtn");
+    if (!button) {
+        button = document.createElement("button");
+        button.id = "soloStopBtn";
+        button.type = "button";
+        button.setAttribute("aria-label", "Solo spel stoppen vanaf 15 ingevulde vakjes");
+        button.addEventListener("click", function () {
+            if (gameMode !== "solo" || gameOver || soloClaimPending ||
+                cells.filter(isOccupiedCell).length < SOLO_MIN_FILLED_TO_STOP) return;
+            if (window.confirm("Solo stoppen? Daarna zie je je resultaat en voorbeeldantwoorden voor de open vakjes.")) {
+                finishSoloGame();
+            }
+        });
+        document.body.appendChild(button);
+    }
+    updateSoloStopButton();
+    return button;
+}
+
+function finishSoloGame() {
+    const claimed = cells.filter(isOccupiedCell).length;
+    if (gameMode !== "solo" || gameOver || soloClaimPending || claimed < SOLO_MIN_FILLED_TO_STOP) return;
+    stopSoloTimer();
+    closePopup();
+    gameOver = true;
+    playSound("winner", { volume: 0.78 });
+    soloOverlayText.textContent = soloCorrectAnswers + " goede antwoorden in " + formatSoloTime(soloElapsedSeconds);
+    soloCorrectCount.textContent = String(soloCorrectAnswers);
+    soloClaimedCount.textContent = claimed + "/25";
+    soloOverlay.classList.remove("hidden", "show");
+    void soloOverlay.offsetWidth;
+    soloOverlay.classList.add("show");
+    updateSoloStopButton();
+    renderSoloAnswerReview();
+    soloNewGameBtn.classList.remove("hidden");
+    newRoundBtn.classList.add("hidden");
+}
+
+
+// Maximum bipartite matching: a square must own a unique answer key.
+// Reassignment avoids the false negatives caused by a greedy first choice.
+function hasDistinctSoloAnswers(answerOptions) {
+    const ordered = [...answerOptions].sort(function (first, second) {
+        return first.length - second.length;
+    });
+    const answerOwners = new Map();
+
+    const assign = function (square, visited) {
+        for (const answerKey of ordered[square]) {
+            if (visited.has(answerKey)) continue;
+            visited.add(answerKey);
+            if (!answerOwners.has(answerKey) ||
+                assign(answerOwners.get(answerKey), visited)) {
+                answerOwners.set(answerKey, square);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    return ordered.every(function (_options, square) {
+        return assign(square, new Set());
+    });
+}
+
+function findSolvableSoloActors(actorPool, genres, getAnswerOptions) {
+    const chosen = [];
+    const search = function (start, options) {
+        if (chosen.length === 5) return [...chosen];
+        const remaining = 5 - chosen.length;
+        for (let index = start; index <= actorPool.length - remaining; index++) {
+            const actor = actorPool[index];
+            const nextOptions = options.concat(genres.map(function (genre) {
+                return getAnswerOptions(actor, genre);
+            }));
+            if (!hasDistinctSoloAnswers(nextOptions)) continue;
+            chosen.push(actor);
+            const result = search(index + 1, nextOptions);
+            if (result) return result;
+            chosen.pop();
+        }
+        return null;
+    };
+    return search(0, []);
+}
+
+// Only shrink overflowing start controls; keep their natural desktop size otherwise.
+function fitStartScreenControls() {
+    const controls = document.querySelector(".start-screen-controls");
+    if (!controls || !startScreen.clientHeight) return;
+    const style = getComputedStyle(startScreen);
+    const startRect = startScreen.getBoundingClientRect();
+    const screenRect = startScreen.closest(".screen-content").getBoundingClientRect();
+    const visibleHeight = Math.min(startScreen.clientHeight, screenRect.bottom - startRect.top, window.innerHeight - startRect.top);
+    const available = visibleHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    const scale = Math.min(1, Math.max(0, available - 2) / controls.offsetHeight);
+    controls.style.setProperty("--start-controls-scale", String(scale));
+}
+const startControlsObserver = new ResizeObserver(fitStartScreenControls);
+startControlsObserver.observe(startScreen);
+startControlsObserver.observe(document.querySelector(".start-screen-controls"));
+window.addEventListener("resize", fitStartScreenControls);

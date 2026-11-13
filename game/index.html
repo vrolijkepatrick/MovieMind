@@ -5,9 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MovieMind</title>
-    <link rel="stylesheet" href="style.css?v=4.1">
-</head>
-
+<link rel="stylesheet" href="style.css?v=4.1">
 <body>
 
     <main class="cinema-shell">
@@ -22,7 +20,17 @@
 
             <div id="startScreen">
 
+                <div class="start-screen-controls">
                 <h2>Nieuwe wedstrijd</h2>
+
+                <div class="game-mode-picker" role="group" aria-label="Kies spelmodus">
+                    <button id="versusModeBtn" class="game-mode-btn selected" type="button" aria-pressed="true">
+                        🎬 Tegen elkaar
+                    </button>
+                    <button id="soloModeBtn" class="game-mode-btn" type="button" aria-pressed="false">
+                        ⏱ Alleen spelen
+                    </button>
+                </div>
 
                 <div class="player-input-grid">
                     <div class="player-setup player-setup-one">
@@ -135,6 +143,8 @@
                     <button id="developerToggleBtn" type="button">🛠 Developer Mode</button>
                 </div>
 
+                </div><!-- .start-screen-controls -->
+
                 <div id="developerPanel" class="developerPanel hidden">
 
                     <h3>🛠 MovieMind Developer Mode</h3>
@@ -230,6 +240,32 @@
                                 </div>
                             </div>
                             <button id="drawNewGameBtn" class="draw-new-game-btn" type="button">Nieuwe game</button>
+                        </div>
+                    </div>
+
+                    <div id="soloOverlay" class="winner-overlay hidden" aria-live="polite">
+                        <div class="winner-spotlight winner-spotlight-left" aria-hidden="true"></div>
+                        <div class="winner-spotlight winner-spotlight-right" aria-hidden="true"></div>
+
+                        <div class="winner-overlay-card solo-overlay-card" role="dialog" aria-modal="true" aria-labelledby="soloOverlayText">
+                            <div class="winner-kicker">De voorstelling is afgelopen</div>
+                            <div class="winner-award" aria-hidden="true">★</div>
+                            <div class="winner-divider" aria-hidden="true"></div>
+                            <div id="soloOverlayText" class="winner-overlay-text">Soloscore</div>
+                            <div class="winner-overlay-subtitle">MovieMind solo challenge</div>
+
+                            <div class="winner-stats">
+                                <div class="winner-stat">
+                                    <span class="winner-stat-label">Goede antwoorden</span>
+                                    <strong id="soloCorrectCount">0</strong>
+                                </div>
+                                <div class="winner-stat">
+                                    <span class="winner-stat-label">Bord</span>
+                                    <strong id="soloClaimedCount">0/25</strong>
+                                </div>
+                            </div>
+
+                            <button id="soloNewGameBtn" class="winner-new-game-btn" type="button">Nieuwe game</button>
                         </div>
                     </div>
 
@@ -347,6 +383,6 @@
 
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=3.3"></script>
 </body>
 </html>
