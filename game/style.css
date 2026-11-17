@@ -1175,59 +1175,6 @@ body.game-active .board {
     animation: popupPanelEnter 0.24s ease both;
 }
 
-/* =========================================================
-   TOUCH & FEEL – ANTWOORDPANEEL IN KLEUR VAN ACTIEVE SPELER
-   Blauw = speler 1, warm rood/oranje = speler 2.
-   Goud blijft de vaste MovieMind-accentkleur.
-========================================================= */
-
-.popup.player-blue {
-    background:
-        radial-gradient(circle at 50% 45%, rgba(23, 111, 159, 0.24), transparent 37%),
-        rgba(3, 7, 12, 0.78);
-}
-
-.popup.player-blue .popup-box {
-    background:
-        linear-gradient(180deg, rgba(224, 244, 255, 0.075), transparent 22%),
-        radial-gradient(circle at 50% 0%, rgba(58, 155, 210, 0.16), transparent 38%),
-        linear-gradient(145deg, #176f9f 0%, #114c70 54%, #08283d 100%);
-    box-shadow:
-        inset 0 0 0 2px rgba(5, 33, 49, 0.94),
-        inset 0 0 0 4px rgba(226, 184, 84, 0.30),
-        inset 0 -22px 34px rgba(2, 18, 29, 0.28),
-        0 24px 70px rgba(0, 0, 0, 0.72),
-        0 0 38px rgba(35, 124, 175, 0.34);
-}
-
-.popup.player-blue .popup-film-emblem {
-    background:
-        radial-gradient(circle at 50% 35%, #278fc6 0 36%, #145b83 66%, #08283d 100%);
-    box-shadow:
-        inset 0 0 0 2px rgba(5, 33, 49, 0.92),
-        inset 0 0 0 4px rgba(225, 185, 89, 0.25),
-        0 8px 18px rgba(0, 0, 0, 0.48),
-        0 0 20px rgba(58, 155, 210, 0.24);
-}
-
-.popup.player-blue .popup-question-hint {
-    color: #d9e9ef;
-}
-
-.popup.player-orange {
-    background:
-        radial-gradient(circle at 50% 45%, rgba(141, 34, 29, 0.24), transparent 37%),
-        rgba(6, 2, 2, 0.76);
-}
-
-.popup.player-orange .popup-box {
-    background:
-        linear-gradient(180deg, rgba(255, 239, 184, 0.075), transparent 22%),
-        radial-gradient(circle at 50% 0%, rgba(206, 151, 54, 0.13), transparent 38%),
-        linear-gradient(145deg, #7a1f1e 0%, #591313 54%, #330909 100%);
-}
-
-
 .popup-box::before,
 .popup-box::after {
     content: "";
@@ -4333,207 +4280,215 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
 .draw-new-game-btn { display:block; width:58%; min-height:clamp(31px,2.65vw,48px); margin:5% auto 0; border:1px solid #d4a13e; border-radius:9px; background:linear-gradient(180deg,#8a211f 0%,#651112 58%,#3b0809 100%); color:#f7d985; font-family:Georgia,"Times New Roman",serif; font-size:clamp(8px,.72vw,14px); font-weight:800; letter-spacing:.09em; text-transform:uppercase; box-shadow:inset 0 0 0 1px rgba(255,225,151,.16),0 6px 13px rgba(0,0,0,.34); }
 .draw-new-game-btn:hover { transform:translateY(-2px); filter:brightness(1.08); border-color:#f3cf71; }
 
-
 /* =========================================================
-   MOVIEMIND – MOBILE V4 CLEAN
-   Eén schone mobiele laag bovenop de originele desktop-CSS.
-   Geen V2/V3/V3.1/V3.2 stapeling.
+   MOVIEMIND – MOBILE V2
+   Definitieve mobiele override op basis van echte iPhone-test.
+   Desktop blijft onaangetast.
 ========================================================= */
 
-/* -------------------------------
-   PORTRAIT – STARTSCHERM
--------------------------------- */
 @media (max-width: 760px) and (orientation: portrait) {
     html,
     body {
         width: 100%;
         min-height: 100%;
         margin: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
         background: #050000;
     }
 
     .cinema-shell {
-        position: relative;
-        inset: auto;
-        width: 100vw;
-        height: 100svh;
-        min-height: 700px;
-        margin: 0;
-        overflow: hidden;
-        background:
-            url("images/cinema-background-v1.png")
-            center top / auto 100%
-            no-repeat;
+        position: relative !important;
+        inset: auto !important;
+        width: 100vw !important;
+        height: 100svh !important;
+        min-height: 700px !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background-image: url("images/cinema-background-v1.png") !important;
+        background-size: auto 100% !important;
+        background-position: center top !important;
+        background-repeat: no-repeat !important;
     }
 
-    body:not(.game-active) .screen-content {
-        left: 6%;
-        top: 22%;
-        width: 88%;
-        height: 45%;
-        overflow: hidden;
-    }
-
-    body:not(.game-active) .brand-block {
-        height: 15%;
-        padding-top: 1%;
-    }
-
-    body:not(.game-active) .brand-block h1 {
-        font-size: clamp(27px, 8.8vw, 38px);
-        line-height: .98;
-    }
-
-    body:not(.game-active) .brand-line {
-        width: 62%;
-        margin-top: .8%;
-        margin-bottom: .2%;
-    }
-
-    body:not(.game-active) #startScreen {
-        width: 96%;
-        height: 85%;
-        margin: 0 auto;
-        padding: 0 2.2%;
-        overflow: hidden;
-    }
-
-    body:not(.game-active) .player-input-grid {
-        grid-template-columns: 1fr;
-        gap: 3px;
-        transform: none;
-    }
-
-    body:not(.game-active) .player-field {
-        grid-template-columns: 72px minmax(0, 1fr);
-        gap: 7px;
-    }
-
-    body:not(.game-active) .player-field span {
-        font-size: 10px;
-    }
-
-    body:not(.game-active) .player-avatar {
-        width: 12px;
-        height: 12px;
-        margin-right: .2em;
-    }
-
-    body:not(.game-active) .player-field input {
-        height: 29px;
-        padding: 0 8px;
-        font-size: 11px;
-        border-radius: 7px;
-    }
-
-    body:not(.game-active) .token-picker {
-        margin-top: 2px;
-    }
-
-    body:not(.game-active) .token-picker legend {
-        margin-bottom: 1px;
-        font-size: 6px;
-    }
-
-    body:not(.game-active) .token-options {
-        gap: 5px;
-    }
-
-    body:not(.game-active) .token-option {
-        height: 28px;
-        min-height: 28px;
-        padding: 1px;
-        border-radius: 6px;
-    }
-
-    body:not(.game-active) .token-option img {
-        width: 88%;
-        height: 88%;
-    }
-
-    body:not(.game-active) .difficulty-section {
-        margin-top: 4px;
-    }
-
-    body:not(.game-active) .difficulty-title {
-        margin: 0 0 3px;
-        font-size: 11px;
-    }
-
-    body:not(.game-active) .difficulty-grid {
-        gap: 4px;
-    }
-
-    body:not(.game-active) .difficulty-card {
-        height: 61px;
-        min-height: 61px;
-        padding: 5px 2px;
-    }
-
-    body:not(.game-active) .difficulty-name {
-        margin-top: 0;
-        font-size: 9px;
-    }
-
-    body:not(.game-active) .difficulty-description {
-        width: 94%;
-        margin-top: 4px;
-        font-size: 6.5px;
-        line-height: 1.08;
-    }
-
-    body:not(.game-active) .difficulty-card.selected::after {
-        font-size: 4.5px;
-    }
-
-    body:not(.game-active) .selected-difficulty-summary {
-        margin-top: 3px;
-        font-size: 8px;
-        line-height: 1;
-    }
-
-    body:not(.game-active) #startBtn {
-        position: static;
-        width: 68%;
-        height: 30px;
-        margin: 4px auto 0;
-        font-size: 10px;
-        transform: none;
-    }
-
-    body:not(.game-active) .developerToggleRow {
-        margin-top: 2px;
-    }
-
-    body:not(.game-active) #developerToggleBtn {
-        padding: 2px 7px;
-        font-size: 6px;
-    }
-
+    /* Het projectiedoek wordt in portrait bewust veel groter. */
+    .screen-content,
     body.game-active .screen-content {
-        left: 3%;
-        top: 16%;
-        width: 94%;
-        height: 62%;
-        overflow: visible;
+        position: absolute !important;
+        left: 4vw !important;
+        top: 14.5svh !important;
+        width: 92vw !important;
+        height: 59svh !important;
+        min-height: 430px !important;
+        overflow: hidden !important;
+        padding: 0 !important;
     }
 
-    body.game-active .screen-frame {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
+    /* ---------------- STARTSCHERM ---------------- */
+    .brand-block {
+        height: auto !important;
+        padding: 10px 0 5px !important;
     }
 
-    body.game-active #gameScreen {
-        position: relative;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        padding: 0;
+    .brand-block h1 {
+        font-size: clamp(30px, 10.5vw, 43px) !important;
+        line-height: 1 !important;
+    }
+
+    .brand-line {
+        width: 68% !important;
+        margin: 5px auto 2px !important;
+    }
+
+    #startScreen {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 4px 14px 12px !important;
+        overflow: visible !important;
+    }
+
+    .player-input-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        transform: none !important;
+    }
+
+    .player-setup {
+        min-width: 0 !important;
+    }
+
+    .player-field {
+        display: grid !important;
+        grid-template-columns: 82px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .player-field span {
+        font-size: 12px !important;
+    }
+
+    .player-avatar {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .player-field input {
+        height: 36px !important;
+        padding: 0 10px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+    }
+
+    .token-picker {
+        margin-top: 4px !important;
+        padding: 0 !important;
+    }
+
+    .token-picker legend {
+        margin-bottom: 3px !important;
+        font-size: 8px !important;
+    }
+
+    .token-options {
+        gap: 6px !important;
+        justify-content: center !important;
+    }
+
+    .token-option {
+        width: 44px !important;
+        height: 38px !important;
+        min-width: 44px !important;
+        min-height: 38px !important;
+    }
+
+    .token-option img {
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+
+    .difficulty-section {
+        margin-top: 10px !important;
+    }
+
+    .difficulty-title {
+        margin: 0 0 6px !important;
+        font-size: 13px !important;
+    }
+
+    .difficulty-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+    }
+
+    .difficulty-card {
+        height: 76px !important;
+        min-height: 76px !important;
+        padding: 8px 3px !important;
+        border-radius: 7px !important;
+    }
+
+    .difficulty-name {
+        margin-top: 0 !important;
+        font-size: clamp(10px, 3.25vw, 13px) !important;
+    }
+
+    .difficulty-description {
+        width: 96% !important;
+        margin-top: 6px !important;
+        font-size: clamp(7px, 2.25vw, 9px) !important;
+        line-height: 1.08 !important;
+    }
+
+    .difficulty-card.selected::after {
+        font-size: 5px !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: 6px !important;
+        font-size: 10px !important;
+    }
+
+    #startBtn {
+        width: 72% !important;
+        height: 40px !important;
+        margin-top: 5px !important;
+        font-size: 13px !important;
+    }
+
+    .developerToggleRow {
+        margin-top: 5px !important;
+    }
+
+    #developerToggleBtn {
+        padding: 4px 9px !important;
+        font-size: 7px !important;
+    }
+
+    /* ---------------- SPEELSCHERM ---------------- */
+    body.game-active .screen-content {
+        top: 12.5svh !important;
+        height: 64svh !important;
+        min-height: 470px !important;
+    }
+
+    body.game-active .screen-frame,
+    .screen-frame {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+    }
+
+    body.game-active #gameScreen,
+    #gameScreen {
+        position: relative !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
     }
 
     body.game-active .status.hud-ready,
@@ -4543,20 +4498,24 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
-        height: 9.5% !important;
-        min-height: 44px !important;
-        padding: 0 6px !important;
-        grid-template-columns:
-            minmax(0, .95fr)
-            minmax(0, 1.25fr)
-            minmax(0, .85fr) !important;
+        height: 10% !important;
+        min-height: 48px !important;
+        padding: 0 8px !important;
+        grid-template-columns: minmax(0, .95fr) minmax(0, 1.25fr) minmax(0, .85fr) !important;
         border-radius: 13px !important;
+    }
+
+    body.game-active .hud-difficulty,
+    body.game-active .status-center,
+    body.game-active .hud-progress {
+        min-width: 0 !important;
     }
 
     body.game-active .hud-meta-label,
     body.game-active .hud-progress-label,
     body.game-active .status-label {
         font-size: 6px !important;
+        letter-spacing: .06em !important;
     }
 
     body.game-active #hudDifficulty,
@@ -4566,67 +4525,102 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
     }
 
     body.game-active .status-icon {
-        width: 27px;
-        height: 27px;
+        width: 28px !important;
+        height: 28px !important;
     }
 
     body.game-active .hud-player-token {
-        max-width: 25px;
-        max-height: 25px;
+        max-width: 26px !important;
+        max-height: 26px !important;
     }
 
     body.game-active .board {
         position: absolute !important;
         left: 0 !important;
-        top: 10.5% !important;
+        top: 11% !important;
         width: 100% !important;
-        height: 89.5% !important;
+        height: 89% !important;
         display: grid !important;
-        grid-template-columns: 22% repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: 23% repeat(3, minmax(0, 1fr)) !important;
         grid-template-rows: 29% repeat(3, minmax(0, 1fr)) !important;
         gap: 3px !important;
+    }
+
+    body.game-active .board .actor-header {
+        min-width: 0 !important;
+        min-height: 0 !important;
     }
 
     body.game-active .board .actor-header .actor-portrait,
     body.game-active .board .actor-header:hover .actor-portrait {
         top: 3% !important;
         bottom: 3% !important;
+        left: 50% !important;
         width: auto !important;
         height: 94% !important;
         max-width: 94% !important;
+        aspect-ratio: 1.02 / 1 !important;
+        object-fit: cover !important;
         object-position: 50% 18% !important;
+        transform: translateX(-50%) !important;
     }
 
     body.game-active .board .actor-name {
-        font-size: clamp(7px, 2.25vw, 10px) !important;
+        font-size: clamp(7px, 2.3vw, 10px) !important;
+        letter-spacing: .015em !important;
     }
 
-    body.game-active .board .side.genre-panel .side-label,
-    body.game-active .board .side.genre-panel .genre-label {
-        font-size: clamp(7px, 2vw, 9px) !important;
+    body.game-active .board .side.genre-panel,
+    body.game-active .cell {
+        border-radius: 5px !important;
+    }
+
+    body.game-active .board .side-without-image .side-label {
+        font-size: clamp(7px, 2.1vw, 9px) !important;
     }
 
     body.game-active .cell {
-        min-width: 0;
-        min-height: 0;
-        padding: 2px;
-        font-size: clamp(7px, 2vw, 9px);
-        border-radius: 5px;
+        padding: 2px !important;
+        font-size: clamp(7px, 2.05vw, 9px) !important;
+    }
+
+    body.game-active .cell:empty::before {
+        width: 20px !important;
+        height: 15px !important;
+        margin-bottom: 4px !important;
+    }
+
+    body.game-active .cell:empty::after {
+        font-size: clamp(6px, 1.85vw, 8px) !important;
+        line-height: 1.05 !important;
     }
 
     body.game-active .claimed-title {
-        font-size: clamp(7px, 2vw, 9px) !important;
+        font-size: clamp(7px, 2.05vw, 9px) !important;
     }
 
     body.game-active .claimed-owner {
         font-size: clamp(6px, 1.7vw, 8px) !important;
     }
 
+    body.game-active .claimed-token,
+    body.game-active .claimed-token-image {
+        max-width: 30px !important;
+        max-height: 30px !important;
+    }
+
+    /* Touch: voorkom vastplakkende hover-effecten. */
+    body.game-active .cell:hover {
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* ---------------- POPUPS ---------------- */
     .popup,
     .feedback-overlay,
     .winner-overlay,
     .draw-overlay {
-        padding: 12px;
+        padding: 12px !important;
     }
 
     .popup-box,
@@ -4634,351 +4628,332 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
     .winner-overlay-card,
     .draw-overlay-card {
         width: min(94vw, 460px) !important;
-        max-height: 88svh;
-        overflow-y: auto;
+        max-height: 88svh !important;
+        overflow-y: auto !important;
     }
 
+    .popup-box {
+        padding: 22px 16px 16px !important;
+    }
+
+    #question {
+        font-size: clamp(18px, 5.4vw, 24px) !important;
+    }
+
+    .popup-question-hint {
+        font-size: 11px !important;
+    }
+
+    .popup-input-wrap input,
     #answerInput {
-        min-height: 44px;
-        font-size: 16px;
+        min-height: 44px !important;
+        font-size: 16px !important;
+    }
+
+    .buttons {
+        gap: 7px !important;
+    }
+
+    .buttons button {
+        min-height: 42px !important;
+        font-size: 11px !important;
     }
 }
 
+/* Landscape: behoud de bestaande desktoppresentatie, maar zorg dat de
+   startknop en het onderste deel van het startscherm binnen het doek blijven. */
+@media (max-height: 520px) and (orientation: landscape) {
+    #startScreen {
+        padding-top: 0 !important;
+    }
 
-/* -------------------------------
-   LANDSCAPE – STARTSCHERM
--------------------------------- */
+    .brand-block {
+        height: 13% !important;
+        padding-top: .4% !important;
+    }
+
+    .player-input-grid {
+        transform: translateY(2%) !important;
+    }
+
+    .difficulty-section {
+        margin-top: .5% !important;
+    }
+
+    .difficulty-card {
+        height: clamp(58px, 5.2vw, 88px) !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: .35% !important;
+    }
+
+    #startBtn {
+        height: clamp(27px, 2.35vw, 40px) !important;
+        margin-top: 0 !important;
+    }
+
+    .developerToggleRow {
+        margin-top: -.15% !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – MOBILE V3 LANDSCAPE FIX
+   Gebruikt de zichtbare Safari-hoogte (svh), zodat MovieMind
+   niet achter de browserbalken verdwijnt. Portrait V2 blijft gelijk.
+========================================================= */
+
 @media (orientation: landscape) and (max-height: 600px) {
     html,
     body {
-        width: 100%;
-        height: 100%;
-        min-height: 100%;
-        margin: 0;
-        overflow: hidden;
-        background: #050000;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background: #050000 !important;
     }
 
     .cinema-shell {
-        position: fixed;
-        inset: 0;
-        width: min(100vw, 150svh);
-        height: min(100svh, 66.6667vw);
-        min-height: 0;
-        margin: auto;
-        overflow: hidden;
-        background-size: 100% 100%;
-        background-position: center center;
+        position: fixed !important;
+        inset: 0 !important;
+        width: min(100vw, 150svh) !important;
+        height: min(100svh, 66.6667vw) !important;
+        min-height: 0 !important;
+        margin: auto !important;
+        overflow: hidden !important;
+        background-size: 100% 100% !important;
+        background-position: center center !important;
     }
 
-    body:not(.game-active) .screen-content {
-        left: 21.8%;
-        top: 20.5%;
-        width: 56.4%;
-        height: 47%;
-        overflow: hidden;
+    /*
+    Startscherm: behoud exact de desktopverhouding binnen het
+    zichtbare bioscoopcanvas, maar maak het nét compacter.
+    */
+    .screen-content {
+        left: 22.85% !important;
+        top: 23.15% !important;
+        width: 54.30% !important;
+        height: 40.85% !important;
+        overflow: hidden !important;
     }
 
-    body:not(.game-active) .brand-block {
-        height: 13%;
-        padding-top: .2%;
+    .brand-block {
+        height: 13% !important;
+        padding-top: .3% !important;
     }
 
-    body:not(.game-active) .brand-block h1 {
-        font-size: clamp(18px, 2.15vw, 35px);
-        line-height: .94;
-    }
-
-    body:not(.game-active) .brand-line {
-        margin-top: .2%;
-        margin-bottom: .1%;
-    }
-
-    body:not(.game-active) #startScreen {
-        position: relative;
-        width: 96%;
-        height: 87%;
-        margin: 0 auto;
-        padding: 0 2%;
-        overflow: hidden;
-    }
-
-    body:not(.game-active) .player-input-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 2%;
-        transform: none;
-    }
-
-    body:not(.game-active) .player-field span {
-        font-size: clamp(8px, .72vw, 12px);
-    }
-
-    body:not(.game-active) .player-field input {
-        height: clamp(22px, 1.85vw, 31px);
-        font-size: clamp(8px, .7vw, 11px);
-    }
-
-    body:not(.game-active) .token-picker {
-        margin-top: .3%;
-    }
-
-    body:not(.game-active) .token-picker legend {
-        margin-bottom: .1%;
-        font-size: clamp(5px, .4vw, 7px);
-    }
-
-    body:not(.game-active) .token-options {
-        gap: 1.4%;
-    }
-
-    body:not(.game-active) .token-option {
-        height: clamp(22px, 1.95vw, 32px);
-        padding: .5%;
-    }
-
-    body:not(.game-active) .difficulty-section {
-        margin-top: -.4%;
-    }
-
-    body:not(.game-active) .difficulty-title {
-        margin: 0 0 .15%;
-        font-size: clamp(8px, .75vw, 12px);
-    }
-
-    body:not(.game-active) .difficulty-grid {
-        gap: 1.3%;
-    }
-
-    body:not(.game-active) .difficulty-card {
-        height: clamp(40px, 3.35vw, 56px);
-        padding: 1.8% 2%;
-    }
-
-    body:not(.game-active) .difficulty-name {
-        margin-top: 0;
-        font-size: clamp(8px, .78vw, 12px);
-    }
-
-    body:not(.game-active) .difficulty-description {
-        margin-top: .3%;
-        font-size: clamp(5px, .47vw, 8px);
-        line-height: 1.05;
-    }
-
-    body:not(.game-active) .selected-difficulty-summary {
-        margin-top: .05%;
-        font-size: clamp(6px, .52vw, 9px);
-        line-height: 1;
-    }
-
-    body:not(.game-active) #startBtn {
-        position: static !important;
-        display: block !important;
-        width: 52% !important;
-        height: clamp(22px, 1.8vw, 30px) !important;
-        margin: .45% auto 0 !important;
+    .player-input-grid {
         transform: none !important;
-        font-size: clamp(7px, .62vw, 10px) !important;
+        gap: 1.7% !important;
     }
 
-    body:not(.game-active) .developerToggleRow {
-        display: none;
+    .token-picker {
+        margin-top: .7% !important;
     }
 
+    .token-option {
+        height: clamp(24px, 2.3vw, 39px) !important;
+    }
+
+    .difficulty-section {
+        margin-top: 0 !important;
+    }
+
+    .difficulty-title {
+        margin-bottom: .4% !important;
+    }
+
+    .difficulty-card {
+        height: clamp(48px, 4.1vw, 70px) !important;
+        padding-top: 2% !important;
+        padding-bottom: 1.8% !important;
+    }
+
+    .difficulty-card .difficulty-description {
+        margin-top: 1% !important;
+    }
+
+    .selected-difficulty-summary {
+        margin-top: .2% !important;
+    }
+
+    #startBtn {
+        height: clamp(24px, 2.1vw, 35px) !important;
+        margin-top: 0 !important;
+    }
+
+    .developerToggleRow {
+        margin-top: -1.1% !important;
+    }
+
+    /*
+    Speelscherm: gebruik dezelfde desktop-bordverhouding,
+    maar volledig binnen het zichtbare Safari-canvas.
+    */
     body.game-active .screen-content {
-        left: 19.7%;
-        top: 19.8%;
-        width: 60.6%;
-        height: 49.2%;
-        overflow: visible;
+        left: 19.7% !important;
+        top: 19.8% !important;
+        width: 60.6% !important;
+        height: 49.2% !important;
+        overflow: visible !important;
     }
 
     body.game-active .screen-frame {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
     }
 
     body.game-active #gameScreen {
-        position: relative;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        padding: 0;
+        position: relative !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
     }
 
     body.game-active .status.hud-ready,
     body.game-active .status.hud-ready.blue-turn,
     body.game-active .status.hud-ready.orange-turn {
-        top: 0 !important;
+        top: .5% !important;
         left: .8% !important;
         right: .8% !important;
         width: auto !important;
         height: 9.5% !important;
-        min-height: 28px !important;
+        min-height: 30px !important;
     }
 
     body.game-active .board {
         position: absolute !important;
         left: .8% !important;
-        top: 10.4% !important;
+        top: 10.7% !important;
         width: 98.4% !important;
-        height: 89.6% !important;
+        height: 89.3% !important;
+        grid-template-columns: 18.5% repeat(3, minmax(0, 1fr)) !important;
+        grid-template-rows: 30% repeat(3, minmax(0, 1fr)) !important;
+        gap: .55% !important;
     }
 }
 
 /* =========================================================
-   MOVIEMIND – MOBILE V4.1 PORTRAIT START FIX
-   Alleen het STARTSCHERM in portrait.
-   Landscape en het speelbord blijven exact zoals V4.
+   MOVIEMIND – MOBILE V3.1
+   Alleen landscape startscherm: maak ruimte voor START SPEL.
+   Portrait en het speelbord blijven ongewijzigd.
 ========================================================= */
 
-@media (max-width: 760px) and (orientation: portrait) {
-    body:not(.game-active) .screen-content {
-        left: 4% !important;
-        top: 24.5% !important;
-        width: 92% !important;
-        height: 37.5% !important;
-        overflow: hidden !important;
-    }
-
+@media (orientation: landscape) and (max-height: 600px) {
     body:not(.game-active) .brand-block {
-        height: 15% !important;
-        padding-top: .6% !important;
+        height: 11.5% !important;
+        padding-top: 0 !important;
     }
 
     body:not(.game-active) .brand-block h1 {
-        font-size: clamp(24px, 7.8vw, 34px) !important;
-        line-height: .96 !important;
+        font-size: clamp(20px, 2.25vw, 38px) !important;
+        line-height: .92 !important;
     }
 
     body:not(.game-active) .brand-line {
-        width: 58% !important;
-        margin: .5% auto .15% !important;
+        margin-top: .2% !important;
+        margin-bottom: .1% !important;
     }
 
     body:not(.game-active) #startScreen {
-        width: 96% !important;
-        height: 85% !important;
-        margin: 0 auto !important;
-        padding: 0 2% !important;
-        overflow: hidden !important;
+        height: 88.5% !important;
+        padding-top: 0 !important;
     }
 
-    /*
-    Belangrijkste correctie:
-    spelers blijven ook in portrait naast elkaar.
-    Zo behouden we de originele brede MovieMind-verhouding.
-    */
     body:not(.game-active) .player-input-grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 2.2% !important;
-        transform: none !important;
-    }
-
-    body:not(.game-active) .player-field {
-        grid-template-columns: auto minmax(0, 1fr) !important;
-        gap: 4% !important;
-    }
-
-    body:not(.game-active) .player-field span {
-        font-size: clamp(7px, 2.15vw, 9px) !important;
-        white-space: nowrap !important;
-    }
-
-    body:not(.game-active) .player-avatar {
-        width: 10px !important;
-        height: 10px !important;
-    }
-
-    body:not(.game-active) .player-field input {
-        height: clamp(23px, 6.4vw, 28px) !important;
-        padding: 0 6px !important;
-        font-size: clamp(8px, 2.2vw, 10px) !important;
-        border-radius: 6px !important;
+        transform: translateY(-2%) !important;
     }
 
     body:not(.game-active) .token-picker {
-        margin-top: 2px !important;
-        padding: 0 !important;
+        margin-top: .15% !important;
     }
 
     body:not(.game-active) .token-picker legend {
-        margin-bottom: 1px !important;
-        font-size: clamp(5px, 1.45vw, 6px) !important;
-    }
-
-    body:not(.game-active) .token-options {
-        gap: 3px !important;
-        justify-content: center !important;
+        margin-bottom: .1% !important;
     }
 
     body:not(.game-active) .token-option {
-        width: auto !important;
-        height: clamp(22px, 6vw, 26px) !important;
-        min-height: 22px !important;
-        padding: 1px !important;
-        border-radius: 5px !important;
-    }
-
-    body:not(.game-active) .token-option img {
-        width: 86% !important;
-        height: 86% !important;
-        object-fit: contain !important;
+        height: clamp(22px, 2.05vw, 34px) !important;
     }
 
     body:not(.game-active) .difficulty-section {
-        margin-top: 2px !important;
+        margin-top: -.3% !important;
     }
 
     body:not(.game-active) .difficulty-title {
-        margin: 0 0 2px !important;
-        font-size: clamp(9px, 2.55vw, 11px) !important;
-    }
-
-    body:not(.game-active) .difficulty-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: 4px !important;
+        margin-bottom: .15% !important;
     }
 
     body:not(.game-active) .difficulty-card {
-        height: clamp(48px, 13.4vw, 58px) !important;
-        min-height: 48px !important;
-        padding: 4px 2px !important;
+        height: clamp(43px, 3.75vw, 63px) !important;
     }
 
     body:not(.game-active) .difficulty-name {
-        margin-top: 0 !important;
-        font-size: clamp(8px, 2.35vw, 10px) !important;
+        margin-top: 1% !important;
     }
 
     body:not(.game-active) .difficulty-description {
-        width: 95% !important;
-        margin-top: 3px !important;
-        font-size: clamp(5.3px, 1.55vw, 6.5px) !important;
+        margin-top: .4% !important;
         line-height: 1.05 !important;
     }
 
-    body:not(.game-active) .difficulty-card.selected::after {
-        font-size: 4px !important;
-    }
-
     body:not(.game-active) .selected-difficulty-summary {
-        margin-top: 2px !important;
-        font-size: clamp(6px, 1.8vw, 8px) !important;
+        margin-top: 0 !important;
         line-height: 1 !important;
     }
 
     body:not(.game-active) #startBtn {
-        position: static !important;
         display: block !important;
-        width: 62% !important;
-        height: clamp(26px, 7.2vw, 31px) !important;
-        margin: 3px auto 0 !important;
-        transform: none !important;
-        font-size: clamp(8px, 2.2vw, 10px) !important;
+        width: 54% !important;
+        height: clamp(23px, 1.95vw, 33px) !important;
+        margin: .35% auto 0 !important;
+        font-size: clamp(8px, .72vw, 12px) !important;
+    }
+
+    body:not(.game-active) .developerToggleRow {
+        margin-top: -.35% !important;
+    }
+}
+
+/* =========================================================
+   MOVIEMIND – MOBILE V3.2
+   Landscape startscherm: START SPEL altijd zichtbaar.
+   We positioneren de knop onderaan ín het projectiedoek.
+========================================================= */
+
+@media (orientation: landscape) and (max-height: 600px) {
+    body:not(.game-active) #startScreen {
+        position: relative !important;
+        height: 88.5% !important;
+        padding-bottom: 34px !important;
+        overflow: hidden !important;
+    }
+
+    body:not(.game-active) #startBtn {
+        position: absolute !important;
+        left: 50% !important;
+        bottom: 3px !important;
+        transform: translateX(-50%) !important;
+
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+
+        width: 54% !important;
+        height: 28px !important;
+        margin: 0 !important;
+
+        z-index: 50 !important;
+    }
+
+    body:not(.game-active) #startBtn:hover {
+        transform: translateX(-50%) translateY(-1px) !important;
     }
 
     body:not(.game-active) .developerToggleRow {
@@ -4986,13 +4961,237 @@ body.game-active .status.hud-ready.orange-turn .hud-progress-label {
     }
 }
 
-/* =========================================
-   POSTER -> PION CLAIMANIMATIE
-========================================= */
-body.poster-claim-active {
-    cursor: wait;
+/* Solo restoration: scoped additions; existing versus rules stay intact. */
+.game-mode-picker {
+    display: flex;
+    justify-content: center;
+    gap: 1.2%;
+    margin: 0 auto 1.2%;
 }
 
+.game-mode-btn {
+    min-width: 24%;
+    padding: 0.65% 1.4%;
+    border: 1px solid #9a6b0c;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #35110d, #180504);
+    color: #dbc486;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(8px, 0.72vw, 13px);
+    font-weight: 700;
+}
+
+.game-mode-btn.selected,
+.game-mode-btn:hover {
+    border-color: #f3cf71;
+    background: linear-gradient(180deg, #9a281e, #50100d);
+    color: #fff0b2;
+    box-shadow: 0 0 9px rgba(215, 167, 44, 0.28);
+}
+
+body.solo-setup .player-input-grid {
+    display: none;
+}
+
+body.solo-setup .difficulty-section {
+    margin-top: 3.2%;
+}
+
+body.solo-active .board {
+    grid-template-columns: 15% repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: 20% repeat(5, minmax(0, 1fr)) !important;
+}
+
+body.solo-active .board .actor-name {
+    font-size: clamp(6px, 0.56vw, 11px);
+}
+
+body.solo-active .board .side-label,
+body.solo-active .board .genre-label {
+    font-size: clamp(6px, 0.52vw, 10px);
+}
+
+.solo-overlay-card .winner-award {
+    color: #f3cf71;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(34px, 4vw, 70px);
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(243, 207, 113, 0.42);
+}
+/* Laatste override: het solo-bord gebruikt altijd vijf gelijke rijen. */
+body.solo-active .board {
+    grid-template-columns: 15% repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: 20% repeat(5, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+}
+
+body.solo-active .board > .side,
+body.solo-active .board > .cell,
+body.solo-active .board > .header,
+body.solo-active .board > .corner {
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+
+#soloOverlay:has(#soloAnswerReview) {
+    display: grid;
+    grid-template-columns: minmax(250px, 36%) minmax(0, 64%);
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0;
+    padding: 3.5% 4%;
+    overflow: hidden;
+}
+
+#soloOverlay:has(#soloAnswerReview) .solo-overlay-card {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 4.5% 6% 4%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 14px 0 0 14px;
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-kicker {
+    margin: 0 0 2.5%;
+    font-size: clamp(6px, 0.58vw, 10px);
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-award {
+    min-height: clamp(48px, 5.1vw, 84px);
+    margin: 0 0 1%;
+    font-size: clamp(30px, 3.3vw, 56px);
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-divider {
+    width: 64%;
+    margin: 1% auto 3%;
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-overlay-text {
+    max-width: 94%;
+    font-size: clamp(15px, 1.55vw, 27px);
+    line-height: 1.05;
+    letter-spacing: 0.045em;
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-overlay-subtitle {
+    margin-top: 1.4%;
+    font-size: clamp(5px, 0.50vw, 9px);
+    line-height: 1.15;
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-stats {
+    width: 84%;
+    margin: 4% auto 0;
+    gap: 4%;
+}
+
+#soloOverlay:has(#soloAnswerReview) .winner-stat {
+    padding: 4% 3%;
+}
+
+#soloOverlay:has(#soloAnswerReview) #soloAnswerReview {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100%;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 3% 4% 10% !important;
+    overflow-y: auto;
+    border-radius: 0 14px 14px 0 !important;
+}
+
+/* De nieuw-spelknop blijft onderin vrij van de scrollende antwoorden. */
+#soloOverlay:has(#soloAnswerReview) #soloNewGameBtn {
+    max-width: 240px;
+}
+
+
+/* SOLO EINDSCHERM v2 – Nieuw spel onder de scorekaartjes, niet eroverheen */
+#soloOverlay:has(#soloAnswerReview) #soloNewGameBtn {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    z-index: auto !important;
+    width: 84% !important;
+    max-width: 240px;
+    flex: 0 0 auto;
+    margin: 4% auto 0 !important;
+}
+
+/* Houd onderin voldoende ruimte binnen de linker scorekolom. */
+#soloOverlay:has(#soloAnswerReview) .solo-overlay-card {
+    padding-bottom: 4% !important;
+}
+
+
+#soloStopBtn {
+    position: fixed;
+    right: 18px;
+    bottom: 12px;
+    z-index: 1200;
+    padding: 10px 18px;
+    border: 1px solid #d4af37;
+    border-radius: 999px;
+    background: #490a18;
+    color: #f4dc8a;
+    font-weight: 700;
+    cursor: pointer;
+}
+#soloStopBtn:disabled { opacity: .55; cursor: not-allowed; }
+body.solo-active .board { grid-template-columns: 15% repeat(5, minmax(0, 1fr)) !important; grid-template-rows: 20% repeat(5, minmax(0, 1fr)) !important; }
+body.solo-active .cell:empty::after { content: "Kies antwoord"; white-space: normal; max-width: 100%; }
+#soloOverlay:has(#soloAnswerReview) .solo-overlay-card,
+#soloOverlay:has(#soloAnswerReview) #soloAnswerReview { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#soloOverlay .winner-overlay-text,
+#soloOverlay .winner-kicker,
+#soloOverlay .winner-overlay-subtitle { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+    .game-mode-btn { min-height: 30px; font-size: 12px; }
+    body.solo-active .board .actor-name,
+    body.solo-active .board .side-label,
+    body.solo-active .board .genre-label { font-size: clamp(7px, 1.6vw, 11px); }
+    body.solo-active .board .actor-name { white-space: normal !important; overflow-wrap: anywhere; text-overflow: clip; }
+    body.solo-active #hudRemaining { font-size: 8px !important; white-space: normal; line-height: 1.15; }
+    body.solo-active .cell:empty::after { font-size: 8px; }
+    #soloOverlay:has(#soloAnswerReview) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        padding: 12px;
+        overflow-y: auto;
+    }
+    #soloOverlay:has(#soloAnswerReview) .solo-overlay-card { height: auto; padding: 12px; border-radius: 12px 12px 0 0; }
+    #soloOverlay:has(#soloAnswerReview) .winner-award { display: none; }
+    #soloOverlay:has(#soloAnswerReview) .winner-kicker,
+    #soloOverlay:has(#soloAnswerReview) .winner-overlay-subtitle { font-size: 10px; }
+    #soloOverlay:has(#soloAnswerReview) #soloAnswerReview { border-radius: 0 0 12px 12px !important; padding: 12px !important; }
+}
+
+/* Keep the complete start controls visible inside the cinema screen. */
+.start-screen-controls {
+    display: flow-root;
+    transform: scale(var(--start-controls-scale, 1));
+    transform-origin: top center;
+}
+body:not(.game-active) .start-screen-controls #startBtn {
+    position: relative !important;
+    left: auto !important;
+    bottom: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin: 0.5% auto 0 !important;
+}
+
+/* The claim animation uses viewport coordinates supplied by animatePosterToCell. */
 .poster-claim-overlay {
     position: fixed;
     inset: 0;
@@ -5001,45 +5200,27 @@ body.poster-claim-active {
     place-items: center;
     pointer-events: none;
     opacity: 0;
-    background: rgba(7, 2, 2, 0.12);
-    transition: opacity 0.16s ease;
+    background: rgba(7, 2, 2, .12);
+    transition: opacity .16s ease;
 }
-
-.poster-claim-overlay.is-visible {
-    opacity: 1;
-}
-
+.poster-claim-overlay.is-visible { opacity: 1; }
 .poster-claim-frame {
-    --poster-target-x: 0px;
-    --poster-target-y: 0px;
-    --poster-target-scale: 0.3;
     position: relative;
-    width: clamp(150px, 15vw, 235px);
+    width: clamp(118px, 15vw, 235px);
+    max-height: 65vh;
     aspect-ratio: 2 / 3;
-    border: 2px solid rgba(238, 199, 103, 0.92);
+    border: 2px solid #eec767;
     border-radius: 10px;
     overflow: hidden;
-    opacity: 0;
-    transform: scale(0.72);
-    transform-origin: center center;
     background: #140606;
-    box-shadow:
-        0 22px 55px rgba(0, 0, 0, 0.72),
-        0 0 0 5px rgba(78, 18, 18, 0.55),
-        0 0 28px rgba(231, 190, 91, 0.25);
-    transition:
-        opacity 0.18s ease,
-        transform 0.24s cubic-bezier(.2,.85,.25,1.15);
-    will-change: transform, opacity;
+    box-shadow: 0 22px 55px #000b, 0 0 28px #e7be5b40;
+    opacity: 0;
+    transform: scale(.72);
+    transform-origin: center;
+    transition: opacity .18s ease, transform .24s cubic-bezier(.2,.85,.25,1.15);
 }
-
-.poster-claim-frame.is-presented {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.poster-claim-image,
-.poster-claim-token {
+.poster-claim-frame.is-presented { opacity: 1; transform: scale(1); }
+.poster-claim-image, .poster-claim-token {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -5047,731 +5228,30 @@ body.poster-claim-active {
     object-fit: cover;
     user-select: none;
 }
-
-.poster-claim-image {
-    z-index: 1;
-    opacity: 1;
-    transition: opacity 0.22s ease, filter 0.22s ease;
-}
-
+.poster-claim-image { transition: opacity .22s ease; }
 .poster-claim-token {
-    z-index: 2;
-    padding: 17%;
     object-fit: contain;
+    padding: 17%;
     opacity: 0;
-    transform: scale(0.58);
-    filter:
-        drop-shadow(0 7px 7px rgba(0, 0, 0, 0.62))
-        drop-shadow(0 0 8px rgba(239, 199, 98, 0.28));
-    transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.9,.3,1.25);
+    transform: scale(.58);
+    transition: opacity .22s ease, transform .24s ease;
 }
-
 .poster-claim-frame.is-flying {
-    transform:
-        translate(var(--poster-target-x), var(--poster-target-y))
-        scale(var(--poster-target-scale));
-    transition: transform 0.68s cubic-bezier(.35,.02,.18,1);
+    transform: translate(var(--poster-target-x), var(--poster-target-y)) scale(var(--poster-target-scale));
+    transition: transform .68s cubic-bezier(.35,.02,.18,1);
 }
-
-.poster-claim-frame.is-morphing .poster-claim-image {
-    opacity: 0;
-    filter: blur(2px) brightness(1.25);
+.poster-claim-frame.is-morphing .poster-claim-image { opacity: 0; }
+.poster-claim-frame.is-morphing .poster-claim-token { opacity: 1; transform: scale(1); }
+.cell.blue .claimed-token, .poster-claim-overlay.blue .poster-claim-token {
+    filter: sepia(1) saturate(4) hue-rotate(160deg) drop-shadow(0 0 5px #3a9bd2);
 }
-
-.poster-claim-frame.is-morphing .poster-claim-token {
-    opacity: 1;
-    transform: scale(1);
+.cell.orange .claimed-token, .poster-claim-overlay.orange .poster-claim-token {
+    filter: sepia(1) saturate(5) hue-rotate(315deg) drop-shadow(0 0 5px #df4938);
 }
-
-@media (max-width: 760px) {
-    .poster-claim-frame {
-        width: clamp(118px, 34vw, 175px);
-        border-radius: 8px;
-    }
-}
-
+@media (max-width: 760px) { .poster-claim-frame { width: clamp(118px, 34vw, 175px); } }
 @media (prefers-reduced-motion: reduce) {
-    .poster-claim-overlay,
-    .poster-claim-frame,
-    .poster-claim-image,
-    .poster-claim-token {
-        transition-duration: 0.01ms !important;
-    }
+    .poster-claim-overlay, .poster-claim-frame, .poster-claim-image, .poster-claim-token { transition-duration: .01ms !important; }
 }
-/* =========================================================
-   PIONNEN IN SPELERKLEUR
-   Goedgekeurde MovieMind-uitwerking: de bestaande gouden
-   pion-afbeeldingen krijgen in het spel duidelijk de kleur
-   van de eigenaar, met extra gloed voor betere zichtbaarheid.
-========================================================= */
 
-/* Geclaimde vakjes — Speler 1 blauw */
-.cell.blue .claimed-token {
-    filter:
-        brightness(0.82)
-        saturate(2.15)
-        sepia(0.18)
-        hue-rotate(155deg)
-        saturate(2.35)
-        brightness(1.18)
-        drop-shadow(0 3px 3px rgba(0, 0, 0, 0.58))
-        drop-shadow(0 0 4px rgba(42, 156, 255, 0.95))
-        drop-shadow(0 0 9px rgba(23, 111, 159, 0.72));
-}
-
-/* Geclaimde vakjes — Speler 2 rood/bordeaux */
-.cell.orange .claimed-token {
-    filter:
-        brightness(0.78)
-        saturate(2.25)
-        sepia(0.22)
-        hue-rotate(315deg)
-        saturate(2.65)
-        brightness(1.12)
-        drop-shadow(0 3px 3px rgba(0, 0, 0, 0.58))
-        drop-shadow(0 0 4px rgba(255, 63, 47, 0.95))
-        drop-shadow(0 0 9px rgba(141, 34, 29, 0.78));
-}
-
-/* De pion in de beurtbalk volgt dezelfde spelerkleur. */
-body.game-active .status.hud-ready.blue-turn .hud-player-token {
-    filter:
-        brightness(0.82)
-        saturate(2.15)
-        sepia(0.18)
-        hue-rotate(155deg)
-        saturate(2.35)
-        brightness(1.18)
-        drop-shadow(0 0 3px rgba(42, 156, 255, 0.95))
-        drop-shadow(0 0 7px rgba(23, 111, 159, 0.72));
-}
-
-body.game-active .status.hud-ready.orange-turn .hud-player-token {
-    filter:
-        brightness(0.78)
-        saturate(2.25)
-        sepia(0.22)
-        hue-rotate(315deg)
-        saturate(2.65)
-        brightness(1.12)
-        drop-shadow(0 0 3px rgba(255, 63, 47, 0.95))
-        drop-shadow(0 0 7px rgba(141, 34, 29, 0.78));
-}
-
-/* Iets groter in het vakje: de pion blijft binnen zijn eigen zone,
-   maar is duidelijker zichtbaar dan de oude gouden uitvoering. */
-.claimed-token {
-    max-width: 82%;
-    max-height: 108%;
-}
-
-
-/* =========================================================
-   MOVIEMIND – CINEMATISCHE STARTOVERGANG V6
-   Geen zwart tussenvlak: het bestaande doek dooft zelf uit.
-========================================================= */
-
-body.cinema-transitioning .loading-screen {
-    display: none !important;
-}
-
-/* Het startbeeld zelf dooft uit, zodat er nergens een los zwart blok verschijnt. */
-body.cinema-screen-dimming .brand-block,
-body.cinema-screen-dimming #startScreen {
-    animation: movieMindContentDimV5 .70s ease-in forwards !important;
-}
-
-.cinema-transition-layer {
-    position: absolute;
-    left: 22.85%;
-    top: 23.15%;
-    width: 54.30%;
-    height: 40.85%;
-    z-index: 9999;
-    overflow: hidden;
-    pointer-events: none;
-    opacity: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-/* De laag is nu alleen nog voor projectorlicht en filmflikkering. */
-.cinema-transition-layer.projector-on {
-    opacity: 1;
-    animation: movieMindProjectorLayerV5 1.28s ease-out forwards;
-}
-
-.cinema-projector-glow,
-.cinema-film-flicker {
-    position: absolute;
-    inset: 0;
-    display: block;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.cinema-projector-glow {
-    background:
-        radial-gradient(ellipse at 50% 46%,
-            rgba(255, 244, 199, .68) 0%,
-            rgba(239, 202, 117, .25) 36%,
-            rgba(156, 113, 45, .07) 60%,
-            transparent 78%);
-    mix-blend-mode: screen;
-}
-
-.cinema-film-flicker {
-    background:
-        repeating-linear-gradient(
-            0deg,
-            rgba(255,255,255,.03) 0 1px,
-            transparent 1px 4px
-        );
-    mix-blend-mode: screen;
-}
-
-.cinema-transition-layer.projector-on .cinema-projector-glow {
-    animation: movieMindProjectorGlowV5 1.08s ease-out both;
-}
-
-.cinema-transition-layer.projector-on .cinema-film-flicker {
-    animation: movieMindFilmFlickerV5 .88s steps(1, end) both;
-}
-
-/* Heel even is alleen het echte bord bijna donker; geen overlay/rechthoek ervoor. */
-.screen-frame.cinema-board-prelight {
-    opacity: .045 !important;
-    filter: brightness(.09) blur(3.2px) saturate(.72) !important;
-    transform: scale(.994);
-}
-
-.screen-frame.cinema-board-reveal-v6 {
-    transform-origin: 50% 50%;
-    animation: movieMindBoardRevealV6 1.38s cubic-bezier(.18,.76,.24,1) both !important;
-}
-
-body.cinema-transition-settled .screen-frame::after {
-    content: "";
-    position: absolute;
-    inset: -.8%;
-    z-index: 90;
-    pointer-events: none;
-    border-radius: 8px;
-    animation: movieMindGoldFinishV5 .70s ease-out both;
-}
-
-@keyframes movieMindContentDimV5 {
-    0% {
-        opacity: 1;
-        filter: brightness(1) blur(0);
-    }
-    62% {
-        opacity: .28;
-        filter: brightness(.38) blur(.35px);
-    }
-    100% {
-        opacity: .035;
-        filter: brightness(.10) blur(1.1px);
-    }
-}
-
-@keyframes movieMindProjectorLayerV5 {
-    0%, 82% { opacity: 1; }
-    100% { opacity: 0; }
-}
-
-@keyframes movieMindProjectorGlowV5 {
-    0%   { opacity: 0; transform: scale(.92); filter: brightness(.65); }
-    18%  { opacity: .78; transform: scale(.96); filter: brightness(1.25); }
-    27%  { opacity: .16; filter: brightness(.78); }
-    39%  { opacity: .60; filter: brightness(1.15); }
-    68%  { opacity: .20; transform: scale(1.02); filter: brightness(1); }
-    100% { opacity: 0; transform: scale(1.04); filter: brightness(1); }
-}
-
-@keyframes movieMindFilmFlickerV5 {
-    0%   { opacity: 0; }
-    14%  { opacity: .17; }
-    22%  { opacity: .025; }
-    31%  { opacity: .12; }
-    43%  { opacity: .02; }
-    58%  { opacity: .07; }
-    100% { opacity: 0; }
-}
-
-@keyframes movieMindBoardRevealV6 {
-    0% {
-        opacity: .045;
-        filter: brightness(.09) blur(3.4px) saturate(.72);
-        transform: scale(.994);
-    }
-    20% {
-        opacity: .17;
-        filter: brightness(.34) blur(2.7px) saturate(.80);
-    }
-    38% {
-        opacity: .42;
-        filter: brightness(1.22) blur(2.05px) saturate(.88);
-        transform: scale(.997);
-    }
-    52% {
-        opacity: .72;
-        filter: brightness(1.12) blur(1.35px) saturate(.93);
-    }
-    66% {
-        opacity: .90;
-        filter: brightness(1.04) blur(.72px) saturate(.97);
-    }
-    /* Projectorlens vindt hier zichtbaar zijn focus. */
-    76% {
-        opacity: .98;
-        filter: brightness(1.02) blur(.42px) saturate(.99);
-    }
-    84% {
-        opacity: 1;
-        filter: brightness(1) blur(0) saturate(1);
-        transform: scale(1);
-    }
-    100% {
-        opacity: 1;
-        filter: brightness(1) blur(0) saturate(1);
-        transform: scale(1);
-    }
-}
-
-@keyframes movieMindGoldFinishV5 {
-    0% {
-        border: 1px solid rgba(239, 202, 105, 0);
-        box-shadow: 0 0 0 rgba(239, 202, 105, 0);
-        opacity: 0;
-    }
-    42% {
-        border: 1px solid rgba(239, 202, 105, .64);
-        box-shadow:
-            0 0 11px rgba(239, 202, 105, .22),
-            inset 0 0 8px rgba(239, 202, 105, .09);
-        opacity: 1;
-    }
-    100% {
-        border: 1px solid rgba(239, 202, 105, 0);
-        box-shadow: 0 0 0 rgba(239, 202, 105, 0);
-        opacity: 0;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    body.cinema-screen-dimming .brand-block,
-    body.cinema-screen-dimming #startScreen,
-    .cinema-transition-layer.projector-on,
-    .cinema-transition-layer.projector-on .cinema-projector-glow,
-    .cinema-transition-layer.projector-on .cinema-film-flicker,
-    .screen-frame.cinema-board-prelight,
-    .screen-frame.cinema-board-reveal-v6,
-    body.cinema-transition-settled .screen-frame::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-    }
-}
-
-
-
-/* =========================================================
-   MOVIEMIND – WINNAARSCHERM V1
-   De gekozen spelpion is de trofee van de winnaar.
-========================================================= */
-
-.winner-award {
-    min-height: clamp(108px, 10vw, 180px);
-    margin: 1% 0 0;
-}
-
-.winner-award::before {
-    width: 58%;
-    background: radial-gradient(circle, rgba(245, 209, 112, 0.20), transparent 69%);
-}
-
-.winner-popcorn-image {
-    max-width: 58%;
-    max-height: clamp(104px, 9.6vw, 174px);
-    animation: winnerTokenRise 1.05s cubic-bezier(.18,.78,.22,1) both;
-    transform-origin: 50% 88%;
-}
-
-.winner-overlay.winner-blue .winner-popcorn-image {
-    filter:
-        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))
-        drop-shadow(0 0 9px rgba(58, 155, 210, 0.78))
-        drop-shadow(0 0 24px rgba(23, 111, 159, 0.52));
-}
-
-.winner-overlay.winner-orange .winner-popcorn-image {
-    filter:
-        drop-shadow(0 7px 10px rgba(0, 0, 0, 0.62))
-        drop-shadow(0 0 9px rgba(196, 54, 48, 0.82))
-        drop-shadow(0 0 24px rgba(123, 24, 22, 0.58));
-}
-
-.winner-overlay.winner-blue .winner-overlay-text {
-    color: #9edcff;
-    text-shadow: 0 1px 0 #174b69, 0 0 12px rgba(58,155,210,.42), 0 3px 9px rgba(20,1,1,.72);
-}
-
-.winner-overlay.winner-orange .winner-overlay-text {
-    color: #ffb0a8;
-    text-shadow: 0 1px 0 #6e1c18, 0 0 12px rgba(196,54,48,.38), 0 3px 9px rgba(20,1,1,.72);
-}
-
-.winner-overlay.show .winner-kicker {
-    position: relative;
-    overflow: hidden;
-}
-
-.winner-overlay.show .winner-kicker::after {
-    content: "";
-    position: absolute;
-    top: -40%;
-    bottom: -40%;
-    width: 18%;
-    left: -28%;
-    transform: skewX(-20deg);
-    background: linear-gradient(90deg, transparent, rgba(255,239,181,.72), transparent);
-    animation: winnerGoldSweep 1.05s ease .82s both;
-}
-
-@keyframes winnerTokenRise {
-    0% { opacity: 0; transform: translateY(22px) scale(.82); }
-    58% { opacity: 1; transform: translateY(-3px) scale(1.035); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes winnerGoldSweep {
-    from { left: -28%; opacity: 0; }
-    20% { opacity: 1; }
-    to { left: 112%; opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .winner-popcorn-image,
-    .winner-overlay.show .winner-kicker::after { animation: none; }
-}
-
-/* =========================================================
-   MOVIEMIND – EERSTE DATABASE-LOAD V1
-   Een echte voortgangsbalk in klassieke filmarchiefstijl.
-========================================================= */
-
-body.database-loading .loading-screen {
-    background:
-        radial-gradient(circle at 50% 36%, rgba(111, 24, 17, 0.10), transparent 34%),
-        rgba(0, 0, 0, 0.80);
-}
-
-body.database-loading .projection-content {
-    border: 1px solid rgba(204, 157, 54, 0.48);
-    background:
-        radial-gradient(circle at 50% 34%, rgba(118, 31, 24, 0.22), transparent 52%),
-        linear-gradient(180deg, rgba(39, 8, 8, 0.97), rgba(10, 3, 3, 0.995));
-    box-shadow:
-        inset 0 0 0 1px rgba(247, 211, 117, 0.07),
-        inset 0 0 50px rgba(0, 0, 0, 0.72),
-        0 0 24px rgba(207, 160, 55, 0.08);
-}
-
-body.database-loading .projection-brand {
-    color: #e0bb5e;
-}
-
-body.database-loading .projection-icon {
-    margin-bottom: 1.7%;
-}
-
-body.database-loading .loading-message {
-    margin-bottom: 1.7%;
-}
-
-.database-progress {
-    --database-progress: 0%;
-    position: relative;
-    z-index: 15;
-    width: min(78%, 560px);
-    margin: 0 auto;
-    font-family: Georgia, "Times New Roman", serif;
-}
-
-.database-progress-title {
-    margin: 0 0 1.2%;
-    color: rgba(239, 207, 128, 0.78);
-    font-size: clamp(5px, 0.46vw, 9px);
-    font-weight: 800;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-}
-
-.database-progress-track {
-    position: relative;
-    height: clamp(11px, 1vw, 18px);
-    overflow: hidden;
-    border: 1px solid rgba(224, 182, 79, 0.72);
-    border-radius: 3px;
-    background:
-        linear-gradient(180deg, #160808, #070303);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 228, 155, 0.055),
-        inset 0 2px 6px rgba(0, 0, 0, 0.90),
-        0 0 8px rgba(213, 171, 65, 0.08);
-}
-
-/* De gaatjes boven en onder maken van de balk een kleine filmstrook. */
-.database-progress-track::before,
-.database-progress-track::after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    right: 3px;
-    z-index: 4;
-    height: 2px;
-    opacity: 0.70;
-    background:
-        repeating-linear-gradient(
-            90deg,
-            rgba(255, 224, 142, 0.76) 0 5px,
-            transparent 5px 10px
-        );
-}
-
-.database-progress-track::before { top: 1px; }
-.database-progress-track::after { bottom: 1px; }
-
-.database-progress-fill {
-    position: absolute;
-    inset: 3px auto 3px 3px;
-    width: calc(var(--database-progress) - 6px);
-    min-width: 0;
-    max-width: calc(100% - 6px);
-    border-radius: 1px;
-    background:
-        linear-gradient(
-            90deg,
-            #7b1717 0%,
-            #a52a22 28%,
-            #d5a83e 72%,
-            #f0ce72 100%
-        );
-    box-shadow:
-        0 0 8px rgba(225, 181, 72, 0.30),
-        inset 0 1px 0 rgba(255, 239, 187, 0.32);
-    transition: width 0.24s ease-out;
-}
-
-.database-progress-fill::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: clamp(12px, 1.8vw, 34px);
-    opacity: 0.72;
-    background: linear-gradient(90deg, transparent, rgba(255, 243, 196, 0.72));
-    animation: databaseProgressGlow 1.15s ease-in-out infinite alternate;
-}
-
-.database-progress-meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 4%;
-    margin-top: 1.5%;
-}
-
-.database-progress-hint {
-    overflow: hidden;
-    color: rgba(224, 209, 169, 0.60);
-    font-size: clamp(4px, 0.40vw, 8px);
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.database-progress-percent {
-    flex: 0 0 auto;
-    min-width: 3.1em;
-    color: #efcf78;
-    font-size: clamp(7px, 0.65vw, 12px);
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-align: right;
-    text-shadow: 0 0 7px rgba(229, 185, 75, 0.20);
-}
-
-.database-progress.is-complete .database-progress-track {
-    border-color: rgba(246, 209, 111, 0.95);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 237, 178, 0.09),
-        0 0 12px rgba(222, 179, 69, 0.20);
-}
-
-.database-progress.is-complete .database-progress-percent {
-    color: #ffe6a0;
-}
-
-.database-progress-legacy-hidden {
-    display: none !important;
-}
-
-@keyframes databaseProgressGlow {
-    from { opacity: 0.28; }
-    to { opacity: 0.82; }
-}
-
-@media (max-width: 760px) {
-    .database-progress {
-        width: 84%;
-    }
-
-    .database-progress-meta {
-        margin-top: 2%;
-    }
-
-    .database-progress-hint {
-        max-width: 78%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .database-progress-fill,
-    .database-progress-fill::after {
-        transition: none !important;
-        animation: none !important;
-    }
-}
-
-/* =========================================================
-   MOVIEMIND – DATABASE LOADER V2
-   Fix: de echte voortgangsbalk staat altijd zichtbaar op het projectiedoek.
-========================================================= */
-
-body.database-loading .projection-content {
-    padding-bottom: 12% !important;
-}
-
-body.database-loading .database-progress {
-    position: absolute !important;
-    left: 10% !important;
-    right: 10% !important;
-    bottom: 7.5% !important;
-    z-index: 30 !important;
-    display: block !important;
-    width: auto !important;
-    margin: 0 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-body.database-loading .database-progress-title {
-    margin: 0 0 5px !important;
-    font-size: clamp(7px, 0.58vw, 11px) !important;
-}
-
-body.database-loading .database-progress-track {
-    display: block !important;
-    width: 100% !important;
-    height: clamp(14px, 1.15vw, 21px) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    border-color: rgba(239, 199, 96, 0.92) !important;
-    background: linear-gradient(180deg, #1a0909, #050202) !important;
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 233, 168, 0.08),
-        inset 0 2px 7px rgba(0, 0, 0, 0.92),
-        0 0 10px rgba(218, 173, 62, 0.18) !important;
-}
-
-body.database-loading .database-progress-fill {
-    top: 3px !important;
-    bottom: 3px !important;
-    left: 3px !important;
-    right: auto !important;
-    width: var(--database-progress) !important;
-    max-width: calc(100% - 6px) !important;
-    min-width: 0 !important;
-    transition: width 0.22s ease-out !important;
-}
-
-body.database-loading .database-progress-meta {
-    margin-top: 5px !important;
-}
-
-body.database-loading .database-progress-percent {
-    font-size: clamp(9px, 0.78vw, 14px) !important;
-}
-
-body.database-loading .database-progress-hint {
-    font-size: clamp(6px, 0.48vw, 9px) !important;
-}
-
-@media (max-width: 760px) {
-    body.database-loading .database-progress {
-        left: 8% !important;
-        right: 8% !important;
-        bottom: 6.5% !important;
-    }
-}
-
-
-/* =========================================================
-   MOVIEMIND – DATABASEVOORTGANG IN DE STARTKNOP
-   Geen extra laadscherm: de bestaande START SPEL-knop loopt vol.
-========================================================= */
-
-#startBtn.database-loading-progress {
-    --database-progress: 0%;
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    cursor: wait;
-    color: #fff0bd;
-    border-color: #e1b64f;
-    background:
-        linear-gradient(
-            90deg,
-            rgba(225, 174, 50, 0.82) 0%,
-            rgba(178, 112, 13, 0.86) var(--database-progress),
-            rgba(91, 20, 18, 0.96) var(--database-progress),
-            rgba(58, 8, 9, 0.98) 100%
-        );
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 230, 160, 0.20),
-        inset 0 -10px 18px rgba(30, 2, 3, 0.22),
-        0 0 12px rgba(215, 167, 44, 0.18),
-        0 6px 13px rgba(45, 10, 3, 0.32);
-    transition:
-        border-color 0.18s ease,
-        box-shadow 0.18s ease,
-        color 0.18s ease;
-}
-
-#startBtn.database-loading-progress::before {
-    z-index: 2;
-}
-
-#startBtn.database-loading-progress::after {
-    z-index: 1;
-    opacity: 0.24;
-}
-
-#startBtn.database-loading-progress.database-loading-complete {
-    color: #2b1904;
-    border-color: #f3cf71;
-    background: linear-gradient(180deg, #f4d66e, #d09a21 62%, #ad7309);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.48),
-        0 0 18px rgba(243, 207, 113, 0.38),
-        0 7px 15px rgba(66, 44, 3, 0.34);
-}
-
-#startBtn.database-loading-progress:disabled {
-    opacity: 1;
-    filter: none;
-}
+/* The start button now participates in layout; no absolute-button reserve is needed. */
+body:not(.game-active) #startScreen:has(.start-screen-controls) { padding-bottom: 0 !important; }

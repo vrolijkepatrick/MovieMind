@@ -20,6 +20,193 @@ let usedMediaKeys = [];
 let usedCoStarNames = [];
 let selectedSuggestionKey = null;
 
+// Solo state is separate from the existing two-player rules.
+let gameMode = "versus";
+let soloTimerId = null;
+let soloElapsedSeconds = 0;
+let soloCorrectAnswers = 0;
+let soloClaimPending = false;
+let soloRunId = 0;
+const SOLO_MIN_FILLED_TO_STOP = 15;
+
+/* =========================================
+   SPELSTATISTIEKEN
+========================================= */
+
+/*
+Lokale statistieken werken direct en zijn handig om de metingen te testen.
+Voor gezamenlijke statistieken van alle online spelers kan MovieMind ook
+GoatCounter gebruiken. Vul daarvoor later alleen MOVIEMIND_GOATCOUNTER_CODE
+in, bijvoorbeeld "moviemind" voor moviemind.goatcounter.com.
+*/
+const MOVIEMIND_STATS_STORAGE_KEY = "moviemindGameStatsV1";
+const MOVIEMIND_GOATCOUNTER_CODE = "moviemind";
+
+let currentGameStatsActive = false;
+let currentGameStatsFinished = false;
+let pendingAnalyticsEvents = [];
+
+function createEmptyMovieMindStats() {
+    return {
+        pageViews: 0,
+        gameStarts: 0,
+        completedGames: 0,
+        wins: 0,
+        draws: 0,
+        difficulty: {
+            moviehouse: 0,
+            blockbuster: 0,
+            oscarnight: 0
+        },
+        firstVisit: null,
+        lastVisit: null
+    };
+}
+
+function loadMovieMindStats() {
+    try {
+        const raw = localStorage.getItem(MOVIEMIND_STATS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        const empty = createEmptyMovieMindStats();
+
+        return {
+            ...empty,
+            ...parsed,
+            difficulty: {
+                ...empty.difficulty,
+                ...(parsed.difficulty || {})
+            }
+        };
+    } catch (_) {
+        return createEmptyMovieMindStats();
+    }
+}
+
+function saveMovieMindStats(stats) {
+    try {
+        localStorage.setItem(
+            MOVIEMIND_STATS_STORAGE_KEY,
+            JSON.stringify(stats)
+        );
+    } catch (_) {
+        /* Statistieken mogen de game nooit blokkeren. */
+    }
+}
+
+function registerPageView() {
+    const stats = loadMovieMindStats();
+    const now = new Date().toISOString();
+
+    stats.pageViews += 1;
+    stats.firstVisit = stats.firstVisit || now;
+    stats.lastVisit = now;
+    saveMovieMindStats(stats);
+}
+
+function trackGameStarted() {
+    if (currentGameStatsActive) {
+        return;
+    }
+
+    currentGameStatsActive = true;
+    currentGameStatsFinished = false;
+
+    const stats = loadMovieMindStats();
+    stats.gameStarts += 1;
+
+    if (Object.prototype.hasOwnProperty.call(stats.difficulty, difficulty)) {
+        stats.difficulty[difficulty] += 1;
+    }
+
+    saveMovieMindStats(stats);
+    sendMovieMindAnalyticsEvent(
+        "/events/game-start/" + difficulty,
+        "Game gestart · " + getDifficultyLabel(difficulty)
+    );
+}
+
+function trackGameCompleted(result) {
+    if (!currentGameStatsActive || currentGameStatsFinished) {
+        return;
+    }
+
+    currentGameStatsFinished = true;
+    currentGameStatsActive = false;
+
+    const stats = loadMovieMindStats();
+    stats.completedGames += 1;
+
+    if (result === "win") {
+        stats.wins += 1;
+    } else if (result === "draw") {
+        stats.draws += 1;
+    }
+
+    saveMovieMindStats(stats);
+    sendMovieMindAnalyticsEvent(
+        "/events/game-complete/" + result + "/" + difficulty,
+        "Game uitgespeeld · " + result + " · " + getDifficultyLabel(difficulty)
+    );
+}
+
+function abandonCurrentGameStats() {
+    currentGameStatsActive = false;
+    currentGameStatsFinished = false;
+}
+
+function initializeMovieMindAnalytics() {
+    registerPageView();
+
+    if (!MOVIEMIND_GOATCOUNTER_CODE) {
+        return;
+    }
+
+    window.goatcounter = window.goatcounter || {};
+    window.goatcounter.endpoint =
+        "https://" + MOVIEMIND_GOATCOUNTER_CODE + ".goatcounter.com/count";
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://gc.zgo.at/count.js";
+    script.dataset.goatcounter = window.goatcounter.endpoint;
+
+    script.addEventListener("load", flushPendingAnalyticsEvents);
+    document.head.appendChild(script);
+}
+
+function sendMovieMindAnalyticsEvent(path, title) {
+    if (!MOVIEMIND_GOATCOUNTER_CODE) {
+        return;
+    }
+
+    if (window.goatcounter && typeof window.goatcounter.count === "function") {
+        window.goatcounter.count({
+            path: path,
+            title: title,
+            event: true
+        });
+        return;
+    }
+
+    pendingAnalyticsEvents.push({ path: path, title: title });
+}
+
+function flushPendingAnalyticsEvents() {
+    if (!window.goatcounter || typeof window.goatcounter.count !== "function") {
+        return;
+    }
+
+    pendingAnalyticsEvents.splice(0).forEach(function (event) {
+        window.goatcounter.count({
+            path: event.path,
+            title: event.title,
+            event: true
+        });
+    });
+}
+
+initializeMovieMindAnalytics();
+
 /*
 Snelle zoekindexen voor de bordgenerator.
 Deze worden één keer opgebouwd nadat de databases zijn geladen.
@@ -490,6 +677,17 @@ function updateGameHud() {
 }
 
 function returnToStartScreen() {
+    stopSoloTimer();
+    soloRunId += 1;
+    soloClaimPending = false;
+    removeSoloAnswerReview();
+    soloOverlay.classList.add("hidden");
+    soloOverlay.classList.remove("show");
+    const stopButton = document.getElementById("soloStopBtn");
+    if (stopButton) stopButton.classList.add("hidden");
+    document.body.classList.remove("solo-active");
+    selectGameMode(gameMode);
+    abandonCurrentGameStats();
     gameOver = true;
     consecutivePasses = 0;
     lastPassingPlayer = null;
@@ -1167,6 +1365,29 @@ function buildLookupCaches() {
                 Math.max(0, uniqueActors.size - 1)
             );
         });
+
+        /*
+        TV-series is een eigen bordcategorie en geen genre.
+        Iedere serie telt daarom als antwoord voor acteur × TV-series,
+        ongeacht het genre van die serie.
+        */
+        if (item.media_type === "tv") {
+            activeGenres.add(TV_SERIES_CATEGORY);
+            activeSoloGenres.add(TV_SERIES_CATEGORY);
+
+            uniqueActors.forEach(function (actorName, normalizedActor) {
+                const tvKey =
+                    normalizedActor +
+                    "|" +
+                    normalizeText(TV_SERIES_CATEGORY);
+
+                if (!actorGenreMediaIndex.has(tvKey)) {
+                    actorGenreMediaIndex.set(tvKey, []);
+                }
+
+                actorGenreMediaIndex.get(tvKey).push(item);
+            });
+        }
 
         const usableGenres = item.genre.filter(function (genre) {
             return allowedGenres.has(genre);
@@ -1957,48 +2178,56 @@ async function startGameWithLoadingScreen() {
             screenFrame.classList.add("cinema-board-prelight");
         }
 
-    if (gameScreen) {
-        gameScreen.classList.add("hidden");
-    }
-
-    document.body.classList.add("loading-active");
-    showLoadingScreen("De zaal loopt vol...", "audience");
-
-    await waitForPaint();
-    await delay(450);
-    setLoadingPhase("Popcorn wordt klaargezet...", "popcorn");
-
-    await delay(450);
-    setLoadingPhase("De projector wordt opgestart...", "projector");
-
-    await delay(350);
-    setLoadingPhase("Het speelbord wordt samengesteld...", "board");
-
-    await waitForPaint();
-
-    try {
-        startRound();
-
-        setLoadingPhase("De voorstelling kan beginnen!", "curtain");
-        playSound("curtains", { volume: 0.66 });
-        await delay(400);
-
-        hideLoadingScreen();
-        document.body.classList.remove("loading-active");
-        document.body.classList.add("game-active");
-
-        if (screenFrame) {
-            screenFrame.classList.remove("hidden");
-            screenFrame.classList.add("screen-reveal");
-
-            window.setTimeout(function () {
-                screenFrame.classList.remove("screen-reveal");
-            }, 650);
-        }
-
         if (gameScreen) {
             gameScreen.classList.remove("hidden");
         }
+
+        /* Korte donkere projectorpauze, maar zonder een los zwart rechthoekig vlak. */
+        await delay(350);
+
+        if (transitionLayer) {
+            transitionLayer.classList.add("projector-on");
+        }
+
+        /* Nu pas groeit het echte bord vanuit het donkere doek naar volledig beeld. */
+        if (screenFrame) {
+            screenFrame.classList.remove("cinema-board-prelight");
+            void screenFrame.offsetWidth;
+            screenFrame.classList.add("cinema-board-reveal-v6");
+        }
+
+        playSound("curtains", { volume: 0.28 });
+        await delay(1420);
+
+        if (gameMode === "solo" && cells.length === 25 && !gameOver) {
+            startSoloTimer();
+            ensureSoloStopButton();
+        }
+
+        document.body.classList.remove("cinema-transitioning");
+        document.body.classList.add("cinema-transition-settled");
+
+        if (transitionLayer) {
+            transitionLayer.classList.add("transition-finished");
+        }
+
+        window.setTimeout(function () {
+            document.body.classList.remove("cinema-transition-settled");
+
+            if (screenFrame) {
+                screenFrame.classList.remove(
+                    "cinema-board-reveal-v6",
+                    "cinema-board-prelight"
+                );
+            }
+
+            if (transitionLayer) {
+                transitionLayer.classList.remove(
+                    "projector-on",
+                    "transition-finished"
+                );
+            }
+        }, 750);
     } catch (error) {
         console.error("Het speelbord kon niet worden gemaakt:", error);
         document.body.classList.remove(
@@ -2188,7 +2417,17 @@ function startRound() {
     updateGameHud();
     animateTurnIndicator();
 
-    createSmartGrid();
+    if (gameMode === "solo") {
+        createSoloGrid();
+        if (cells.length !== 25) throw new Error("Geen speelbaar Solo-bord gevonden.");
+    } else {
+        createSmartGrid();
+    }
+
+    if (gameMode === "versus" && columns.length === 3 && rows.length === 3 && cells.length === 9) {
+        trackGameStarted();
+    }
+
     updateGameHud();
 }
 
@@ -2898,13 +3137,6 @@ function openAnswerPopup(cell) {
     popup.classList.toggle("player-blue", currentPlayer === 1);
     popup.classList.toggle("player-orange", currentPlayer === 2);
 
-    /*
-    Touch & feel: laat het antwoordpaneel meekleuren met de speler die aan zet is.
-    De MovieMind-goudaccenten blijven behouden; alleen de spelerskleur wisselt.
-    */
-    popup.classList.toggle("player-blue", currentPlayer === 1);
-    popup.classList.toggle("player-orange", currentPlayer === 2);
-
     passBtn.classList.toggle("hidden", gameMode === "solo");
     popup.classList.remove("hidden");
     answerInput.focus();
@@ -3382,6 +3614,16 @@ function checkMedia(title, rowIndex, columnIndex) {
 }
 
 function placeMedia(item) {
+    const targetCell = selectedCell;
+
+    if (!targetCell || (gameMode === "solo" && (soloClaimPending || gameOver || isOccupiedCell(targetCell)))) {
+        return;
+    }
+
+    const claimRunId = soloRunId;
+    const soloClaim = gameMode === "solo";
+    if (soloClaim) { soloClaimPending = true; updateSoloStopButton(); }
+
     let answerTitle = "";
 
     if (item.answer_type === "actor") {
@@ -3419,9 +3661,21 @@ function placeMedia(item) {
             ? playerBlue
             : playerOrange;
 
-    selectedCell.replaceChildren(
-        createClaimedCard(answerTitle, ownerName)
-    );
+    const selectedToken = claimingPlayer === 1
+        ? playerOneToken
+        : playerTwoToken;
+
+    consecutivePasses = 0;
+    lastPassingPlayer = null;
+
+    playSound("correct", { volume: 0.68 });
+    closePopup();
+
+    const finishClaim = function () {
+        if (soloClaim && (claimRunId !== soloRunId || gameOver)) return;
+        targetCell.replaceChildren(
+            createClaimedCardForPlayer(answerTitle, ownerName, claimingPlayer)
+        );
 
         if (claimingPlayer === 1) {
             targetCell.classList.add("blue");
@@ -3434,10 +3688,16 @@ function placeMedia(item) {
         targetCell.classList.add("movie-placed");
 
         playSound("claim", { volume: 0.58 });
-    }, 120);
+        if (soloClaim) {
+            soloClaimPending = false;
+            soloCorrectAnswers += 1;
+        }
+        updateGameHud();
 
-    updateGameHud();
-    closePopup();
+        if (soloClaim) {
+            if (cells.every(isOccupiedCell)) finishSoloGame();
+            return;
+        }
 
         const winner = checkWinner();
 
@@ -3451,7 +3711,138 @@ function placeMedia(item) {
             return;
         }
 
-    switchPlayer();
+        switchPlayer();
+    };
+
+    /*
+    Alleen film- en serie-antwoorden hebben een poster_path.
+    Bij acteurs-antwoorden of ontbrekende posters claimen we direct,
+    zodat de bestaande spelwerking altijd als fallback blijft werken.
+    */
+    if (
+        item.answer_type !== "actor" &&
+        item.poster_path
+    ) {
+        animatePosterToCell(
+            item,
+            targetCell,
+            selectedToken,
+            finishClaim
+        );
+    } else {
+        window.setTimeout(finishClaim, 120);
+    }
+}
+
+function createClaimedCardForPlayer(title, ownerName, playerNumber) {
+    const previousPlayer = currentPlayer;
+    currentPlayer = playerNumber;
+    const card = createClaimedCard(title, ownerName);
+    currentPlayer = previousPlayer;
+    return card;
+}
+
+function animatePosterToCell(item, targetCell, selectedToken, onComplete) {
+    const posterPath = String(item.poster_path || "").trim();
+
+    if (!posterPath) {
+        onComplete();
+        return;
+    }
+
+    const posterUrl = posterPath.startsWith("http")
+        ? posterPath
+        : "https://image.tmdb.org/t/p/w500" +
+          (posterPath.startsWith("/") ? posterPath : "/" + posterPath);
+
+    const tokenFilenames = {
+        projector: "projector-token.png",
+        clapperboard: "clapperboard-token.png",
+        "directors-chair": "directors-chair-token.png",
+        statuette: "statuette-token.png"
+    };
+
+    const overlay = document.createElement("div");
+    overlay.className = "poster-claim-overlay " + (currentPlayer === 1 ? "blue" : "orange");
+
+    const posterFrame = document.createElement("div");
+    posterFrame.className = "poster-claim-frame";
+
+    const posterImage = document.createElement("img");
+    posterImage.className = "poster-claim-image";
+    posterImage.alt = "Poster van " + (item.title || "de gekozen titel");
+    posterImage.draggable = false;
+
+    const tokenImage = document.createElement("img");
+    tokenImage.className = "poster-claim-token";
+    tokenImage.src =
+        "images/tokens/" +
+        (tokenFilenames[selectedToken] || tokenFilenames.projector);
+    tokenImage.alt = "";
+    tokenImage.draggable = false;
+
+    posterFrame.appendChild(posterImage);
+    posterFrame.appendChild(tokenImage);
+    overlay.appendChild(posterFrame);
+    document.body.appendChild(overlay);
+
+    let completed = false;
+
+    const cleanupAndComplete = function () {
+        if (completed) {
+            return;
+        }
+
+        completed = true;
+        overlay.remove();
+        document.body.classList.remove("poster-claim-active");
+        onComplete();
+    };
+
+    posterImage.addEventListener("error", cleanupAndComplete, { once: true });
+
+    posterImage.addEventListener("load", function () {
+        document.body.classList.add("poster-claim-active");
+
+        requestAnimationFrame(function () {
+            overlay.classList.add("is-visible");
+            posterFrame.classList.add("is-presented");
+        });
+
+        window.setTimeout(function () {
+            if (completed || !targetCell.isConnected) {
+                cleanupAndComplete();
+                return;
+            }
+
+            const startRect = posterFrame.getBoundingClientRect();
+            const targetRect = targetCell.getBoundingClientRect();
+
+            const targetX =
+                targetRect.left + targetRect.width / 2 -
+                (startRect.left + startRect.width / 2);
+            const targetY =
+                targetRect.top + targetRect.height / 2 -
+                (startRect.top + startRect.height / 2);
+
+            const scaleX = Math.max(0.18, targetRect.width / startRect.width * 0.58);
+            const scaleY = Math.max(0.18, targetRect.height / startRect.height * 0.72);
+            const targetScale = Math.min(scaleX, scaleY, 0.48);
+
+            posterFrame.style.setProperty("--poster-target-x", targetX + "px");
+            posterFrame.style.setProperty("--poster-target-y", targetY + "px");
+            posterFrame.style.setProperty("--poster-target-scale", String(targetScale));
+            posterFrame.classList.add("is-flying");
+
+            window.setTimeout(function () {
+                posterFrame.classList.add("is-morphing");
+            }, 430);
+
+            window.setTimeout(cleanupAndComplete, 720);
+        }, 520);
+    }, { once: true });
+
+    posterImage.src = posterUrl;
 }
 
 function createClaimedCard(title, ownerName) {
